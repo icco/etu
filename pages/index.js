@@ -1,7 +1,12 @@
-const Index = () => (
-  <div>
-    <p>Hello Next.js</p>
-  </div>
-)
+import App from '../components/App'
+import Header from '../components/Header'
+import Submit from '../components/Submit'
+import PostList from '../components/PostList'
 
-export default Index
+export default () => (
+  <App>
+    <Header />
+    <Submit />
+    <PostList />
+  </App>
+)
