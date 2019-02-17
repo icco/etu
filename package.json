@@ -1,7 +1,19 @@
 {
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
   "dependencies": {
     "next": "^8.0.1",
     "react": "^16.8.2",
     "react-dom": "^16.8.2"
-  }
+  },
+  "name": "etu",
+  "version": "1.0.0",
+  "description": "A wiki",
+  "repository": "git@github.com:icco/etu.git",
+  "author": "Nat Welch <nat@natwelch.com>",
+  "license": "MIT",
+  "private": false
 }
