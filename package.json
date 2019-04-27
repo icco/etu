@@ -33,7 +33,7 @@
     "react-dom": "^16.7.0",
     "react-loading": "^2.0.3",
     "react-p5-wrapper": "^0.0.4",
-    "webpack": "^4.30.0"
+    "webpack": "^4.4.0"
   },
   "prettier": {
     "trailingComma": "es5"
