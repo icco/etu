@@ -1,12 +1,26 @@
-import App from '../components/App'
-import Header from '../components/Header'
-import Submit from '../components/Submit'
-import PostList from '../components/PostList'
+import Head from "next/head";
 
-export default () => (
+import App from "../components/App";
+import Header from "../components/Header";
+import Submit from "../components/submit";
+import { checkLoggedIn } from "../lib/auth";
+
+const Index = props => (
   <App>
-    <Header />
-    <Submit />
-    <PostList />
+    <Head>
+      <title>Etu Time Tracking</title>
+    </Head>
+    <Header loggedInUser={props.loggedInUser} />
+    <Submit loggedInUser={props.loggedInUser} />
   </App>
-)
+);
+
+Index.getInitialProps = async ctx => {
+  const { loggedInUser } = await checkLoggedIn(ctx.apolloClient);
+
+  return {
+    loggedInUser,
+  };
+};
+
+export default Index;
