@@ -19,15 +19,21 @@
     "apollo-link-http": "^1.5.11",
     "auth0-js": "^9.10.0",
     "graphql": "^14.0.2",
-    "pino-stackdriver-serializers": "https://github.com/icco/pino-stackdriver-serializers",
     "graphql-tag": "^2.10.1",
     "isomorphic-unfetch": "^3.0.0",
     "jwt-decode": "^2.2.0",
     "next": "^8.1.0",
     "pino": "^5.12.3",
+    "pino-stackdriver-serializers": "https://github.com/icco/pino-stackdriver-serializers",
     "prop-types": "^15.6.2",
     "react": "^16.7.0",
     "react-apollo": "^2.1.11",
     "react-dom": "^16.7.0"
+  },
+  "prettier": {
+    "trailingComma": "es5"
+  },
+  "devDependencies": {
+    "prettier": "^1.17.0"
   }
 }
