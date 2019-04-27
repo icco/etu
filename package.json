@@ -12,6 +12,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@zeit/next-css": "^1.0.1",
     "apollo-cache-inmemory": "^1.4.3",
     "apollo-client": "^2.4.13",
     "apollo-link-context": "^1.0.14",

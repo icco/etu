@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto|Roboto+Slab");
+
+body,
+p,
+.normal {
+  font-family: "Roboto", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+.header {
+  font-family: "Roboto Slab", serif;
+}
+
+article p {
+  line-height: 1.5;
+}
+
+article img {
+}
+
+article a {
+  -webkit-transition: color 0.4s;
+  transition: color 0.4s;
+  color: #265c83;
+}
+
+article a:link,
+article a:visited {
+  color: #265c83;
+}
+
+article a:hover {
+  color: #7fdbff;
+}
+
+article a:active {
+  -webkit-transition: color 0.3s;
+  transition: color 0.3s;
+  color: #007be6;
+}
+
+section .react-mde .grip {
+  height: 1em;
+}
+
+/* athelas ml0 mt0 pl4 black-90 bl bw2 b--blue */
+article blockquote {
+  border-left-style: solid;
+  border-left-width: 1px;
+  border-color: #408bc9;
+  border-width: 0.25rem;
+  font-family: athelas, georgia, serif;
+  padding-left: 2rem;
+  margin-left: 0;
+  margin-top: 0;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+/* f5 f4-m f3-l lh-copy measure mt0 */
+article blockquote p {
+  font-size: 1rem;
+  max-width: 30em;
+  line-height: 1.5;
+  max-width: 30em;
+  margin-top: 0;
+}
+
+/* f6 ttu tracked fs-normal */
+article blockquote cite {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-style: normal;
+}
+
+@media screen and (min-width: 30em) and (max-width: 60em) {
+  article blockquote p {
+    font-size: 1.25rem;
+  }
+}
+
+@media screen and (min-width: 60em) {
+  article blockquote p {
+    font-size: 1.5rem;
+  }
+}

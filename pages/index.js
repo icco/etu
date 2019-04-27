@@ -10,7 +10,7 @@ const Index = props => (
     <Head>
       <title>Etu Time Tracking</title>
     </Head>
-    <Header loggedInUser={props.loggedInUser} />
+    <Header loggedInUser={props.loggedInUser} noLogo />
     <Submit loggedInUser={props.loggedInUser} />
   </App>
 );
