@@ -2,7 +2,7 @@ import Head from "next/head";
 
 import App from "../components/App";
 import Header from "../components/Header";
-import Submit from "../components/submit";
+import Submit from "../components/Submit";
 import { checkLoggedIn } from "../lib/auth";
 
 const Index = props => (
