@@ -58,7 +58,6 @@ class Submit extends React.Component {
     return (
       <Mutation mutation={SaveLog}>
         {(insertLog, { loading, error, data }) => {
-
           if (loading) {
             return <Loading key={0} />;
           }
@@ -68,74 +67,74 @@ class Submit extends React.Component {
           }
 
           return (
-          <div>
-            <form
-              onSubmit={e => {
-                e.preventDefault();
-                insertLog({
-                  variables: {
-                    content: this.state.content,
-                    project: this.state.project,
-                    code: this.state.code,
-                  },
-                });
-              }}
-              className="pa4 black-80"
-            >
-              <div className="measure mv2">
-                <label htmlFor="code" className="f6 b db mb2">
-                  Code
-                </label>
+            <div>
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  insertLog({
+                    variables: {
+                      content: this.state.content,
+                      project: this.state.project,
+                      code: this.state.code,
+                    },
+                  });
+                }}
+                className="pa4 black-80"
+              >
+                <div className="measure mv2">
+                  <label htmlFor="code" className="f6 b db mb2">
+                    Code
+                  </label>
+                  <input
+                    id="code"
+                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
+                    type="text"
+                    aria-describedby="code-desc"
+                    onChange={this.handleBasicChange}
+                  />
+                  <small id="code-desc" className="f6 black-60 db mb2">
+                    Helper text for the form control.
+                  </small>
+                </div>
+                <div className="measure mv2">
+                  <label htmlFor="content" className="f6 b db mb2">
+                    Log Entry
+                  </label>
+                  <input
+                    id="content"
+                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
+                    type="text"
+                    aria-describedby="content-desc"
+                    onChange={this.handleBasicChange}
+                  />
+                  <small id="content-desc" className="f6 black-60 db mb2">
+                    Helper text for the form control.
+                  </small>
+                </div>
+                <div className="measure mv2">
+                  <label htmlFor="project" className="f6 b db mb2">
+                    Project
+                  </label>
+                  <input
+                    id="project"
+                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
+                    type="text"
+                    onChange={this.handleBasicChange}
+                    aria-describedby="project-desc"
+                  />
+                  <small id="project-desc" className="f6 black-60 db mb2">
+                    Helper text for the form control.
+                  </small>
+                </div>
                 <input
-                  id="code"
-                  className="input-reset ba b--black-20 pa2 mb2 db w-100"
-                  type="text"
-                  aria-describedby="code-desc"
-                        onChange={this.handleBasicChange}
+                  className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
+                  type="submit"
+                  value="Submit"
                 />
-                <small id="code-desc" className="f6 black-60 db mb2">
-                  Helper text for the form control.
-                </small>
-              </div>
-              <div className="measure mv2">
-                <label htmlFor="content" className="f6 b db mb2">
-                  Log Entry
-                </label>
-                <input
-                  id="content"
-                  className="input-reset ba b--black-20 pa2 mb2 db w-100"
-                  type="text"
-                  aria-describedby="content-desc"
-                        onChange={this.handleBasicChange}
-                />
-                <small id="content-desc" className="f6 black-60 db mb2">
-                  Helper text for the form control.
-                </small>
-              </div>
-              <div className="measure mv2">
-                <label htmlFor="project" className="f6 b db mb2">
-                  Project
-                </label>
-                <input
-                  id="project"
-                  className="input-reset ba b--black-20 pa2 mb2 db w-100"
-                  type="text"
-                  onChange={this.handleBasicChange}
-                  aria-describedby="project-desc"
-                />
-                <small id="project-desc" className="f6 black-60 db mb2">
-                  Helper text for the form control.
-                </small>
-              </div>
-              <input
-                className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
-                type="submit"
-                value="Submit"
-              />
-            </form>
-          </div>
-        )}
-        }
+              </form>
+            </div>
+          );
+        }}
       </Mutation>
     );
   }
