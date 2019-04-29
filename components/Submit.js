@@ -13,11 +13,42 @@ const baseUrl = process.env.GRAPHQL_ORIGIN.substring(
   process.env.GRAPHQL_ORIGIN.lastIndexOf("/")
 );
 
+const SaveLog = gql`
+  mutation SaveLog(
+    $content: String!
+    $project: String!
+    $code: String!
+  ) {
+    insertLog(input: {
+      code: $code
+      description: $content
+      project: $project
+    }) {
+      id
+      datetime
+    }
+  }
+`;
+
 class Submit extends React.Component {
   render() {
     return (
+              <Mutation mutation={SaveLog}>
+                {(insertLog, { data }) => (
       <div>
-        <form className="pa4 black-80">
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      insertLog({
+                        variables: {
+    content: this.state.content,
+    project : this.state.project,
+    code: this.state.code ,
+                        },
+                      });
+                    }}
+className="pa4 black-80"
+                  >
           <div className="measure mv2">
             <label for="name" className="f6 b db mb2">
               Code
@@ -67,6 +98,8 @@ class Submit extends React.Component {
           />
         </form>
       </div>
+                )}
+              </Mutation>
     );
   }
 }
