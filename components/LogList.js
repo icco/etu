@@ -19,7 +19,10 @@ function LogList({ data: { loading, error, logs } }) {
           <li className="mb5 ml4 mr3" key={"log-list-" + log.id}>
             <div className="f6 db pb1 gray">
               <span className="db dbi-ns mr3">{log.code}</span>
-              <Link as={`/wiki/${log.project}`} href={`/wiki?id=${log.project}`}>
+              <Link
+                as={`/wiki/${log.project}`}
+                href={`/wiki?id=${log.project}`}
+              >
                 <a className="db dbi-ns mr3">{log.project}</a>
               </Link>
               <span className="db dbi-ns mr3">{log.datetime}</span>
