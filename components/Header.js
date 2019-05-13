@@ -1,28 +1,56 @@
-import Link from 'next/link'
-import { withRouter } from 'next/router'
+import Link from "next/link";
+import { withRouter } from "next/router";
+import React from "react";
 
-const Header = ({ router: { pathname } }) => (
-  <header>
-    <Link prefetch href='/'>
-      <a className={pathname === '/' ? 'is-active' : ''}>Home</a>
-    </Link>
-    <Link prefetch href='/about'>
-      <a className={pathname === '/about' ? 'is-active' : ''}>About</a>
-    </Link>
-    <style jsx>{`
-      header {
-        margin-bottom: 25px;
-      }
-      a {
-        font-size: 14px;
-        margin-right: 15px;
-        text-decoration: none;
-      }
-      .is-active {
-        text-decoration: underline;
-      }
-    `}</style>
-  </header>
-)
+import Logo from "./Logo";
 
-export default withRouter(Header)
+class Header extends React.Component {
+  render() {
+    let prefix = <></>;
+    let head = <></>;
+    let nav = (
+      <Link key="/auth/sign-in" href="/auth/sign-in">
+        <a className="f6 link dib dim mr3 black mr4-ns" href="/auth/sign-in">
+          sign in
+        </a>
+      </Link>
+    );
+
+    if (this.props.loggedInUser) {
+      nav = (
+        <>
+          <Link key="/auth/sign-out" href="/auth/sign-out">
+            <a
+              className="f6 link dib dim mr3 black mr4-ns"
+              href="/auth/sign-out"
+            >
+              Sign Out
+            </a>
+          </Link>
+        </>
+      );
+    }
+
+    if (this.props.noLogo) {
+      prefix = (
+        <Link href="/">
+          <a className="link dark-gray dim">
+            <Logo size={50} className="v-mid mh0-ns dib-ns center ph0 logo" />
+          </a>
+        </Link>
+      );
+    }
+
+    return (
+      <div>
+        <nav className="flex justify-between ttc">
+          <div className="flex items-center pa3">{prefix}</div>
+          <div className="flex-grow pa3 flex items-center">{nav}</div>
+        </nav>
+        {head}
+      </div>
+    );
+  }
+}
+
+export default withRouter(Header);
