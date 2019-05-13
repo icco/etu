@@ -26,6 +26,7 @@ function LogList({ data: { loading, error, logs } }) {
                 <a className="db dbi-ns mr3">{log.project}</a>
               </Link>
               <span className="db dbi-ns mr3">{log.datetime}</span>
+              <span className="db dbi-ns mr3">{log.duration}</span>
               <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
                 <a className="db dbi-ns mr3">{log.id}</a>
               </Link>
@@ -46,6 +47,7 @@ export const userLogs = gql`
       datetime
       description
       project
+      duration
     }
   }
 `;
