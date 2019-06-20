@@ -13,7 +13,7 @@ function LogList({ data: { loading, error, logs } }) {
     return <Loading key={0} />;
   }
   return (
-    <section className="mw8 center">
+    <section className="mw8">
       <ul className="list pl0" key="ul">
         {logs.map(log => (
           <li className="mb5 ml4 mr3" key={"log-list-" + log.id}>
