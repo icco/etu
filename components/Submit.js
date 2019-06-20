@@ -87,13 +87,28 @@ class Submit extends React.Component {
                   </label>
                   <input
                     id="code"
-                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
+                    className="input-reset db mb2"
                     type="text"
                     aria-describedby="code-desc"
                     onChange={this.handleBasicChange}
+            maxlength='3'
+            style={{
+  border: "none",
+  width: "4.5ch",
+  background: "repeating-linear-gradient(90deg, dimgrey 0, dimgrey 1ch, transparent 0, transparent 1.5ch) 0 100%/100% 2px no-repeat",
+  font: "5ch monospace",
+  "letter-spacing": ".5ch",
+}}
                   />
                   <small id="code-desc" className="f6 black-60 db mb2">
-                    Three numbers.
+                  <p>
+                    Category, Focus, Introversion
+            </p>
+            <ol>
+            <li>Educating</li>
+            <li>Building</li>
+            <li>Living</li>
+            </ol>
                   </small>
                 </div>
 
