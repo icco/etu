@@ -143,22 +143,6 @@ class Submit extends React.Component {
                   </small>
                 </div>
 
-                <div className="measure mv2">
-                  <label htmlFor="duration" className="f6 b db mb2">
-                    Duration
-                  </label>
-                  <input
-                    id="duration"
-                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
-                    type="text"
-                    onChange={this.handleBasicChange}
-                    aria-describedby="duration-desc"
-                  />
-                  <small id="duration-desc" className="f6 black-60 db mb2">
-                    How long were you working on this update?
-                  </small>
-                </div>
-
                 <input
                   className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
                   type="submit"
