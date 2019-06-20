@@ -7,7 +7,9 @@ import LogList from "../components/LogList";
 import { checkLoggedIn } from "../lib/auth";
 
 const Index = props => {
-  let content = <div className="pa4">Please sign in to see logs.</div>;
+  let content = (
+    <h1 class="f3 f1-m f-headline-l mw7 center">Please sign-in to see logs.</h1>
+  );
 
   if (props.loggedInUser) {
     content = (
