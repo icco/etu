@@ -91,24 +91,23 @@ class Submit extends React.Component {
                     type="text"
                     aria-describedby="code-desc"
                     onChange={this.handleBasicChange}
-            maxlength='3'
-            style={{
-  border: "none",
-  width: "4.5ch",
-  background: "repeating-linear-gradient(90deg, dimgrey 0, dimgrey 1ch, transparent 0, transparent 1.5ch) 0 100%/100% 2px no-repeat",
-  font: "5ch monospace",
-  "letter-spacing": ".5ch",
-}}
+                    maxlength="3"
+                    style={{
+                      border: "none",
+                      width: "4.5ch",
+                      background:
+                        "repeating-linear-gradient(90deg, dimgrey 0, dimgrey 1ch, transparent 0, transparent 1.5ch) 0 100%/100% 2px no-repeat",
+                      font: "5ch monospace",
+                      "letter-spacing": ".5ch",
+                    }}
                   />
                   <small id="code-desc" className="f6 black-60 db mb2">
-                  <p>
-                    Category, Focus, Introversion
-            </p>
-            <ol>
-            <li>Educating</li>
-            <li>Building</li>
-            <li>Living</li>
-            </ol>
+                    <p>Category, Focus, Introversion</p>
+                    <ol>
+                      <li>Educating</li>
+                      <li>Building</li>
+                      <li>Living</li>
+                    </ol>
                   </small>
                 </div>
 
