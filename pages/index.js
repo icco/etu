@@ -2,41 +2,29 @@ import Head from "next/head";
 
 import App from "../components/App";
 import Header from "../components/Header";
-import Submit from "../components/Submit";
-import LogList from "../components/LogList";
+import Main from "../components/Main";
 import { checkLoggedIn } from "../lib/auth";
+import { initApollo } from "../lib/init-apollo";
 
-const Index = props => {
-  let content = (
-    <h1 class="f-headline mw7 center">Please sign-in to see logs.</h1>
-  );
-
-  if (props.loggedInUser) {
-    content = (
-      <>
-        <Submit />
-        <LogList />
-      </>
-    );
+export default class extends React.Component {
+  async componentDidMount() {
+    const { loggedInUser } = await checkLoggedIn(initApollo());
+    this.setState({ loggedInUser });
   }
 
-  return (
-    <App>
-      <Head>
-        <title>Etu Time Tracking</title>
-      </Head>
-      <Header loggedInUser={props.loggedInUser} noLogo />
-      {content}
-    </App>
-  );
-};
+  render() {
+    if (!this.state || !this.state.loggedInUser) {
+      this.state = { loggedInUser: null };
+    }
 
-Index.getInitialProps = async ctx => {
-  const { loggedInUser } = await checkLoggedIn(ctx.apolloClient);
-
-  return {
-    loggedInUser,
-  };
-};
-
-export default Index;
+    return (
+      <App>
+        <Head>
+          <title>Etu Time Tracking</title>
+        </Head>
+        <Header loggedInUser={this.state.loggedInUser} noLogo />
+        <Main loggedInUser={this.state.loggedInUser} />
+      </App>
+    );
+  }
+}

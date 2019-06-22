@@ -69,6 +69,7 @@ class Submit extends React.Component {
           return (
             <div>
               <form
+                autocomplete="off"
                 onSubmit={e => {
                   e.preventDefault();
                   insertLog({
