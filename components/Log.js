@@ -12,23 +12,20 @@ function Log({ data: { loading, error, log } }) {
   }
 
   return (
-          <li className="mb5 ml4 mr3" key={"log-" + log.id}>
-            <div className="f6 db pb1 gray">
-              <span className="db dbi-ns mr3">{log.code}</span>
-              <Link
-                as={`/wiki/${log.project}`}
-                href={`/wiki?id=${log.project}`}
-              >
-                <a className="db dbi-ns mr3">{log.project}</a>
-              </Link>
-              <span className="db dbi-ns mr3">{log.datetime}</span>
-              <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
-                <a className="db dbi-ns mr3">{log.id}</a>
-              </Link>
-            </div>
-            <div>{log.description}</div>
-          </li>
-  )
+    <li className="mb5 ml4 mr3" key={"log-" + log.id}>
+      <div className="f6 db pb1 gray">
+        <span className="db dbi-ns mr3">{log.code}</span>
+        <Link as={`/wiki/${log.project}`} href={`/wiki?id=${log.project}`}>
+          <a className="db dbi-ns mr3">{log.project}</a>
+        </Link>
+        <span className="db dbi-ns mr3">{log.datetime}</span>
+        <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
+          <a className="db dbi-ns mr3">{log.id}</a>
+        </Link>
+      </div>
+      <div>{log.description}</div>
+    </li>
+  );
 }
 
 export const userLog = gql`
@@ -46,7 +43,7 @@ export const userLog = gql`
 export default graphql(userLog, {
   options: props => ({
     variables: {
-      id: props.id
+      id: props.id,
     },
   }),
 })(Log);
