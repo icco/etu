@@ -27,7 +27,6 @@ function Color(code) {
   let focus = Number.parseInt(pieces[1], 10);
   let introversion = Number.parseInt(pieces[2], 10);
   let idx = Math.floor((focus + introversion) / 2);
-  console.log(pieces, category, idx, colors[category]);
 
   return colors[category][idx];
 }
