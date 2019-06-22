@@ -3,6 +3,7 @@ import gql from "graphql-tag";
 import Link from "next/link";
 
 import Loading from "./Loading";
+import Log from "./Log";
 import ErrorMessage from "./ErrorMessage";
 
 const PER_PAGE = 20;
@@ -16,22 +17,7 @@ function LogList({ data: { loading, error, logs } }) {
     <section className="mw8">
       <ul className="list pl0" key="ul">
         {logs.map(log => (
-          <li className="mb5 ml4 mr3" key={"log-list-" + log.id}>
-            <div className="f6 db pb1 gray">
-              <span className="db dbi-ns mr3">{log.code}</span>
-              <Link
-                as={`/wiki/${log.project}`}
-                href={`/wiki?id=${log.project}`}
-              >
-                <a className="db dbi-ns mr3">{log.project}</a>
-              </Link>
-              <span className="db dbi-ns mr3">{log.datetime}</span>
-              <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
-                <a className="db dbi-ns mr3">{log.id}</a>
-              </Link>
-            </div>
-            <div>{log.description}</div>
-          </li>
+          <Log id={log.id} data={{log}} />
         ))}
       </ul>
     </section>
