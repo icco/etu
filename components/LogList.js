@@ -17,7 +17,7 @@ function LogList({ data: { loading, error, logs } }) {
     <section className="mw8">
       <ul className="list pl0" key="ul">
         {logs.map(log => (
-          <Log id={log.id} data={{ log }} />
+          <Log key={log.id} id={log.id} data={{ log }} />
         ))}
       </ul>
     </section>
