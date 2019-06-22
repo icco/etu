@@ -41,29 +41,30 @@ function Log({ data: { loading, error, log } }) {
   return (
     <li className="mb5 ml4 mr3" key={"log-" + log.id}>
       <div className="f6 db pb1 gray">
-        <span className="db dbi-ns mr3">
-          <svg className="pr1" width="13" height="13">
+        <div className="mb1">
+          <svg className="v-mid h2 w1">
             <rect
               x="0"
               y="0"
-              width="13"
-              height="13"
+              width="100%"
+              height="100%"
               rx="2"
               ry="2"
               fill={Color(log.code)}
             ></rect>
           </svg>
-          {log.code}
-        </span>
+          <span className="mh3 f3 v-mid">{log.code}</span>
+        </div>
         <Link as={`/wiki/${log.project}`} href={`/wiki?id=${log.project}`}>
-          <a className="db dbi-ns mr3">{log.project}</a>
+          <a className="db ml4">{log.project}</a>
         </Link>
-        <span className="db dbi-ns mr3">{log.datetime}</span>
-        <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
-          <a className="db dbi-ns mr3">{log.id}</a>
-        </Link>
+        <span className="db ml4">
+          <Link as={`/log/${log.id}`} href={`/log?id=${log.id}`}>
+            <a className="mr3">{log.datetime}</a>
+          </Link>
+        </span>
       </div>
-      <div>{log.description}</div>
+      <div className="db ml4">{log.description}</div>
     </li>
   );
 }
