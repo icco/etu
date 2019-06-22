@@ -1,6 +1,9 @@
 import { withRouter } from "next/router";
 import React from "react";
 
+import LogList from "../components/LogList";
+import Submit from "../components/Submit";
+
 class Main extends React.Component {
   render() {
     let content = (
