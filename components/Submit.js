@@ -69,7 +69,7 @@ class Submit extends React.Component {
           return (
             <div>
               <form
-                autocomplete="off"
+                autoComplete="off"
                 onSubmit={e => {
                   e.preventDefault();
                   insertLog({
@@ -92,14 +92,14 @@ class Submit extends React.Component {
                     type="text"
                     aria-describedby="code-desc"
                     onChange={this.handleBasicChange}
-                    maxlength="3"
+                    maxLength="3"
                     style={{
                       border: "none",
                       width: "4.5ch",
                       background:
                         "repeating-linear-gradient(90deg, dimgrey 0, dimgrey 1ch, transparent 0, transparent 1.5ch) 0 100%/100% 2px no-repeat",
                       font: "5ch monospace",
-                      "letter-spacing": ".5ch",
+                      letterSpacing: ".5ch",
                     }}
                   />
                   <small id="code-desc" className="f6 black-60 db mb2">

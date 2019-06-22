@@ -1,5 +1,5 @@
 export default ({ message }) => (
-  <aside>
+  <aside key={Math.random()}>
     {message}
     <style jsx>{`
       aside {
