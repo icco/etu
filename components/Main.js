@@ -8,7 +8,7 @@ class Main extends React.Component {
   render() {
     let content = (
       <>
-        <h1 className="f-headline mw7 center">Please sign-in to see logs.</h1>
+        <h1 className="f-headline-ns f-subheadline mw7 center pa4">Please sign-in to see logs.</h1>
       </>
     );
 
