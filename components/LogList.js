@@ -25,13 +25,9 @@ function LogList({ data: { loading, error, logs } }) {
 }
 
 export const userLogs = gql`
-  query {
+  query logs {
     logs {
       id
-      code
-      datetime
-      description
-      project
     }
   }
 `;

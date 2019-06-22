@@ -29,8 +29,8 @@ function Log({ data: { loading, error, log } }) {
 }
 
 export const userLog = gql`
-  query {
-    log {
+  query getLog($id: ID!) {
+    log(id: $id) {
       id
       code
       datetime
