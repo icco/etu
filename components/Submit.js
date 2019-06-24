@@ -113,22 +113,6 @@ class Submit extends React.Component {
                 </div>
 
                 <div className="measure mv2">
-                  <label htmlFor="content" className="f6 b db mb2">
-                    Log Entry
-                  </label>
-                  <input
-                    id="content"
-                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
-                    type="text"
-                    aria-describedby="content-desc"
-                    onChange={this.handleBasicChange}
-                  />
-                  <small id="content-desc" className="f6 black-60 db mb2">
-                    What's your update?
-                  </small>
-                </div>
-
-                <div className="measure mv2">
                   <label htmlFor="project" className="f6 b db mb2">
                     Project
                   </label>
@@ -141,6 +125,22 @@ class Submit extends React.Component {
                   />
                   <small id="project-desc" className="f6 black-60 db mb2">
                     What project is this?
+                  </small>
+                </div>
+
+                <div className="measure mv2">
+                  <label htmlFor="content" className="f6 b db mb2">
+                    Log Entry
+                  </label>
+                  <input
+                    id="content"
+                    className="input-reset ba b--black-20 pa2 mb2 db w-100"
+                    type="text"
+                    aria-describedby="content-desc"
+                    onChange={this.handleBasicChange}
+                  />
+                  <small id="content-desc" className="f6 black-60 db mb2">
+                    What's your update?
                   </small>
                 </div>
 
