@@ -1,10 +1,9 @@
 import { graphql } from "react-apollo";
 import gql from "graphql-tag";
 import Link from "next/link";
+import { ErrorMessage, Loading } from "@icco/react-common";
 
-import Loading from "./Loading";
 import Log from "./Log";
-import ErrorMessage from "./ErrorMessage";
 
 const PER_PAGE = 20;
 
