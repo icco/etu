@@ -1,9 +1,7 @@
 import { graphql } from "react-apollo";
 import gql from "graphql-tag";
 import Link from "next/link";
-
-import Loading from "./Loading";
-import ErrorMessage from "./ErrorMessage";
+import { ErrorMessage, Loading } from "@icco/react-common";
 
 function Color(code) {
   let pieces = code.split("");

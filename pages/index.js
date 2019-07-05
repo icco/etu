@@ -1,7 +1,7 @@
 import Head from "next/head";
+import { Header } from "@icco/react-common";
 
 import App from "../components/App";
-import Header from "../components/Header";
 import Main from "../components/Main";
 import { checkLoggedIn } from "../lib/auth";
 import { initApollo } from "../lib/init-apollo";
