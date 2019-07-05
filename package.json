@@ -34,8 +34,6 @@
     "react": "^16.7",
     "react-apollo": "^2.1",
     "react-dom": "^16.7",
-    "react-loading": "^2.0",
-    "react-p5-wrapper": "^0.0.4",
     "webpack": "^4.4"
   },
   "prettier": {
