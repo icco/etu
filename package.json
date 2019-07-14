@@ -27,6 +27,7 @@
     "helmet": "^3.18.0",
     "isomorphic-unfetch": "^3.0",
     "jwt-decode": "^2.2",
+    "lodash": "^4.17.14",
     "next": "^8.1",
     "pino": "^5.12",
     "pino-stackdriver-serializers": "https://github.com/icco/pino-stackdriver-serializers",
