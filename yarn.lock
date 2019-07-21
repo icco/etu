@@ -712,10 +712,10 @@
     lodash "^4.17.11"
     to-fast-properties "^2.0.0"
 
-"@icco/react-common@^2019.7.5-2":
-  version "2019.7.5-2"
-  resolved "https://registry.yarnpkg.com/@icco/react-common/-/react-common-2019.7.5-2.tgz#011a89bbc66822d7cc3729491075a588dde4a33c"
-  integrity sha512-otjvFj4PqCGDQxDxuxJeF069xr52A1g8svtJGQDqNyWYBmjAHgQ2yN6jWXTIab8RhEaUe6BRcEXAI/HF0GEfzA==
+"@icco/react-common@^2019.7.21-2":
+  version "2019.7.21-2"
+  resolved "https://registry.yarnpkg.com/@icco/react-common/-/react-common-2019.7.21-2.tgz#cb78553ad88565ae665f5c9b572f2e190a3c2421"
+  integrity sha512-o7+Knv/J3+TDnk4a3+c+GQxo1/REBNwicw+M1NXPH+cza4bpruK1/PD5RfGA9oNEsx+avzbeaCwMEeP31RsmKQ==
   dependencies:
     "@svgdotjs/svg.js" "^3.0.1"
     "@svgdotjs/svg.topath.js" "^2.0.3"
