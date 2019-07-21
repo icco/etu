@@ -12,7 +12,7 @@
     "start": "next start -p $PORT"
   },
   "dependencies": {
-    "@icco/react-common": "^2019.7.5-2",
+    "@icco/react-common": "^2019.7.21-2",
     "@zeit/next-css": "^1.0",
     "apollo-cache-inmemory": "^1.4",
     "apollo-client": "^2.4",
