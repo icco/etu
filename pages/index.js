@@ -15,13 +15,13 @@ const Page = ({ auth }) => {
   }
 
   return (
-      <App>
-        <Head>
-          <title>Etu Time Tracking</title>
-        </Head>
-        <Header loggedInUser={this.state.loggedInUser} noLogo />
-        <Main loggedInUser={this.state.loggedInUser} />
-      </App>
+    <App>
+      <Head>
+        <title>Etu Time Tracking</title>
+      </Head>
+      <Header loggedInUser={this.state.loggedInUser} noLogo />
+      <Main loggedInUser={this.state.loggedInUser} />
+    </App>
   );
 };
 
