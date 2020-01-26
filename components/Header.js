@@ -84,9 +84,7 @@ export default function Header({ noLogo }) {
         <div className="flex items-center pa3">
           {noLogo ? elements.smalllogo : ""}
         </div>
-        <div className="flex-grow pa3 flex items-center">
-          {nav}
-        </div>
+        <div className="flex-grow pa3 flex items-center">{nav}</div>
       </nav>
       {noLogo ? "" : elements.largelogo}
     </>

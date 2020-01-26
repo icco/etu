@@ -21,8 +21,8 @@ const Page = ({ auth }) => {
         <title>Etu Time Tracking</title>
       </Head>
       <Header noLogo />
-          <Submit />
-          <LogList />
+      <Submit />
+      <LogList />
     </App>
   );
 };

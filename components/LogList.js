@@ -17,7 +17,7 @@ export const userLogs = gql`
 
 export default function LogList() {
   const { loading, error, data } = useQuery(userLogs, {
-    variables: { 
+    variables: {
       offset: 0,
       perpage: PER_PAGE,
     },
