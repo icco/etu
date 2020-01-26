@@ -4,7 +4,7 @@ import { ErrorMessage, Loading } from "@icco/react-common";
 import { useQuery, useMutation } from "@apollo/react-hooks";
 import { useState } from "react";
 
-import { getToken } from "../lib/auth.js";
+import { useLoggedIn } from "../lib/auth";
 
 const saveLogMutation = gql`
   mutation SaveLog($content: String!, $project: String!, $code: String!) {
@@ -18,6 +18,7 @@ const saveLogMutation = gql`
 `;
 
 export default function Submit() {
+  const { loggedInUser } = useLoggedIn();
   const [content, setContent] = useState("");
   const [project, setProject] = useState("");
   const [code, setCode] = useState("");
