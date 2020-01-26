@@ -22,6 +22,7 @@ export default function Submit() {
   const [content, setContent] = useState("");
   const [project, setProject] = useState("");
   const [code, setCode] = useState("");
+  const [saveLog, loading, error] = useMutation(saveLogMutation);
 
   const handleContentChange = event => {
     const target = event.target;
@@ -41,7 +42,10 @@ export default function Submit() {
     setProject(value);
   };
 
-  const [saveLog, loading, error] = useMutation(saveLogMutation);
+  if (!loggedInUser) {
+    return <ErrorMessage message="User not logged in." />;
+  }
+
   if (loading) {
     return <Loading key={0} />;
   }
