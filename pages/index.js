@@ -10,11 +10,6 @@ import LogList from "../components/LogList";
 import Submit from "../components/Submit";
 
 const Page = ({ auth }) => {
-  const { loggedInUser } = useLoggedIn();
-  if (!loggedInUser || loggedInUser.role !== "admin") {
-    return <NotAuthorized />;
-  }
-
   return (
     <App>
       <Head>

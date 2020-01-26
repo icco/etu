@@ -1,9 +1,8 @@
-import React from "react";
 import gql from "graphql-tag";
-import { Query, Mutation } from "react-apollo";
-import { withRouter } from "next/router";
 import Link from "next/link";
 import { ErrorMessage, Loading } from "@icco/react-common";
+import { useQuery, useMutation } from "@apollo/react-hooks";
+import { useState } from "react";
 
 import { getToken } from "../lib/auth.js";
 
