@@ -1,10 +1,10 @@
 const express = require("express");
 const next = require("next");
 const helmet = require("helmet");
-const { SSLMiddleware } = require("@icco/react-common");
+const { SSLMiddleware, NELMiddleware, ReportToMiddleware } = require("@icco/react-common");
 
 const dev = process.env.NODE_ENV !== "production";
-const port = parseInt(process.env.PORT, 10) || 3000;
+const port = parseInt(process.env.PORT, 10) || 8080;
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
@@ -14,6 +14,8 @@ app.prepare().then(() => {
 
   server.set("trust proxy", true);
   server.use(SSLMiddleware());
+  server.use(NELMiddleware());
+  server.use(ReportToMiddleware("etu"));
 
   server.get("*", (req, res) => {
     return handle(req, res);

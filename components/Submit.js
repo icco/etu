@@ -7,11 +7,6 @@ import { ErrorMessage, Loading } from "@icco/react-common";
 
 import { getToken } from "../lib/auth.js";
 
-const baseUrl = process.env.GRAPHQL_ORIGIN.substring(
-  0,
-  process.env.GRAPHQL_ORIGIN.lastIndexOf("/")
-);
-
 const saveLogMutation = gql`
   mutation SaveLog($content: String!, $project: String!, $code: String!) {
     insertLog(
