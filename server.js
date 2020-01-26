@@ -1,7 +1,11 @@
 const express = require("express");
 const next = require("next");
 const helmet = require("helmet");
-const { SSLMiddleware, NELMiddleware, ReportToMiddleware } = require("@icco/react-common");
+const {
+  SSLMiddleware,
+  NELMiddleware,
+  ReportToMiddleware,
+} = require("@icco/react-common");
 
 const dev = process.env.NODE_ENV !== "production";
 const port = parseInt(process.env.PORT, 10) || 8080;
