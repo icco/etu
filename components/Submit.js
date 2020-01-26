@@ -12,7 +12,7 @@ const baseUrl = process.env.GRAPHQL_ORIGIN.substring(
   process.env.GRAPHQL_ORIGIN.lastIndexOf("/")
 );
 
-const SaveLog = gql`
+const saveLogMutation = gql`
   mutation SaveLog($content: String!, $project: String!, $code: String!) {
     insertLog(
       input: { code: $code, description: $content, project: $project }
@@ -23,40 +23,30 @@ const SaveLog = gql`
   }
 `;
 
-class Submit extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      content: "",
-      project: "",
-      code: "",
-    };
-  }
+export default function Submit() {
+  const [content, setContent] = useState("");
+  const [project, setProject] = useState("");
+  const [code, setCode] = useState("");
 
-  handleBasicChange = event => {
+  const handleContentChange = event => {
     const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    let name = target.name;
-
-    if (name == "") {
-      name = target.id;
-    }
-
-    this.setState({
-      [name]: value,
-    });
+    const value = target.value;
+    setContent(value);
   };
 
-  handleEditorChange = value => {
-    this.setState({
-      content: value(),
-    });
+  const handleCodeChange = event => {
+    const target = event.target;
+    const value = target.value;
+    setCode(value);
   };
 
-  render() {
-    return (
-      <Mutation mutation={SaveLog}>
-        {(insertLog, { loading, error, data }) => {
+  const handleProjectChange = event => {
+    const target = event.target;
+    const value = target.value;
+    setProject(value);
+  };
+
+  const [saveLog, loading, error] = useMutation(saveLogMutation);
           if (loading) {
             return <Loading key={0} />;
           }
@@ -73,9 +63,9 @@ class Submit extends React.Component {
                   e.preventDefault();
                   insertLog({
                     variables: {
-                      content: this.state.content,
-                      project: this.state.project,
-                      code: this.state.code,
+                      content,
+                      project,
+                      code,
                     },
                   });
                 }}
@@ -90,7 +80,7 @@ class Submit extends React.Component {
                     className="input-reset db mb2"
                     type="text"
                     aria-describedby="code-desc"
-                    onChange={this.handleBasicChange}
+                    onChange={handleCodeChange}
                     maxLength="3"
                     style={{
                       border: "none",
@@ -119,7 +109,7 @@ class Submit extends React.Component {
                     id="project"
                     className="input-reset ba b--black-20 pa2 mb2 db w-100"
                     type="text"
-                    onChange={this.handleBasicChange}
+                    onChange={handleProjectChange}
                     aria-describedby="project-desc"
                   />
                   <small id="project-desc" className="f6 black-60 db mb2">
@@ -136,7 +126,7 @@ class Submit extends React.Component {
                     className="input-reset ba b--black-20 pa2 mb2 db w-100"
                     type="text"
                     aria-describedby="content-desc"
-                    onChange={this.handleBasicChange}
+                    onChange={handleContentChange}
                   />
                   <small id="content-desc" className="f6 black-60 db mb2">
                     What's your update?
@@ -151,10 +141,4 @@ class Submit extends React.Component {
               </form>
             </div>
           );
-        }}
-      </Mutation>
-    );
   }
-}
-
-export default withRouter(Submit);
