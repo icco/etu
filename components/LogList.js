@@ -2,8 +2,9 @@ import gql from "graphql-tag";
 import Link from "next/link";
 import { ErrorMessage, Loading } from "@icco/react-common";
 import { useQuery } from "@apollo/react-hooks";
+import { useLocalStorage } from "react-use";
 
-import { useLoggedIn } from "../lib/auth";
+import { useLoggedIn, setToken } from "../lib/auth";
 import Log from "./Log";
 
 const PER_PAGE = 20;
@@ -17,13 +18,15 @@ export const userLogs = gql`
 `;
 
 export default function LogList() {
-  const { loggedInUser } = useLoggedIn();
+  const { loggedInUser, accessToken } = useLoggedIn();
   const { loading, error, data } = useQuery(userLogs, {
     variables: {
       offset: 0,
       perpage: PER_PAGE,
     },
+    fetchPolicy: "no-cache",
   });
+  setToken(accessToken)
 
   if (!loggedInUser) {
     return <ErrorMessage message="User not logged in." />;
