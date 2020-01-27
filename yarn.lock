@@ -1245,10 +1245,10 @@
   dependencies:
     tslib "^1.9.3"
 
-"@xobotyi/scrollbar-width@1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@xobotyi/scrollbar-width/-/scrollbar-width-1.5.0.tgz#488210bff634548040dc22a72f62722a85b134e1"
-  integrity sha512-BK+HR1D00F2xh7n4+5en8/dMkG13uvIXLmEbsjtc1702b7+VwXkvlBDKoRPJMbkRN5hD7VqWa3nS9fNT8JG3CA==
+"@xobotyi/scrollbar-width@1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@xobotyi/scrollbar-width/-/scrollbar-width-1.6.0.tgz#efd0f9d94c2a483faee3d162c9727e4fed40d55e"
+  integrity sha512-i3rX8RomNGFiAD5yR9JplU25/vJcibWmBIvD1LPX7aXuiko9i3oiKPz4nUVTbnrCDlTt78xHxZxWYy0wDLi3nQ==
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -3625,10 +3625,10 @@ graphql-tag@^2.10:
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.10.1.tgz#10aa41f1cd8fae5373eaf11f1f67260a3cad5e02"
   integrity sha512-jApXqWBzNXQ8jYa/HLkZJaVw9jgwNqZkywa2zfFn16Iv1Zb7ELNHkJaXHR7Quvd5SIGsy6Ny7SUKATgnu05uEg==
 
-graphql@^14.0:
-  version "14.5.8"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.5.8.tgz#504f3d3114cb9a0a3f359bbbcf38d9e5bf6a6b3c"
-  integrity sha512-MMwmi0zlVLQKLdGiMfWkgQD7dY/TUKt4L+zgJ/aR0Howebod3aNgP5JkgvAULiR2HPVZaP2VEElqtdidHweLkg==
+graphql@^14.6.0:
+  version "14.6.0"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.6.0.tgz#57822297111e874ea12f5cd4419616930cd83e49"
+  integrity sha512-VKzfvHEKybTKjQVpTFrA5yUq2S9ihcZvfJAtsDBBCuV6wauPu1xl/f9ehgVf0FcEJJs4vz6ysb/ZMkGigQZseg==
   dependencies:
     iterall "^1.2.2"
 
@@ -6117,13 +6117,13 @@ react-loading@^2.0:
   resolved "https://registry.yarnpkg.com/react-loading/-/react-loading-2.0.3.tgz#e8138fb0c3e4674e481b320802ac7048ae14ffb9"
   integrity sha512-Vdqy79zq+bpeWJqC+xjltUjuGApyoItPgL0vgVfcJHhqwU7bAMKzysfGW/ADu6i0z0JiOCRJjo+IkFNkRNbA3A==
 
-react-use@^13.22.0:
-  version "13.22.0"
-  resolved "https://registry.yarnpkg.com/react-use/-/react-use-13.22.0.tgz#92e5c29648cd7a86ac6bb208e4c79393e0b21153"
-  integrity sha512-6VpS/0x2fmiF60ZpLdXimy6wJZMgDg4O/QlyP6E6prOXKSrQfM7E9tMmBkiwu4oI1WjrrVp0N3W2bTbpRY9bbA==
+react-use@^13.22.1:
+  version "13.22.1"
+  resolved "https://registry.yarnpkg.com/react-use/-/react-use-13.22.1.tgz#cc0a5200255f7cdc14c1435ed8fd1c37b1e27b64"
+  integrity sha512-n4DHJfbkyT3gsaJVHhtQ3mPvRBis7q18yQtuqQTtnYPKXAYQ0JGCd++PvWlSxnvG7QbEjNahcA50jLwCnWWOmQ==
   dependencies:
     "@types/js-cookie" "2.2.4"
-    "@xobotyi/scrollbar-width" "1.5.0"
+    "@xobotyi/scrollbar-width" "1.6.0"
     copy-to-clipboard "^3.2.0"
     fast-shallow-equal "^1.0.0"
     js-cookie "^2.2.1"
