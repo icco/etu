@@ -1,5 +1,4 @@
 import gql from "graphql-tag";
-import Link from "next/link";
 import { ErrorMessage, Loading } from "@icco/react-common";
 import { useQuery } from "@apollo/react-hooks";
 
@@ -35,6 +34,8 @@ export default function LogList({ loggedInUser }) {
   if (!loggedInUser) {
     return <ErrorMessage message="User not logged in." />;
   }
+
+  const { logs } = data;
 
   return (
     <section className="mw8">

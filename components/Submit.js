@@ -1,10 +1,7 @@
 import gql from "graphql-tag";
-import Link from "next/link";
 import { ErrorMessage, Loading } from "@icco/react-common";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+import { useMutation } from "@apollo/react-hooks";
 import { useState } from "react";
-
-import { useLoggedIn } from "../lib/auth";
 
 const saveLogMutation = gql`
   mutation SaveLog($content: String!, $project: String!, $code: String!) {
@@ -59,7 +56,7 @@ export default function Submit({ loggedInUser }) {
         autoComplete="off"
         onSubmit={e => {
           e.preventDefault();
-          insertLog({
+          saveLog({
             variables: {
               content,
               project,
@@ -127,7 +124,7 @@ export default function Submit({ loggedInUser }) {
             onChange={handleContentChange}
           />
           <small id="content-desc" className="f6 black-60 db mb2">
-            What's your update?
+            What is your update?
           </small>
         </div>
 
