@@ -33,13 +33,11 @@
     "graphql-tag": "^2.10",
     "helmet": "^3.18.0",
     "isomorphic-unfetch": "^3.0",
-    "jwt-decode": "^2.2",
     "next": "^9.2.1",
     "pino": "^5.12",
     "pino-stackdriver-serializers": "https://github.com/icco/pino-stackdriver-serializers",
     "prop-types": "^15.6",
     "react": "^16.12.0",
-    "react-apollo": "^2.1",
     "react-dom": "^16.12.0",
     "react-use": "^13.22.0",
     "use-auth0-hooks": "^0.7.0"
