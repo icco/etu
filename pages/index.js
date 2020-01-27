@@ -5,10 +5,9 @@ import { withApollo } from "../lib/apollo";
 import { AuthOptions } from "../lib/auth";
 
 import App from "../components/App";
+import Main from "../components/Main";
 import Header from "../components/Header";
-import LogList from "../components/LogList";
 import NotAuthorized from "../components/NotAuthorized";
-import Submit from "../components/Submit";
 
 const Page = ({ auth }) => {
   return (
@@ -19,8 +18,7 @@ const Page = ({ auth }) => {
 
       <Header noLogo />
 
-      <Submit />
-      <LogList />
+      <Main />
     </App>
   );
 };

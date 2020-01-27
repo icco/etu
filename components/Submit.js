@@ -17,8 +17,7 @@ const saveLogMutation = gql`
   }
 `;
 
-export default function Submit() {
-  const { loggedInUser } = useLoggedIn();
+export default function Submit({ loggedInUser }) {
   const [content, setContent] = useState("");
   const [project, setProject] = useState("");
   const [code, setCode] = useState("");
