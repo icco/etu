@@ -5,7 +5,6 @@ import { useLoggedIn } from "../lib/auth";
 import Submit from "./Submit";
 import LogList from "./LogList";
 
-
 export default function Main() {
   const { loggedInUser, loading, error } = useLoggedIn();
 
@@ -23,8 +22,8 @@ export default function Main() {
 
   return (
     <>
-    <Submit loggedInUser={loggedInUser} />
-    <LogList loggedInUser={loggedInUser} />
+      <Submit loggedInUser={loggedInUser} />
+      <LogList loggedInUser={loggedInUser} />
     </>
-  )
+  );
 }
