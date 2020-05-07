@@ -5,7 +5,6 @@
   "repository": "git@github.com:icco/etu.git",
   "author": "Nat Welch <nat@natwelch.com>",
   "license": "MIT",
-  "private": false,
   "scripts": {
     "build": "next build",
     "start": "node index.js",
@@ -44,9 +43,7 @@
     "react-use": "^14.0.0",
     "use-auth0-hooks": "^0.7.0"
   },
-  "prettier": {
-    "trailingComma": "es5"
-  },
+  "private": true,
   "devDependencies": {
     "depcheck": "^0.9.1",
     "eslint": "^6.8.0",
@@ -55,5 +52,9 @@
     "eslint-plugin-react-hooks": "^4.0.0",
     "prettier": "^2.0.0",
     "webpack": "^4.3.0"
-  }
+  },
+  "prettier": {
+    "trailingComma": "es5"
+  },
+  "snyk": true
 }
