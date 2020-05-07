@@ -24,7 +24,7 @@ const Page = ({ auth }) => {
   }
 
   if (!loggedInUser) {
-    return <ErrorMessage message="User not logged in." />;
+    return <NotAuthorized />;
   }
 
   return (
