@@ -1,6 +1,6 @@
 import App from "../components/App";
 
-const Healthz = props => (
+const Healthz = (props) => (
   <App>
     <div>OK.</div>
   </App>

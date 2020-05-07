@@ -20,19 +20,19 @@ export default function Submit({ loggedInUser }) {
   const [code, setCode] = useState("");
   const [saveLog, loading, error] = useMutation(saveLogMutation);
 
-  const handleContentChange = event => {
+  const handleContentChange = (event) => {
     const target = event.target;
     const value = target.value;
     setContent(value);
   };
 
-  const handleCodeChange = event => {
+  const handleCodeChange = (event) => {
     const target = event.target;
     const value = target.value;
     setCode(value);
   };
 
-  const handleProjectChange = event => {
+  const handleProjectChange = (event) => {
     const target = event.target;
     const value = target.value;
     setProject(value);
@@ -54,7 +54,7 @@ export default function Submit({ loggedInUser }) {
     <div>
       <form
         autoComplete="off"
-        onSubmit={e => {
+        onSubmit={(e) => {
           e.preventDefault();
           saveLog({
             variables: {

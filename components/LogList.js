@@ -40,7 +40,7 @@ export default function LogList({ loggedInUser }) {
   return (
     <section className="mw8">
       <ul className="list pl0" key="ul">
-        {logs.map(log => (
+        {logs.map((log) => (
           <Log key={log.id} id={log.id} />
         ))}
       </ul>

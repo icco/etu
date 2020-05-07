@@ -9,7 +9,7 @@ import "../style.css";
 /**
  * Where to send the user after they have signed in.
  */
-const onRedirectCallback = appState => {
+const onRedirectCallback = (appState) => {
   if (appState && appState.returnTo) {
     Router.push({
       pathname: appState.returnTo.pathname,
@@ -31,7 +31,7 @@ const onAccessTokenError = (err, options) => {
  * When signing in fails for some reason, we want to show it here.
  * @param {Error} err
  */
-const onLoginError = err => {
+const onLoginError = (err) => {
   Router.push({
     pathname: "/oops",
     query: {
