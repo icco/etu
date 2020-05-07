@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 import Head from "next/head";
 import { withAuth, withLoginRequired } from "use-auth0-hooks";
 import { ErrorMessage, Loading } from "@icco/react-common";
