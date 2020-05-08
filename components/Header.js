@@ -49,7 +49,6 @@ export default function Header({ noLogo }) {
         </a>
       </Link>
     ),
-    adminlink: <></>,
   };
 
   let nav = <>{elements.signin}</>;
@@ -65,14 +64,8 @@ export default function Header({ noLogo }) {
   }
 
   if (loggedInUser) {
-    elements.adminlink = (
-      <Link key="/admin" href="/admin">
-        <a className="f6 link dib dim mr3 black mr4-ns">{loggedInUser.role}</a>
-      </Link>
-    );
     nav = (
       <>
-        {elements.adminlink}
         {elements.signout}
       </>
     );

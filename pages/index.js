@@ -1,7 +1,5 @@
-import React from "react";
 import Head from "next/head";
 import { withAuth, withLoginRequired } from "use-auth0-hooks";
-import { ErrorMessage, Loading } from "@icco/react-common";
 
 import { withApollo } from "../lib/apollo";
 import { useLoggedIn } from "../lib/auth";
@@ -13,16 +11,8 @@ import Submit from "../components/Submit";
 import LogList from "../components/LogList";
 
 const Page = ({ auth }) => {
-  const { loggedInUser, loading, error } = useLoggedIn();
-
-  if (error) {
-    return <ErrorMessage message="Error loading User's Logs." />;
-  }
-
-  if (loading) {
-    return <Loading key={0} />;
-  }
-
+  const { loggedInUser } = useLoggedIn();
+  console.log(loggedInUser)
   if (!loggedInUser) {
     return <NotAuthorized />;
   }
