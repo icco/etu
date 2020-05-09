@@ -11,11 +11,6 @@ import Submit from "../components/Submit";
 import LogList from "../components/LogList";
 
 const Page = () => {
-  const { loggedInUser } = useLoggedIn();
-  if (!loggedInUser || loggedInUser.role !== "admin") {
-    return <NotAuthorized />;
-  }
-
   return (
     <App>
       <Head>
@@ -24,10 +19,9 @@ const Page = () => {
 
       <Header noLogo />
 
-      <Submit />
       <LogList />
     </App>
   );
 };
 
-export default withLoginRequired(withAuth(withApollo(Page)));
+export default withApollo(Page);
