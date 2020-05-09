@@ -1,4 +1,5 @@
-import React from "react";
-import Router from "next/router";
+function App({ children }) {
+  return <main>{children}</main>;
+}
 
-export default ({ children }) => <main>{children}</main>;
+export default App;

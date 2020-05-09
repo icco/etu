@@ -1,7 +1,7 @@
-import { graphql } from "react-apollo";
 import gql from "graphql-tag";
 import Link from "next/link";
 import { ErrorMessage, Loading } from "@icco/react-common";
+import { useQuery } from "@apollo/react-hooks";
 
 function Color(code) {
   let pieces = code.split("");
@@ -29,11 +29,29 @@ function Color(code) {
   return colors[category][idx];
 }
 
-function Log({ data: { loading, error, log } }) {
+export const userLog = gql`
+  query getLog($id: ID!) {
+    log(id: $id) {
+      id
+      code
+      datetime
+      description
+      project
+    }
+  }
+`;
+
+export default function Log({ id }) {
+  const { loading, error, data } = useQuery(userLog, {
+    variables: { id },
+  });
+
   if (error) return <ErrorMessage message="Error loading log entry." />;
   if (loading) {
     return <Loading key={0} />;
   }
+
+  const { log } = data;
 
   return (
     <li className="mb5 ml4 mr3" key={"log-" + log.id}>
@@ -65,26 +83,6 @@ function Log({ data: { loading, error, log } }) {
     </li>
   );
 }
-
-export const userLog = gql`
-  query getLog($id: ID!) {
-    log(id: $id) {
-      id
-      code
-      datetime
-      description
-      project
-    }
-  }
-`;
-
-export default graphql(userLog, {
-  options: props => ({
-    variables: {
-      id: props.id,
-    },
-  }),
-})(Log);
 
 // https://palx.jxnblk.com/1a616c.json
 const colors = {
