@@ -14,7 +14,7 @@ export const userLogs = gql`
   }
 `;
 
-export default function LogList({ loggedInUser }) {
+export default function LogList() {
   const { loading, error, data } = useQuery(userLogs, {
     variables: {
       offset: 0,
@@ -29,10 +29,6 @@ export default function LogList({ loggedInUser }) {
 
   if (loading) {
     return <Loading key={0} />;
-  }
-
-  if (!loggedInUser) {
-    return <ErrorMessage message="User not logged in." />;
   }
 
   const { logs } = data;

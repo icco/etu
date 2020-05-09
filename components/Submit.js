@@ -14,7 +14,7 @@ const saveLogMutation = gql`
   }
 `;
 
-export default function Submit({ loggedInUser }) {
+export default function Submit() {
   const [content, setContent] = useState("");
   const [project, setProject] = useState("");
   const [code, setCode] = useState("");
@@ -37,10 +37,6 @@ export default function Submit({ loggedInUser }) {
     const value = target.value;
     setProject(value);
   };
-
-  if (!loggedInUser) {
-    return <ErrorMessage message="User not logged in." />;
-  }
 
   if (loading) {
     return <Loading key={0} />;

@@ -10,10 +10,9 @@ import NotAuthorized from "../components/NotAuthorized";
 import Submit from "../components/Submit";
 import LogList from "../components/LogList";
 
-const Page = ({ auth }) => {
+const Page = () => {
   const { loggedInUser } = useLoggedIn();
-  console.log(loggedInUser)
-  if (!loggedInUser) {
+  if (!loggedInUser || loggedInUser.role !== "admin") {
     return <NotAuthorized />;
   }
 
@@ -25,8 +24,8 @@ const Page = ({ auth }) => {
 
       <Header noLogo />
 
-      <Submit loggedInUser={loggedInUser} />
-      <LogList loggedInUser={loggedInUser} />
+      <Submit />
+      <LogList />
     </App>
   );
 };
