@@ -64,11 +64,7 @@ export default function Header({ noLogo }) {
   }
 
   if (loggedInUser) {
-    nav = (
-      <>
-        {elements.signout}
-      </>
-    );
+    nav = <>{elements.signout}</>;
   }
 
   return (

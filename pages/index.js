@@ -19,8 +19,7 @@ const Page = () => {
 
       <Header noLogo />
 
-    <p>Etu is an app for tracking the time I work on projects.</p>
-
+      <p>Etu is an app for tracking the time I work on projects.</p>
     </App>
   );
 };
