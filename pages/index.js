@@ -19,7 +19,8 @@ const Page = () => {
 
       <Header noLogo />
 
-      <LogList />
+    <p>Etu is an app for tracking the time I work on projects.</p>
+
     </App>
   );
 };
