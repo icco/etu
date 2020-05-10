@@ -16,6 +16,11 @@ export default function Header({ noLogo }) {
   }
 
   const elements = {
+    about: (
+      <Link key="/about" href="/about" prefetch={false}>
+        <a className="f6 link dib dim mr3 black mr4-ns">about</a>
+      </Link>
+    ),
     signin: (
       <a
         className="f6 link dib dim mr3 black mr4-ns pointer"
@@ -49,6 +54,7 @@ export default function Header({ noLogo }) {
         </a>
       </Link>
     ),
+    adminlink: <></>,
   };
 
   let nav = <>{elements.signin}</>;
@@ -64,7 +70,17 @@ export default function Header({ noLogo }) {
   }
 
   if (loggedInUser) {
-    nav = <>{elements.signout}</>;
+    elements.adminlink = (
+      <Link key="/admin" href="/admin">
+        <a className="f6 link dib dim mr3 black mr4-ns">{loggedInUser.role}</a>
+      </Link>
+    );
+    nav = (
+      <>
+        {elements.adminlink}
+        {elements.signout}
+      </>
+    );
   }
 
   return (
@@ -73,7 +89,10 @@ export default function Header({ noLogo }) {
         <div className="flex items-center pa3">
           {noLogo ? elements.smalllogo : ""}
         </div>
-        <div className="flex-grow pa3 flex items-center">{nav}</div>
+        <div className="flex-grow pa3 flex items-center">
+          {elements.about}
+          {nav}
+        </div>
       </nav>
       {noLogo ? "" : elements.largelogo}
     </>
