@@ -58,7 +58,7 @@ function Etu({ Component, pageProps }) {
   return (
     <Auth0Provider
       domain={process.env.AUTH0_DOMAIN}
-      audience={"https://natwelch.com"}
+      audience={process.env.AUTH0_AUDIENCE}
       clientId={process.env.AUTH0_CLIENT_ID}
       redirectUri={process.env.DOMAIN}
       onLoginError={onLoginError}
