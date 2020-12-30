@@ -8,7 +8,12 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
+	port := "8080"
+	if fromEnv := os.Getenv("PORT"); fromEnv != "" {
+		port = fromEnv
+	}
+	log.Printf("Starting up on http://localhost:%s", port)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		fmt.Fprintf(w, "Etu is a work in progress. github.com/icco/etu")
