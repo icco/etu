@@ -135,7 +135,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 		slug = fmt.Sprintf("%s/%s", hexdate.Now().String, neralie.Now().String())
 	}
 
-	content, err := CaptureInputFromEditor()
+	content, err := CaptureInputFromEditor([]byte(fmt.Sprintf("Location: %+v", loc.Coordinate)))
 	if err != nil {
 		return fmt.Errorf("get input: %w", err)
 	}
