@@ -131,7 +131,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 
 	slug := cfg.slug
 	if slug == "" {
-		slug = fmt.Sprintf("%s/%s", hexdate.Now().String, neralie.Now().String())
+		slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
 	}
 
 	tmpl := fmt.Sprintf("\n\n\nLocation: %+v\n", loc.Coordinate)
