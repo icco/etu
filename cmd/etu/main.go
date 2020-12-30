@@ -141,7 +141,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 	}
 
 	gql := `
-mutation SavePage($content: String!, $slug: String!) {
+mutation SavePage($content: String!, $slug: ID!) {
 	upsertPage(input: {
     content: $content,
     slug: $slug,
