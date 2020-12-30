@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/icco/etu"
@@ -63,21 +62,6 @@ func main() {
 	}
 }
 
-type AddHeaderTransport struct {
-	T   http.RoundTripper
-	Key string
-}
-
-func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if adt.Key == "" {
-		return nil, fmt.Errorf("no key provided")
-	}
-
-	req.Header.Add("X-API-AUTH", adt.Key)
-
-	return adt.T.RoundTrip(req)
-}
-
 func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	url := ""
 	switch cfg.Env {
@@ -109,5 +93,5 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return fmt.Errorf("get input: %w", err)
 	}
 
-	return etu.EditPage(ctx, client, cfg.slug, string(content))
+	return etu.EditPage(c.Context, client, cfg.slug, string(content))
 }

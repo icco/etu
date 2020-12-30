@@ -10,6 +10,21 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+type AddHeaderTransport struct {
+	T   http.RoundTripper
+	Key string
+}
+
+func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if adt.Key == "" {
+		return nil, fmt.Errorf("no key provided")
+	}
+
+	req.Header.Add("X-API-AUTH", adt.Key)
+
+	return adt.T.RoundTrip(req)
+}
+
 func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Client, error) {
 	httpclient := &http.Client{
 		Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: apikey},
