@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/icco/etu"
 	"github.com/icco/etu/cmd/etu/location"
-	"github.com/icco/graphql/time/hexdate"
-	"github.com/icco/graphql/time/neralie"
 	"github.com/machinebox/graphql"
 	"github.com/urfave/cli/v2"
 )
@@ -90,32 +89,7 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 		return nil, fmt.Errorf("unknown environment %q", cfg.Env)
 	}
 
-	httpclient := &http.Client{Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: cfg.APIKey}}
-	client := graphql.NewClient(url, graphql.WithHTTPClient(httpclient))
-
-	gql := `
-  query {
-    whoami {
-			id
-    }
-  }`
-	req := graphql.NewRequest(gql)
-
-	var response struct {
-		WhoAmI struct {
-			ID string
-		}
-	}
-
-	if err := client.Run(ctx, req, &response); err != nil {
-		return nil, err
-	}
-
-	if response.WhoAmI.ID == "" {
-		return nil, fmt.Errorf("invalid user")
-	}
-
-	return client, nil
+	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
 }
 
 func (cfg *Config) Add(c *cli.Context) error {
@@ -129,30 +103,11 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return err
 	}
 
-	slug := cfg.slug
-	if slug == "" {
-		slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
-	}
-
 	tmpl := fmt.Sprintf("\n\n\nLocation: %+v\n", loc.Coordinate)
 	content, err := CaptureInputFromEditor([]byte(tmpl))
 	if err != nil {
 		return fmt.Errorf("get input: %w", err)
 	}
 
-	gql := `
-mutation SavePage($content: String!, $slug: ID!) {
-	upsertPage(input: {
-    content: $content,
-    slug: $slug,
-	}) {
-    modified
-	}
-}`
-
-	req := graphql.NewRequest(gql)
-	req.Var("content", string(content))
-	req.Var("slug", slug)
-
-	return client.Run(c.Context, req, nil)
+	return etu.EditPage(ctx, client, cfg.slug, string(content))
 }
