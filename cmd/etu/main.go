@@ -151,7 +151,7 @@ mutation SavePage($content: String!, $slug: ID!) {
 }`
 
 	req := graphql.NewRequest(gql)
-	req.Var("content", content)
+	req.Var("content", string(content))
 	req.Var("slug", slug)
 
 	return client.Run(c.Context, req, nil)
