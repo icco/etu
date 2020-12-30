@@ -123,7 +123,6 @@ func (cfg *Config) Add(c *cli.Context) error {
 	if err != nil {
 		log.Printf("could not get location: %+v", err)
 	}
-	log.Printf("currently at %+v", loc)
 
 	client, err := cfg.Client(c.Context)
 	if err != nil {
@@ -135,7 +134,8 @@ func (cfg *Config) Add(c *cli.Context) error {
 		slug = fmt.Sprintf("%s/%s", hexdate.Now().String, neralie.Now().String())
 	}
 
-	content, err := CaptureInputFromEditor([]byte(fmt.Sprintf("Location: %+v", loc.Coordinate)))
+	tmpl := fmt.Sprintf("\n\n\nLocation: %+v\n", loc.Coordinate)
+	content, err := CaptureInputFromEditor([]byte(tmpl))
 	if err != nil {
 		return fmt.Errorf("get input: %w", err)
 	}
