@@ -6,23 +6,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/icco/etu/cmd/etu/location"
+	"github.com/icco/graphql/time/hexdate"
+	"github.com/icco/graphql/time/neralie"
 	"github.com/machinebox/graphql"
-	"github.com/olekukonko/tablewriter"
-	"github.com/peterh/liner"
 	"github.com/urfave/cli/v2"
 )
 
-var (
-	history_fn = filepath.Join(os.TempDir(), ".etu.history")
-)
-
 type Config struct {
-	Env string
-	Key string
+	APIKey string
+	Env    string
+	slug   string
 }
 
 // Etu is the personifcation of time according to the Lakota.
@@ -30,19 +25,21 @@ func main() {
 	cfg := &Config{}
 	app := &cli.App{
 		Name:  "etu",
-		Usage: "log a project to etu.natwelch.com",
+		Usage: "Journaling from the command line",
 		Commands: []*cli.Command{
-			{
-				Name:    "print",
-				Aliases: []string{"p"},
-				Usage:   "print recent entries",
-				Action:  cfg.Print,
-			},
 			{
 				Name:    "add",
 				Aliases: []string{"a"},
 				Usage:   "add a log",
 				Action:  cfg.Add,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "slug",
+						Aliases:     []string{"s"},
+						Usage:       "slug to save page as",
+						Destination: &cfg.slug,
+					},
+				},
 			},
 		},
 		Flags: []cli.Flag{
@@ -50,7 +47,7 @@ func main() {
 				Name:        "api_key",
 				Usage:       "authorize your user",
 				EnvVars:     []string{"GQL_TOKEN"},
-				Destination: &cfg.Key,
+				Destination: &cfg.APIKey,
 			},
 			&cli.StringFlag{
 				Name:        "env",
@@ -93,7 +90,7 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 		return nil, fmt.Errorf("unknown environment %q", cfg.Env)
 	}
 
-	httpclient := &http.Client{Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: cfg.Key}}
+	httpclient := &http.Client{Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: cfg.APIKey}}
 	client := graphql.NewClient(url, graphql.WithHTTPClient(httpclient))
 
 	gql := `
@@ -122,140 +119,40 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 }
 
 func (cfg *Config) Add(c *cli.Context) error {
-	line := liner.NewLiner()
-	defer line.Close()
-	line.SetCtrlCAborts(true)
-
-	if f, err := os.Open(history_fn); err == nil {
-		line.ReadHistory(f)
-		f.Close()
-	}
-
-	project, err := line.Prompt("What Project? ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Categories:")
-	fmt.Println(" 1. Educating ")
-	fmt.Println(" 2. Building")
-	fmt.Println(" 3. Living")
-
-	typeStr, err := line.Prompt("Category [1-3]? ")
-	if err != nil {
-		return err
-	}
-
-	focusStr, err := line.Prompt("Focus [1-9]? ")
-	if err != nil {
-		return err
-	}
-
-	introversionStr, err := line.Prompt("Introversion [1-9]? ")
-	if err != nil {
-		return err
-	}
-	code := fmt.Sprintf("%s%s%s", typeStr, focusStr, introversionStr)
-
-	line.SetMultiLineMode(true)
-	comment, err := line.Prompt("Comment? ")
-	if err != nil {
-		return err
-	}
-
 	loc, err := location.CurrentLocation()
 	if err != nil {
 		log.Printf("could not get location: %+v", err)
 	}
-
-	if f, err := os.Create(history_fn); err != nil {
-		log.Print("Error writing history file: ", err)
-	} else {
-		line.WriteHistory(f)
-		f.Close()
-	}
+	log.Printf("currently at %+v", loc)
 
 	client, err := cfg.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
+	slug := cfg.slug
+	if slug == "" {
+		slug = fmt.Sprintf("%s/%s", hexdate.Now().String, neralie.Now().String())
+	}
+
+	content, err := CaptureInputFromEditor()
+	if err != nil {
+		return fmt.Errorf("get input: %w", err)
+	}
+
 	gql := `
-mutation SaveLog($content: String!, $project: String!, $code: String!, $lat: Float!, $long: Float!) {
-	insertLog(input: {
-		code: $code,
-		description: $content,
-		project: $project,
-		location: {
-			lat: $lat,
-			long: $long,
-		}
+mutation SavePage($content: String!, $slug: String!) {
+	upsertPage(input: {
+    content: $content,
+    slug: $slug,
 	}) {
-		id
-		datetime
+    modified
 	}
 }`
 
 	req := graphql.NewRequest(gql)
-	req.Var("content", comment)
-	req.Var("code", code)
-	req.Var("project", project)
-	req.Var("lat", loc.Coordinate.Latitude)
-	req.Var("long", loc.Coordinate.Longitude)
+	req.Var("content", content)
+	req.Var("slug", slug)
 
 	return client.Run(c.Context, req, nil)
-}
-
-func (cfg *Config) Print(c *cli.Context) error {
-	client, err := cfg.Client(c.Context)
-	if err != nil {
-		return err
-	}
-
-	gql := `
-query logs {
-	logs {
-		datetime
-		description
-		code
-		project
-	}
-}`
-	req := graphql.NewRequest(gql)
-
-	var response struct {
-		Logs []struct {
-			Datetime    time.Time
-			Code        string
-			Description string
-			Project     string
-		}
-	}
-	err = client.Run(c.Context, req, &response)
-	if err != nil {
-		return err
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAutoFormatHeaders(true)
-	table.SetAutoWrapText(false)
-	table.SetBorder(false)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderLine(true)
-	table.SetNoWhiteSpace(true)
-	table.SetRowLine(true)
-	table.SetRowSeparator(" ")
-	table.SetTablePadding("\t")
-
-	table.SetHeader([]string{"Code", "Project", "When", "Description"})
-	for _, r := range response.Logs {
-		table.Append([]string{r.Code, r.Project, r.Datetime.Format("2006-01-02 15:04"), r.Description})
-	}
-
-	table.Render()
-
-	return nil
 }
