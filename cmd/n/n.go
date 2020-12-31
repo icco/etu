@@ -84,7 +84,7 @@ func (cfg *Config) Sync(c *cli.Context) error {
 		return err
 	}
 
-	if err := os.MkdirAll(cfg.Path(""), os.ModeDir); err != nil {
+	if err := os.MkdirAll(cfg.Path(""), 0777); err != nil {
 		return err
 	}
 
