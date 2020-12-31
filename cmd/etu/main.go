@@ -17,6 +17,7 @@ type Config struct {
 	APIKey string
 	Env    string
 	slug   string
+	dir    string
 }
 
 func main() {
@@ -36,6 +37,20 @@ func main() {
 						Aliases:     []string{"s"},
 						Usage:       "slug to save page as",
 						Destination: &cfg.slug,
+					},
+				},
+			},
+			{
+				Name:    "sync",
+				Aliases: []string{"s"},
+				Usage:   "Sync wiki to disk",
+				Action:  cfg.Sync,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "dir",
+						Usage:       "set where to store the wiki",
+						Value:       "/tmp/wiki",
+						Destination: &cfg.dir,
 					},
 				},
 			},
@@ -94,4 +109,35 @@ func (cfg *Config) Add(c *cli.Context) error {
 	}
 
 	return etu.EditPage(c.Context, client, cfg.slug, string(content))
+}
+
+func (cfg *Config) Sync(c *cli.Context) error {
+	client, err := cfg.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(cfg.Path(""), 0777); err != nil {
+		return err
+	}
+
+	pages, err := etu.GetPages(c.Context, client)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range pages {
+		path := cfg.Path(p.Slug)
+
+		f, err := os.Create(path)
+		if err != nil {
+			return fmt.Errorf("create file:a%w ", err)
+		}
+
+		if err := tmpl.Execute(f, p); err != nil {
+			return fmt.Errorf("could not write %q: %w", path, err)
+		}
+	}
+
+	return nil
 }
