@@ -41,7 +41,7 @@ query GetPage($slug: ID!) {
 func GetPages(ctx context.Context, client *graphql.Client) ([]*gql.Page, error) {
 	req := graphql.NewRequest(`
 query GetPages {
-	page(input: {
+	pages(input: {
     limit: 1000
   }) {
     slug
@@ -51,7 +51,7 @@ query GetPages {
     }
     meta {
       key
-      value
+      record
     }
     modified
 	}

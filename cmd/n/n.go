@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -85,7 +84,7 @@ func (cfg *Config) Sync(c *cli.Context) error {
 		return err
 	}
 
-	if err := os.MkdirAll(cfg.Path("")); err != nil {
+	if err := os.MkdirAll(cfg.Path(""), os.ModeDir); err != nil {
 		return err
 	}
 
@@ -96,8 +95,16 @@ func (cfg *Config) Sync(c *cli.Context) error {
 
 	for _, p := range pages {
 		path := cfg.Path(p.Slug)
-		if err := ioutil.WriteFile(path, p.Content, 0644); err != nil {
+
+		f, err := os.Create(path)
+		if err != nil {
+			return fmt.Errorf("create file:a%w ", err)
+		}
+
+		if err := tmpl.Execute(f, p); err != nil {
 			return fmt.Errorf("could not write %q: %w", path, err)
 		}
 	}
+
+	return nil
 }

@@ -13,5 +13,8 @@ modified: {{.Modified}}
 ---
 {{.Content}}
 `
+)
+
+var (
 	tmpl = template.Must(template.New("md").Parse(md))
 )
