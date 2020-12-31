@@ -1,14 +1,15 @@
-// Etu is the personifcation of time according to the Lakota.
+// Command n syncs everything from etu.
 package main
 
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/icco/etu"
-	"github.com/icco/etu/cmd/etu/location"
 	"github.com/machinebox/graphql"
 	"github.com/urfave/cli/v2"
 )
@@ -16,28 +17,19 @@ import (
 type Config struct {
 	APIKey string
 	Env    string
-	slug   string
+	Dir    string
 }
 
 func main() {
 	cfg := &Config{}
 	app := &cli.App{
-		Name:  "etu",
-		Usage: "Journaling from the command line",
+		Name:  "n",
+		Usage: "Wiki sync",
 		Commands: []*cli.Command{
 			{
-				Name:    "add",
-				Aliases: []string{"a"},
-				Usage:   "add a log",
-				Action:  cfg.Add,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:        "slug",
-						Aliases:     []string{"s"},
-						Usage:       "slug to save page as",
-						Destination: &cfg.slug,
-					},
-				},
+				Name:    "sync",
+				Aliases: []string{"s"},
+				Action:  cfg.Sync,
 			},
 		},
 		Flags: []cli.Flag{
@@ -54,12 +46,23 @@ func main() {
 				EnvVars:     []string{"NAT_ENV"},
 				Destination: &cfg.Env,
 			},
+			&cli.StringFlag{
+				Name:        "dir",
+				Usage:       "set where to store the wiki",
+				Value:       "~/wiki",
+				Destination: &cfg.Dir,
+			},
 		},
 	}
 
 	if err := app.RunContext(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (cfg *Config) Path(filename string) string {
+	path, _ := filepath.Abs(filepath.Join(cfg.Dir, filename))
+	return path
 }
 
 func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
@@ -76,22 +79,25 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
 }
 
-func (cfg *Config) Add(c *cli.Context) error {
-	loc, err := location.CurrentLocation()
-	if err != nil {
-		log.Printf("could not get location: %+v", err)
-	}
-
+func (cfg *Config) Sync(c *cli.Context) error {
 	client, err := cfg.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
-	tmpl := fmt.Sprintf("\n\n\nLocation: %+v\n", loc.Coordinate)
-	content, err := CaptureInputFromEditor([]byte(tmpl))
-	if err != nil {
-		return fmt.Errorf("get input: %w", err)
+	if err := os.MkdirAll(cfg.Path("")); err != nil {
+		return err
 	}
 
-	return etu.EditPage(c.Context, client, cfg.slug, string(content))
+	pages, err := etu.GetPages(c.Context, client)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range pages {
+		path := cfg.Path(p.Slug)
+		if err := ioutil.WriteFile(path, p.Content, 0644); err != nil {
+			return fmt.Errorf("could not write %q: %w", path, err)
+		}
+	}
 }
