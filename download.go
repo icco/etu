@@ -31,8 +31,10 @@ query GetPage($slug: ID!) {
       id
     }
     meta {
-      key
-      record
+      records {
+        key
+        record
+      }
     }
     modified
 	}
@@ -73,11 +75,13 @@ query GetPages {
     user {
       id
     }
-    meta {
-      key
-      record
-    }
     modified
+    meta {
+      records {
+        key
+        record
+      }
+    }
 	}
 }`)
 
