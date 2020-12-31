@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -44,17 +45,21 @@ func (cfg *Config) Sync(c *cli.Context) error {
 
 	pages, err := etu.GetPages(c.Context, client)
 	if err != nil {
+		log.Printf("error getting pages: %v", err)
 		return err
 	}
+	log.Printf("got %d pages", len(pages))
 
 	for _, p := range pages {
 		path := cfg.Path(p.Slug)
 
 		f, err := os.Create(path)
 		if err != nil {
-			return fmt.Errorf("create file:a%w ", err)
+			return fmt.Errorf("create file: %w ", err)
 		}
+		defer f.Close()
 
+		log.Printf("writing to %q: %+v", path, p)
 		if err := tmpl.Execute(f, p); err != nil {
 			return fmt.Errorf("could not write %q: %w", path, err)
 		}
