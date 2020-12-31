@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/icco/etu"
-	"github.com/icco/etu/cmd/etu/location"
 	"github.com/machinebox/graphql"
 	"github.com/urfave/cli/v2"
 )
@@ -89,55 +88,4 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	}
 
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
-}
-
-func (cfg *Config) Add(c *cli.Context) error {
-	loc, err := location.CurrentLocation()
-	if err != nil {
-		log.Printf("could not get location: %+v", err)
-	}
-
-	client, err := cfg.Client(c.Context)
-	if err != nil {
-		return err
-	}
-
-	tmpl := fmt.Sprintf("\n\n\nLocation: %+v\n", loc.Coordinate)
-	content, err := CaptureInputFromEditor([]byte(tmpl))
-	if err != nil {
-		return fmt.Errorf("get input: %w", err)
-	}
-
-	return etu.EditPage(c.Context, client, cfg.slug, string(content))
-}
-
-func (cfg *Config) Sync(c *cli.Context) error {
-	client, err := cfg.Client(c.Context)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(cfg.Path(""), 0777); err != nil {
-		return err
-	}
-
-	pages, err := etu.GetPages(c.Context, client)
-	if err != nil {
-		return err
-	}
-
-	for _, p := range pages {
-		path := cfg.Path(p.Slug)
-
-		f, err := os.Create(path)
-		if err != nil {
-			return fmt.Errorf("create file:a%w ", err)
-		}
-
-		if err := tmpl.Execute(f, p); err != nil {
-			return fmt.Errorf("could not write %q: %w", path, err)
-		}
-	}
-
-	return nil
 }
