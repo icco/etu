@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -16,8 +17,11 @@ const (
 ---
 slug: {{.Slug}}
 modified: {{.Modified}}
-{{range $index, $pair := .Meta }}
-{{$pair.Key}}: {{$pair.Record}}
+{{if .Meta}}
+records:
+{{range $index, $pair := .Meta.Records }}
+  {{$pair.Key}}: {{$pair.Record}}
+{{end}}
 {{end}}
 ---
 {{.Content}}
@@ -29,7 +33,7 @@ var (
 )
 
 func (cfg *Config) Path(filename string) string {
-	path, _ := filepath.Abs(filepath.Join(cfg.dir, filename))
+	path, _ := filepath.Abs(filepath.Join(cfg.dir, url.PathEscape(filename)))
 	return path
 }
 
@@ -51,7 +55,7 @@ func (cfg *Config) Sync(c *cli.Context) error {
 	log.Printf("got %d pages", len(pages))
 
 	for _, p := range pages {
-		path := cfg.Path(p.Slug)
+		path := cfg.Path(p.Slug + ".md")
 
 		f, err := os.Create(path)
 		if err != nil {

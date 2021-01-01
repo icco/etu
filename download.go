@@ -10,12 +10,7 @@ import (
 )
 
 type getPageResponse struct {
-	Errors []struct {
-		Message string `json:"message"`
-	} `json:"errors"`
-	Data struct {
-		Page *gql.Page `json:"page"`
-	} `json:"data"`
+	Page *gql.Page `json:"page"`
 }
 
 func GetPage(ctx context.Context, client *graphql.Client, slug string) (*gql.Page, error) {
@@ -48,20 +43,11 @@ query GetPage($slug: ID!) {
 	}
 	log.Printf("got response: %+v", resp)
 
-	if len(resp.Errors) > 0 {
-		return nil, fmt.Errorf("query error: %s", resp.Errors[0])
-	}
-
-	return resp.Data.Page, nil
+	return resp.Page, nil
 }
 
 type getPagesResponse struct {
-	Data struct {
-		Pages []*gql.Page `json:"pages"`
-	} `json:"data"`
-	Errors []struct {
-		Message string `json:"message"`
-	} `json:"errors"`
+	Pages []*gql.Page `json:"pages"`
 }
 
 func GetPages(ctx context.Context, client *graphql.Client) ([]*gql.Page, error) {
@@ -91,9 +77,5 @@ query GetPages {
 	}
 	log.Printf("got response: %+v", resp)
 
-	if len(resp.Errors) > 0 {
-		return nil, fmt.Errorf("query error: %s", resp.Errors[0])
-	}
-
-	return resp.Data.Pages, nil
+	return resp.Pages, nil
 }
