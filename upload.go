@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	gql "github.com/icco/graphql"
 	"github.com/icco/graphql/time/hexdate"
 	"github.com/icco/graphql/time/neralie"
 	"github.com/machinebox/graphql"
@@ -56,7 +57,7 @@ func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Cl
 	return client, nil
 }
 
-func EditPage(ctx context.Context, client *graphql.Client, slug, content string) error {
+func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMeta) error {
 	if slug == "" {
 		slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
 	}
