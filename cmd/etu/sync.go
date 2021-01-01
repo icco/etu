@@ -13,15 +13,12 @@ import (
 )
 
 const (
-	md = `
----
+	md = `---
 slug: {{.Slug}}
 modified: {{.Modified}}
-{{if .Meta}}
 records:
 {{range $index, $pair := .Meta.Records }}
   {{$pair.Key}}: {{$pair.Record}}
-{{end}}
 {{end}}
 ---
 {{.Content}}
