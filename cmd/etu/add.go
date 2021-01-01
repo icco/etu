@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/icco/etu"
 	"github.com/icco/etu/cmd/etu/location"
+	"github.com/icco/graphql/time/hexdate"
+	"github.com/icco/graphql/time/neralie"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,20 +23,24 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return err
 	}
 
-	p, err := etu.GetPage(ctx, client, cfg.slug)
+	if cfg.slug == "" {
+		cfg.slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
+	}
+
+	p, err := etu.GetPage(c.Context, client, cfg.slug)
 	if err != nil {
 		return err
 	}
 
-	p.Meta.Set("latitude", loc.Coordinate.Latitude)
-	p.Meta.Set("longitude", loc.Coordinate.Longitude)
+	p.Meta.Set("latitude", strconv.FormatFloat(loc.Coordinate.Latitude, 'f', -1, 64))
+	p.Meta.Set("longitude", strconv.FormatFloat(loc.Coordinate.Longitude, 'f', -1, 64))
 
 	tmpl, err := etu.ToMarkdown(p)
 	if err != nil {
 		return err
 	}
 
-	content, err := CaptureInputFromEditor([]byte(tmpl))
+	content, err := CaptureInputFromEditor(tmpl.Bytes())
 	if err != nil {
 		return fmt.Errorf("get input: %w", err)
 	}
