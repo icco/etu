@@ -6,27 +6,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/icco/etu"
 	"github.com/urfave/cli/v2"
-)
-
-const (
-	md = `---
-slug: {{.Slug}}
-modified: {{.Modified}}
-records:
-{{range $index, $pair := .Meta.Records }}
-  {{$pair.Key}}: {{$pair.Record}}
-{{end}}
----
-{{.Content}}
-`
-)
-
-var (
-	tmpl = template.Must(template.New("md").Parse(md))
 )
 
 func (cfg *Config) Path(filename string) string {
@@ -60,9 +42,13 @@ func (cfg *Config) Sync(c *cli.Context) error {
 		}
 		defer f.Close()
 
-		log.Printf("writing to %q: %+v", path, p)
-		if err := tmpl.Execute(f, p); err != nil {
-			return fmt.Errorf("could not write %q: %w", path, err)
+		bb, err := etu.ToMarkdown(p)
+		if err != nil {
+			return err
+		}
+
+		if _, err := bb.WriteTo(f); err != nil {
+			return err
 		}
 	}
 
