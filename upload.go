@@ -58,18 +58,20 @@ func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Cl
 func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {
 
 	gql := `
-mutation SavePage($content: String!, $slug: ID!) {
-	upsertPage(input: {
+mutation SavePage($content: String!, $slug: ID!, $meta: [InputMeta]!) {
+  upsertPage(input: {
     content: $content,
     slug: $slug,
-	}) {
+    meta: $meta,
+  }) {
     modified
-	}
+  }
 }`
 
 	req := graphql.NewRequest(gql)
 	req.Var("content", content)
 	req.Var("slug", slug)
+	req.Var("meta", meta.Records)
 
 	return client.Run(ctx, req, nil)
 }
