@@ -3,7 +3,6 @@ package etu
 import (
 	"context"
 	"fmt"
-	"log"
 
 	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
@@ -41,7 +40,12 @@ query GetPage($slug: ID!) {
 	if err := client.Run(ctx, req, &resp); err != nil {
 		return nil, err
 	}
-	log.Printf("got response: %+v", resp)
+
+	if resp.Page.Meta == nil {
+		resp.Page.Meta = &gql.PageMetaGrouping{
+			Records: []*gql.PageMeta{},
+		}
+	}
 
 	return resp.Page, nil
 }
@@ -75,7 +79,6 @@ query GetPages {
 	if err := client.Run(ctx, req, &resp); err != nil {
 		return nil, err
 	}
-	log.Printf("got response: %+v", resp)
 
 	return resp.Pages, nil
 }

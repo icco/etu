@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strconv"
@@ -31,6 +32,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("page: %+v", p)
 
 	p.Meta.Set("latitude", strconv.FormatFloat(loc.Coordinate.Latitude, 'f', -1, 64))
 	p.Meta.Set("longitude", strconv.FormatFloat(loc.Coordinate.Longitude, 'f', -1, 64))
@@ -45,5 +47,10 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return fmt.Errorf("get input: %w", err)
 	}
 
-	return etu.EditPage(c.Context, client, cfg.slug, string(content), p.Meta)
+	page, err := etu.FromMarkdown(bytes.NewReader(content))
+	if err != nil {
+		return err
+	}
+
+	return etu.EditPage(c.Context, client, page.Slug, page.Content, page.Meta)
 }
