@@ -2,8 +2,8 @@ package etu
 
 import (
 	"bytes"
+	"fmt"
 	"io"
-	"log"
 	"text/template"
 	"time"
 
@@ -64,12 +64,11 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 		p.Slug = v
 	}
 
-	if r, ok := f["records"].(map[string]string); ok {
+	if r, ok := f["records"].(map[interface{}]interface{}); ok {
 		for k, v := range r {
-			p.Meta.Set(k, v)
+			p.Meta.Set(fmt.Sprintf("%v", k), fmt.Sprintf("%v", v))
 		}
 	}
-	log.Printf("parsed: %#v", p)
 
 	return p, nil
 }
