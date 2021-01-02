@@ -32,14 +32,13 @@ func (cfg *Config) Add(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("page: %+v", p)
 
 	p.Meta.Set("latitude", strconv.FormatFloat(loc.Coordinate.Latitude, 'f', -1, 64))
 	p.Meta.Set("longitude", strconv.FormatFloat(loc.Coordinate.Longitude, 'f', -1, 64))
 
 	tmpl, err := etu.ToMarkdown(p)
 	if err != nil {
-		return err
+		return fmt.Errorf("to md: %w", err)
 	}
 
 	content, err := CaptureInputFromEditor(tmpl.Bytes())
@@ -49,7 +48,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 
 	page, err := etu.FromMarkdown(bytes.NewReader(content))
 	if err != nil {
-		return err
+		return fmt.Errorf("from md: %w", err)
 	}
 
 	return etu.EditPage(c.Context, client, page.Slug, page.Content, page.Meta)

@@ -15,8 +15,7 @@ const (
 	md = `---
 slug: "{{.Slug}}"
 modified: "{{.Modified | jstime}}"
-records:
-{{range $index, $pair := .Meta.Records }}
+records:{{range $index, $pair := .Meta.Records }}
   {{$pair.Key}}: "{{$pair.Record}}"{{end}}
 ---
 {{.Content}}
