@@ -73,5 +73,9 @@ mutation SavePage($content: String!, $slug: ID!, $meta: [InputMeta]!) {
 	req.Var("slug", slug)
 	req.Var("meta", meta.Records)
 
-	return client.Run(ctx, req, nil)
+	if err := client.Run(ctx, req, nil); err != nil {
+		return fmt.Errorf("edit page %+v: %w", req, err)
+	}
+
+	return nil
 }
