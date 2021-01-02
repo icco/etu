@@ -48,7 +48,6 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("The front matter is:\n%#v\n", f)
 	p := &gql.Page{
 		Content: body,
 		Meta:    &gql.PageMetaGrouping{},
@@ -71,6 +70,7 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 			p.Meta.Set(k, v)
 		}
 	}
+	log.Printf("parsed: %#v", p)
 
 	return p, nil
 }
