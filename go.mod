@@ -9,6 +9,7 @@ require (
 	github.com/icco/graphql v0.0.0-20210102022217-8cb870b61a63
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 	golang.org/x/tools v0.0.0-20210101214203-2dba1e4ea05c // indirect
