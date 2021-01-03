@@ -51,5 +51,10 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return fmt.Errorf("from md: %w", err)
 	}
 
-	return etu.EditPage(c.Context, client, page.Slug, page.Content, page.Meta)
+	if err := etu.EditPage(c.Context, client, page.Slug, page.Content, page.Meta); err != nil {
+		return fmt.Errorf("upload: %w", err)
+	}
+
+	log.Printf("uploaded n://%s", page.Slug)
+	return nil
 }
