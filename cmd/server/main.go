@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 func main() {
@@ -14,13 +17,18 @@ func main() {
 	}
 	log.Printf("Starting up on http://localhost:%s", port)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintf(w, "Etu is a work in progress. github.com/icco/etu")
-	})
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		fmt.Fprintf(w, "ok")
 	})
-	log.Fatalln(http.ListenAndServe(":"+port, nil))
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, "Etu is a work in progress. github.com/icco/etu")
+	})
+
+	log.Fatalln(http.ListenAndServe(":"+port, r))
 }
