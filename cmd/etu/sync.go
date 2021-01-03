@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/icco/etu"
 	"github.com/urfave/cli/v2"
@@ -44,11 +45,15 @@ func (cfg *Config) Sync(c *cli.Context) error {
 
 		bb, err := etu.ToMarkdown(p)
 		if err != nil {
-			return err
+			return fmt.Errorf("parse: %w", err)
 		}
 
 		if _, err := bb.WriteTo(f); err != nil {
-			return err
+			return fmt.Errorf("write: %w", err)
+		}
+
+		if err := os.Chtimes(path, time.Now(), p.Modified); err != nil {
+			return fmt.Errorf("chtimes: %w", err)
 		}
 	}
 
