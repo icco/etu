@@ -46,9 +46,9 @@ var (
         <time class="f6 ttu tracked gray">{{ .Page.Modified }}</time>
         <div class="cf">
         {{ range .Page.Meta.Records }}
-          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr5-l">
+          <dl class="fn dib w-auto lh-title mr5-l">
             <dd class="f6 fw4 ml0">{{ .Key }}</dd>
-            <dd class="f3 fw6 ml0">{{ .Record }}</dd>
+            <dd class="fw6 ml0">{{ .Record }}</dd>
           </dl>
         {{ end }}
         </div>
