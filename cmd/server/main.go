@@ -20,26 +20,65 @@ type pageResponse struct {
 }
 
 type pageData struct {
-	Content template.HTML
-	Title   string
-	Header  string
+	Content   template.HTML
+	Title     string
+	Header    string
+	SubHeader string
+	Page      *gql.Page
 }
 
-var tmpl = template.Must(template.New("layout").Parse(`
+var (
+	pageTmpl = template.Must(template.New("layout").Parse(`
 <!DOCTYPE html>
 <html lang="en">
-  <title>{{ .Title }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+  <head>
+    <title>{{ .Title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+  </head>
+  <body>
+    <article class="cf ph3 ph5-ns pv5">
+      <header class="fn fl-ns w-50-ns pr4-ns">
+        <h1 class="f2 lh-title fw9 mb3 mt0 pt3 bt bw2">
+          {{ .Header }}
+        </h1>
+        <h2 class="f3 mid-gray lh-title">{{ .SubHeader }}</h2>
+        <time class="f6 ttu tracked gray">{{ .Page.Modified }}</time>
+        <div class="cf">
+        {{ range .Page.Meta.Records }}
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr5-l">
+            <dd class="f6 fw4 ml0">{{ .Key }}</dd>
+            <dd class="f3 fw6 ml0">{{ .Record }}</dd>
+          </dl>
+        {{ end }}
+        </div>
+      </header>
+      <div class="fn fl-ns w-50-ns">
+        <div class="measure lh-copy">
+          {{ .Content }}
+        </div>
+      </div>
+    </article>
+  </body>
+</html>`))
+	indexTmpl = template.Must(template.New("layout").Parse(`
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ .Title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+  </head>
   <body>
     <article class="pa3 pa5-ns">
-      <h1 class="f3 f1-m f-headline-l">{{ .Header }}</h1>
+      <h1 class="">{{ .Header }}</h1>
       <div class="measure lh-copy">
         {{ .Content }}
       </div>
     </article>
   </body>
 </html>`))
+)
 
 func main() {
 	port := "8080"
@@ -63,7 +102,7 @@ func main() {
 			Header:  "Etu",
 		}
 
-		if err := tmpl.Execute(w, data); err != nil {
+		if err := indexTmpl.Execute(w, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -81,6 +120,13 @@ func main() {
       page(slug: $slug) {
         slug
         content
+        modified
+        meta {
+          records {
+            key
+            record
+          }
+        }
       }
     }`
 
@@ -99,9 +145,10 @@ func main() {
 			Content: template.HTML(blackfriday.Run([]byte(resp.Page.Content))),
 			Title:   fmt.Sprintf("Etu: %q", resp.Page.Slug),
 			Header:  resp.Page.Slug,
+			Page:    resp.Page,
 		}
 
-		if err := tmpl.Execute(w, data); err != nil {
+		if err := pageTmpl.Execute(w, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
