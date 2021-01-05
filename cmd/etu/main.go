@@ -40,6 +40,12 @@ func main() {
 				},
 			},
 			{
+				Name:    "generate",
+				Aliases: []string{"g"},
+				Usage:   "generate missing slugs",
+				Action:  cfg.Generate,
+			},
+			{
 				Name:    "sync",
 				Aliases: []string{"s"},
 				Usage:   "Sync wiki to disk",

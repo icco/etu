@@ -72,3 +72,31 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 
 	return p, nil
 }
+
+func GetLinkedSlugs(p *gql.Page) []string {
+	r := blackfriday.NewHTMLRenderer(HTMLRendererParameters{
+		Flags: blackfriday.CommonHTMLFlags,
+	})
+	parser := New(blackfriday.WithRenderer(r), blackfriday.WithExtensions(CommonExtensions))
+	ast := parser.Parse(input)
+
+	var ret []string
+	ast.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
+		if node.Type == blackfriday.Link {
+			log.Printf("link %+v", node)
+			u, err := url.Parse(string(node.Destination))
+			if err != nil {
+				log.Errorf("parse: %v", err)
+				return blackfriday.Terminate
+			}
+
+			if u.Scheme == "n" {
+				ret = append(ret, u.Host+u.Path)
+			}
+		}
+
+		return blackfriday.GoToNext
+	})
+
+	return ret
+}
