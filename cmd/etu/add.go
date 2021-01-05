@@ -35,6 +35,7 @@ func (cfg *Config) Add(c *cli.Context) error {
 
 	p.Meta.Set("latitude", strconv.FormatFloat(loc.Coordinate.Latitude, 'f', -1, 64))
 	p.Meta.Set("longitude", strconv.FormatFloat(loc.Coordinate.Longitude, 'f', -1, 64))
+	p.Meta.Set("type", "journal")
 
 	tmpl, err := etu.ToMarkdown(p)
 	if err != nil {
