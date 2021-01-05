@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
+	"net/url"
 	"text/template"
 	"time"
 
 	"github.com/gernest/front"
 	gql "github.com/icco/graphql"
+	"github.com/russross/blackfriday/v2"
 )
 
 const (
@@ -74,19 +77,18 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 }
 
 func GetLinkedSlugs(p *gql.Page) []string {
-	r := blackfriday.NewHTMLRenderer(HTMLRendererParameters{
+	r := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
 		Flags: blackfriday.CommonHTMLFlags,
 	})
-	parser := New(blackfriday.WithRenderer(r), blackfriday.WithExtensions(CommonExtensions))
-	ast := parser.Parse(input)
+	parser := blackfriday.New(blackfriday.WithRenderer(r), blackfriday.WithExtensions(blackfriday.CommonExtensions))
+	ast := parser.Parse([]byte(p.Content))
 
 	var ret []string
 	ast.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Link {
-			log.Printf("link %+v", node)
 			u, err := url.Parse(string(node.Destination))
 			if err != nil {
-				log.Errorf("parse: %v", err)
+				log.Printf("parse error: %v", err)
 				return blackfriday.Terminate
 			}
 
@@ -97,6 +99,8 @@ func GetLinkedSlugs(p *gql.Page) []string {
 
 		return blackfriday.GoToNext
 	})
+
+	log.Printf("links found: %+v", ret)
 
 	return ret
 }
