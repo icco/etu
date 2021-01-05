@@ -22,14 +22,16 @@ func (cfg *Config) Generate(c *cli.Context) error {
 		return err
 	}
 
-	var links []string
+	links := map[string]bool{}
 	slugs := map[string]*gql.Page{}
 	for _, p := range pages {
 		slugs[p.Slug] = p
-		links = append(links, etu.GetLinkedSlugs(p)...)
+		for _, l := range etu.GetLinkedSlugs(p) {
+			links[l] = true
+		}
 	}
 
-	for _, l := range links {
+	for l, _ := range links {
 		if slugs[l] == nil {
 			if err := etu.EditPage(c.Context, client, l, "TBD", &gql.PageMetaGrouping{Records: []*gql.PageMeta{&gql.PageMeta{Key: "type", Record: "stub"}}}); err != nil {
 				return fmt.Errorf("uploading %q: %w", l, err)
