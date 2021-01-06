@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
@@ -53,6 +54,10 @@ func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Cl
 	}
 
 	return client, nil
+}
+
+func UploadImage(ctx context.Context, filepath string) (*url.URL, error) {
+	return nil, fmt.Errorf("unimplemented")
 }
 
 func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {
