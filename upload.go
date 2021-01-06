@@ -3,11 +3,9 @@ package etu
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
-	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -64,6 +62,12 @@ func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Cl
 	return client, nil
 }
 
+type imageUploadResp struct {
+	Error  string `json:"error"`
+	File   string `json:"file"`
+	Upload string `json:"upload"`
+}
+
 func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -71,10 +75,9 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	}
 	defer file.Close()
 
-	filetype := mime.TypeByExtension(filepath.Ext(path))
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(filetype, filepath.Base(file.Name()))
+	part, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +91,9 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	}
 
 	request.Header.Add("Content-Type", writer.FormDataContentType())
-	request.Header.Add("Authorization", fmt.Sprint("Bearer %s", apikey))
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: apikey},
+	}
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -97,13 +101,16 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	}
 	defer response.Body.Close()
 
-	content, err := ioutil.ReadAll(response.Body)
-	if err != nil {
+	var p imageUploadResp
+	if err := json.NewDecoder(response.Body).Decode(&p); err != nil {
 		return nil, err
 	}
-	log.Printf("sure: %+v", content)
 
-	return nil, fmt.Errorf("unimplemented")
+	if p.Error != "" {
+		return nil, fmt.Errorf(p.Error)
+	}
+
+	return url.Parse(p.File)
 }
 
 func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {

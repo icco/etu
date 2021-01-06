@@ -21,6 +21,11 @@ func (cfg *Config) Add(c *cli.Context) error {
 		cfg.slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
 	}
 
+	p, err := etu.GetPage(c.Context, client, cfg.slug)
+	if err != nil {
+		return err
+	}
+
 	if cfg.file != "" {
 		// do upload
 		path, err := etu.UploadImage(c.Context, cfg.APIKey, cfg.file)
@@ -28,12 +33,11 @@ func (cfg *Config) Add(c *cli.Context) error {
 			return err
 		}
 
-		log.Printf("got path: %v", path)
-	}
+		raw := path.String()
+		path.RawQuery = "auto=format%2Ccompress"
 
-	p, err := etu.GetPage(c.Context, client, cfg.slug)
-	if err != nil {
-		return err
+		log.Printf("got path: %v", path)
+		p.Content = fmt.Sprintf("[![](%s)](%s)\n\n", path.String(), raw) + p.Content
 	}
 
 	p.Meta.Set("type", "journal")
