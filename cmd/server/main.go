@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -111,6 +112,13 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	})
+
+	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		workDir, _ := os.Getwd()
+		filesDir := http.Dir(filepath.Join(workDir, "cmd/server/public"))
+		fs := http.FileServer(filesDir)
+		fs.ServeHTTP(w, r)
 	})
 
 	r.Get("/pages", func(w http.ResponseWriter, r *http.Request) {
