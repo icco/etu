@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
 	"github.com/russross/blackfriday/v2"
@@ -26,6 +27,10 @@ type pageData struct {
 	SubHeader string
 	Page      *gql.Page
 }
+
+const (
+	GQLDomain = "https://graphql.natwelch.com/graphql"
+)
 
 var (
 	pageTmpl = template.Must(template.New("layout").Parse(`
@@ -100,6 +105,38 @@ func main() {
 			Content: template.HTML(`Etu is a work in progress. <a href="https://github.com/icco/etu">github.com/icco/etu</a> for more information.`),
 			Title:   "Etu: icco's wiki",
 			Header:  "Etu",
+		}
+
+		if err := indexTmpl.Execute(w, data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Get("/pages", func(w http.ResponseWriter, r *http.Request) {
+		client, err := etu.NewGraphQLClient(r.Context(), GQLDomain, os.Getenv("GQL_TOKEN"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		pages, err := etu.GetPages(r.Context(), client)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// This is hacky.
+		content := `<div class="pa3 pa5-ns"><ul class="list pl0 measure center">`
+		for _, p := range pages {
+			content += fmt.Sprintf(`<li class="lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30"><a href="https://etu.natwelch.com/page/%s">%s</a></li>`, p.Slug, p.Slug)
+		}
+		content += "</ul></div>"
+
+		data := &pageData{
+			Content: template.HTML(content),
+			Title:   "Etu: index",
+			Header:  "Etu: index",
 		}
 
 		if err := indexTmpl.Execute(w, data); err != nil {
