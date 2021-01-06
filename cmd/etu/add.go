@@ -21,6 +21,16 @@ func (cfg *Config) Add(c *cli.Context) error {
 		cfg.slug = fmt.Sprintf("%s/%s", hexdate.Now().String(), neralie.Now().String())
 	}
 
+	if cfg.file != "" {
+		// do upload
+		path, err := etu.UploadImage(c.Context, cfg.APIKey, cfg.file)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("got path: %v", path)
+	}
+
 	p, err := etu.GetPage(c.Context, client, cfg.slug)
 	if err != nil {
 		return err

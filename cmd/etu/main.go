@@ -15,8 +15,10 @@ import (
 type Config struct {
 	APIKey string
 	Env    string
-	slug   string
-	dir    string
+
+	slug string
+	dir  string
+	file string
 }
 
 func main() {
@@ -37,6 +39,13 @@ func main() {
 						Usage:       "slug to save page as",
 						Destination: &cfg.slug,
 					},
+					&cli.PathFlag{
+						Name:        "file",
+						Aliases:     []string{"f"},
+						Usage:       "image to upload",
+						Value:       "",
+						Destination: &cfg.file,
+					},
 				},
 			},
 			{
@@ -51,7 +60,7 @@ func main() {
 				Usage:   "Sync wiki to disk",
 				Action:  cfg.Sync,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
+					&cli.PathFlag{
 						Name:        "dir",
 						Usage:       "set where to store the wiki",
 						Value:       "/tmp/wiki",

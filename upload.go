@@ -1,10 +1,18 @@
 package etu
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
@@ -56,7 +64,45 @@ func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Cl
 	return client, nil
 }
 
-func UploadImage(ctx context.Context, filepath string) (*url.URL, error) {
+func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	filetype := mime.TypeByExtension(filepath.Ext(path))
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(filetype, filepath.Base(file.Name()))
+	if err != nil {
+		return nil, err
+	}
+
+	io.Copy(part, file)
+	writer.Close()
+
+	request, err := http.NewRequest("POST", "https://graphql.natwelch.com/photo/new", body)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Add("Content-Type", writer.FormDataContentType())
+	request.Header.Add("Authorization", fmt.Sprint("Bearer %s", apikey))
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	content, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("sure: %+v", content)
+
 	return nil, fmt.Errorf("unimplemented")
 }
 
