@@ -4,21 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/icco/etu"
-	"github.com/icco/etu/cmd/etu/location"
 	"github.com/icco/graphql/time/hexdate"
 	"github.com/icco/graphql/time/neralie"
 	"github.com/urfave/cli/v2"
 )
 
 func (cfg *Config) Add(c *cli.Context) error {
-	loc, err := location.CurrentLocation()
-	if err != nil {
-		log.Printf("could not get location: %+v", err)
-	}
-
 	client, err := cfg.Client(c.Context)
 	if err != nil {
 		return err
@@ -33,8 +26,6 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return err
 	}
 
-	p.Meta.Set("latitude", strconv.FormatFloat(loc.Coordinate.Latitude, 'f', -1, 64))
-	p.Meta.Set("longitude", strconv.FormatFloat(loc.Coordinate.Longitude, 'f', -1, 64))
 	p.Meta.Set("type", "journal")
 
 	tmpl, err := etu.ToMarkdown(p)
