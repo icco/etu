@@ -13,8 +13,6 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
-	"github.com/machinebox/graphql"
-	"github.com/russross/blackfriday/v2"
 )
 
 type pageResponse struct {
@@ -161,36 +159,23 @@ func main() {
 			return
 		}
 
-		query := `query ($slug: ID!) {
-      page(slug: $slug) {
-        slug
-        content
-        modified
-        meta {
-          records {
-            key
-            record
-          }
-        }
-      }
-    }`
+		client, err := etu.NewGraphQLClient(r.Context(), GQLDomain, os.Getenv("GQL_TOKEN"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-		gqlClient := graphql.NewClient("https://graphql.natwelch.com/graphql")
-		req := graphql.NewRequest(query)
-		req.Header.Add("X-API-AUTH", os.Getenv("GQL_TOKEN"))
-		req.Header.Add("User-Agent", "etu-server/1.0")
-		req.Var("slug", slug)
-		var resp pageResponse
-		if err := gqlClient.Run(r.Context(), req, &resp); err != nil {
+		page, err := etu.GetPage(r.Context(), client, slug)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		data := &pageData{
-			Content: template.HTML(blackfriday.Run([]byte(resp.Page.Content))),
-			Title:   fmt.Sprintf("Etu: %q", resp.Page.Slug),
-			Header:  resp.Page.Slug,
-			Page:    resp.Page,
+			Content: etu.ToHTML(resp.Page),
+			Title:   fmt.Sprintf("Etu: %q", page.Slug),
+			Header:  page.Slug,
+			Page:    page,
 		}
 
 		if err := pageTmpl.Execute(w, data); err != nil {

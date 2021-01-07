@@ -3,9 +3,11 @@ package etu
 import (
 	"bytes"
 	"fmt"
+	h "html/template"
 	"io"
 	"log"
 	"net/url"
+	"strings"
 	"text/template"
 	"time"
 
@@ -41,6 +43,12 @@ func ToMarkdown(p *gql.Page) (*bytes.Buffer, error) {
 	}
 
 	return &tpl, nil
+}
+
+func ToHTML(p *gql.Page) h.HTML {
+	cntnt := strings.ReplaceAll(p.Content, "n://", "https://etu.natwelch.com/page/")
+	ret := blackfriday.Run([]byte(cntnt))
+	return h.HTML(ret)
 }
 
 func FromMarkdown(input io.Reader) (*gql.Page, error) {
