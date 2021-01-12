@@ -123,7 +123,6 @@ func main() {
 		data := &pageData{
 			Content: etu.ToHTML(page),
 			Title:   fmt.Sprintf("Etu: %q", page.Slug),
-			Header:  page.Slug,
 			Page:    page,
 		}
 

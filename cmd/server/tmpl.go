@@ -15,10 +15,12 @@ var (
     <article class="cf ph3 ph5-ns pv5">
       <header class="fn fl-ns w-50-ns pr4-ns">
         <h1 class="f2 lh-title fw9 mb3 mt0 pt3 bt bw2">
-          {{ .Header }}
+          {{ .Page.Slug }}
         </h1>
-        <h2 class="f3 mid-gray lh-title">{{ .SubHeader }}</h2>
-        <time class="f6 ttu tracked gray">{{ .Page.Modified }}</time>
+
+        <div class="f6 gray tracked">Created: <time class="ttu">{{ .Page.Created }}</time></div>
+        <div class="f6 gray tracked">Modified: <time class="ttu">{{ .Page.Modified }}</time></div>
+
         <div class="cf">
         {{ range .Page.Meta.Records }}
           <dl class="fn dib w-auto lh-title mr5-l">
@@ -70,7 +72,7 @@ var (
             <ul class="list pl0 measure center">
               {{ range $value }}
                 <li class="lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30">
-                  <a href="https://etu.natwelch.com/page/{{ .Slug }}">{{ .Slug }}</a>
+                  <a href="/page/{{ .Slug }}">{{ .Slug }}</a>
                 </li>
               {{ end }}
             </ul>

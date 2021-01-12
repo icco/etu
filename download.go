@@ -31,6 +31,7 @@ query GetPage($slug: ID!) {
       }
     }
     modified
+    created
 	}
 }`)
 
