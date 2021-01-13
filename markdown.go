@@ -108,7 +108,5 @@ func GetLinkedSlugs(p *gql.Page) []string {
 		return blackfriday.GoToNext
 	})
 
-	log.Printf("links found: %+v", ret)
-
 	return ret
 }
