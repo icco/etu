@@ -32,8 +32,8 @@ func (cfg *Config) Sync(c *cli.Context) error {
 		log.Printf("error getting pages: %v", err)
 		return err
 	}
-	log.Printf("got %d pages", len(pages))
 
+	// TODO: Compare edited files and upload
 	for _, p := range pages {
 		path := cfg.Path(p.Slug + ".md")
 
