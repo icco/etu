@@ -84,14 +84,14 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 	return p, nil
 }
 
-func GetLinkedSlugs(p *gql.Page) []string {
+func GetLinkedSlugs(p *gql.Page) map[string]bool {
 	r := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
 		Flags: blackfriday.CommonHTMLFlags,
 	})
 	parser := blackfriday.New(blackfriday.WithRenderer(r), blackfriday.WithExtensions(blackfriday.CommonExtensions))
 	ast := parser.Parse([]byte(p.Content))
 
-	var ret []string
+	ret := map[string]bool{}
 	ast.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
 		if node.Type == blackfriday.Link {
 			u, err := url.Parse(string(node.Destination))
@@ -101,7 +101,7 @@ func GetLinkedSlugs(p *gql.Page) []string {
 			}
 
 			if u.Scheme == "n" {
-				ret = append(ret, u.Host+u.Path)
+				ret[u.Host+u.Path] = true
 			}
 		}
 

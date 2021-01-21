@@ -29,6 +29,13 @@ var (
           </dl>
         {{ end }}
         </div>
+
+        <h2 class="f4 lh-title fw9 mb3 mt0 pt3">Links to here</h2>
+        <ul>
+        {{ range .References }}
+        <li><a href="/page/{{ . }}">{{ . }}</a></li>
+        {{ end }}
+        </ul>
       </header>
       <div class="fn fl-ns w-50-ns">
         <div class="measure lh-copy">

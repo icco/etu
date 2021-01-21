@@ -26,8 +26,8 @@ func (cfg *Config) Generate(c *cli.Context) error {
 	slugs := map[string]*gql.Page{}
 	for _, p := range pages {
 		slugs[p.Slug] = p
-		for _, l := range etu.GetLinkedSlugs(p) {
-			links[l] = true
+		for l, b := range etu.GetLinkedSlugs(p) {
+			links[l] = b
 		}
 	}
 

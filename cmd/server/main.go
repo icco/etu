@@ -20,12 +20,13 @@ type pageResponse struct {
 }
 
 type pageData struct {
-	Content   template.HTML
-	Title     string
-	Header    string
-	SubHeader string
-	Page      *gql.Page
-	Pages     map[string][]*gql.Page
+	Content    template.HTML
+	Title      string
+	Header     string
+	SubHeader  string
+	Page       *gql.Page
+	Pages      map[string][]*gql.Page
+	References []string
 }
 
 const (
@@ -120,10 +121,24 @@ func main() {
 			return
 		}
 
+		var refs []string
+		pages, err := etu.GetPages(r.Context(), client)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		for _, p := range pages {
+			linked := etu.GetLinkedSlugs(p)
+			if linked[page.Slug] {
+				refs = append(refs, p.Slug)
+			}
+		}
+
 		data := &pageData{
-			Content: etu.ToHTML(page),
-			Title:   fmt.Sprintf("Etu: %q", page.Slug),
-			Page:    page,
+			Content:    etu.ToHTML(page),
+			Title:      fmt.Sprintf("Etu: %q", page.Slug),
+			Page:       page,
+			References: refs,
 		}
 
 		if err := pageTmpl.Execute(w, data); err != nil {
