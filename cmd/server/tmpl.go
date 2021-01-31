@@ -10,6 +10,8 @@ var (
     <title>{{ .Title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+    <link rel="webmention" href="https://webmention.io/natwelch.com/webmention" />
+    <link rel="pingback" href="https://webmention.io/natwelch.com/xmlrpc" />
   </head>
   <body>
     <article class="cf ph3 ph5-ns pv5">
@@ -52,6 +54,8 @@ var (
     <title>{{ .Title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+    <link rel="webmention" href="https://webmention.io/natwelch.com/webmention" />
+    <link rel="pingback" href="https://webmention.io/natwelch.com/xmlrpc" />
   </head>
   <body>
     <article class="pa3 pa5-ns">
@@ -69,6 +73,8 @@ var (
     <title>{{ .Title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
+    <link rel="webmention" href="https://webmention.io/natwelch.com/webmention" />
+    <link rel="pingback" href="https://webmention.io/natwelch.com/xmlrpc" />
   </head>
   <body>
     <article class="pa3 pa5-ns">
