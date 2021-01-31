@@ -12,6 +12,21 @@ var (
     <link rel="stylesheet" href="https://unpkg.com/tachyons/css/tachyons.min.css">
     <link rel="webmention" href="https://webmention.io/natwelch.com/webmention" />
     <link rel="pingback" href="https://webmention.io/natwelch.com/xmlrpc" />
+    <style>
+      pre {
+        border-left: 3px solid #ddd;
+        page-break-inside: avoid;
+        font-family: monospace;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 1.6em;
+        max-width: 100%;
+        overflow: auto;
+        padding: 1em 1.5em;
+        display: block;
+        word-wrap: break-word;
+      }
+    </style>
   </head>
   <body>
     <article class="cf ph3 ph5-ns pv5">
