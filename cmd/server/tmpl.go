@@ -3,7 +3,7 @@ package main
 import "html/template"
 
 var (
-	pageTmpl = template.Must(template.New("layout").Parse(`
+	pageTmpl = template.Must(template.New("page").Parse(`
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -32,12 +32,16 @@ var (
         {{ end }}
         </div>
 
-        <h2 class="f4 lh-title fw9 mb3 mt0 pt3">Links to here</h2>
-        <ul>
-        {{ range .References }}
-        <li><a href="/page/{{ . }}">{{ . }}</a></li>
-        {{ end }}
-        </ul>
+        <div class="cf pb3 bb bw2">
+          <h2 class="f4 lh-title fw9 mb3 mt0 pt3">Links to here</h2>
+          <ul>
+          {{ range .References }}
+          <li><a href="/page/{{ . }}">{{ . }}</a></li>
+          {{ else }}
+          No links :(
+          {{ end }}
+          </ul>
+        </div>
       </header>
       <div class="fn fl-ns w-50-ns">
         <div class="measure lh-copy">
@@ -47,7 +51,7 @@ var (
     </article>
   </body>
 </html>`))
-	indexTmpl = template.Must(template.New("layout").Parse(`
+	indexTmpl = template.Must(template.New("index").Parse(`
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -66,7 +70,7 @@ var (
     </article>
   </body>
 </html>`))
-	pagesTmpl = template.Must(template.New("layout").Parse(`
+	pagesTmpl = template.Must(template.New("pages").Parse(`
 <!DOCTYPE html>
 <html lang="en">
   <head>
