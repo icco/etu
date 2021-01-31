@@ -33,12 +33,12 @@ var (
         </div>
 
         <div class="cf pb3 bb bw2">
-          <h2 class="f4 lh-title fw9 mb3 mt0 pt3">Links to here</h2>
+          <h2 class="f6 fw4 ml0 lh-title mt0 pt3">Links to here</h2>
           <ul>
           {{ range .References }}
-          <li><a href="/page/{{ . }}">{{ . }}</a></li>
+            <li class="f6 lh-title"><a href="/page/{{ . }}">{{ . }}</a></li>
           {{ else }}
-          No links :(
+            <li>None</li>
           {{ end }}
           </ul>
         </div>
