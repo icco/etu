@@ -10,7 +10,7 @@ require (
 	github.com/gernest/front v0.0.0-20181129160812-ed80ca338b88
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/uuid v1.2.0 // indirect
-	github.com/icco/graphql v0.0.0-20210112174851-a68f4e1bdf93
+	github.com/icco/graphql v0.0.0-20210214172924-294d2fcd05fe
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/paulmach/orb v0.2.1 // indirect
