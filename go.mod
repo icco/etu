@@ -15,10 +15,10 @@ require (
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/paulmach/orb v0.2.1 // indirect
 	github.com/urfave/cli/v2 v2.3.0
-	github.com/yuin/goldmark v1.3.0
+	github.com/yuin/goldmark v1.3.2
 	go.opencensus.io v0.22.6 // indirect
-	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
-	google.golang.org/api v0.39.0 // indirect
-	google.golang.org/genproto v0.0.0-20210204154452-deb828366460 // indirect
+	golang.org/x/oauth2 v0.0.0-20210210192628-66670185b0cd // indirect
+	google.golang.org/api v0.40.0 // indirect
+	google.golang.org/genproto v0.0.0-20210212180131-e7f2df4ecc2d // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
