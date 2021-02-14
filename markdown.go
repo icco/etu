@@ -7,13 +7,16 @@ import (
 	"io"
 	"log"
 	"net/url"
-	"strings"
 	"text/template"
 	"time"
 
+	wikilink "github.com/dangoor/goldmark-wikilinks"
 	"github.com/gernest/front"
 	gql "github.com/icco/graphql"
-	"github.com/russross/blackfriday/v2"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/util"
 )
 
 const (
@@ -45,10 +48,49 @@ func ToMarkdown(p *gql.Page) (*bytes.Buffer, error) {
 	return &tpl, nil
 }
 
+type wikilinksExt struct {
+	found map[string]string
+}
+
+func (wl *wikilinksExt) LinkWithContext(destText string, destFilename string, context string) {
+	wl.found[destFilename] = destText
+}
+
+func (wl *wikilinksExt) Normalize(in string) string {
+	return fmt.Sprintf("/page/%s", url.PathEscape(in))
+}
+
+func (wl *wikilinksExt) Extend(m goldmark.Markdown) {
+	wlp := wikilink.NewWikilinksParser().WithNormalizer(wl).WithTracker(wl)
+	m.Parser().AddOptions(
+		parser.WithInlineParsers(util.Prioritized(wlp, 102)),
+	)
+}
+
+func buildMDParser() (goldmark.Markdown, *wikilinksExt) {
+	wl := &wikilinksExt{found: map[string]string{}}
+
+	return goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.DefinitionList,
+			extension.Footnote,
+			wl,
+		),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+		),
+	), wl
+}
+
 func ToHTML(p *gql.Page) h.HTML {
-	cntnt := strings.ReplaceAll(p.Content, "n://", "https://etu.natwelch.com/page/")
-	ret := blackfriday.Run([]byte(cntnt))
-	return h.HTML(ret)
+	var buf bytes.Buffer
+	md, _ := buildMDParser()
+	if err := md.Convert([]byte(p.Content), &buf); err != nil {
+		log.Panic(err)
+	}
+
+	return h.HTML(buf.Bytes())
 }
 
 func FromMarkdown(input io.Reader) (*gql.Page, error) {
@@ -85,28 +127,16 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 }
 
 func GetLinkedSlugs(p *gql.Page) map[string]bool {
-	r := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
-		Flags: blackfriday.CommonHTMLFlags,
-	})
-	parser := blackfriday.New(blackfriday.WithRenderer(r), blackfriday.WithExtensions(blackfriday.CommonExtensions))
-	ast := parser.Parse([]byte(p.Content))
+	md, t := buildMDParser()
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(p.Content), &buf); err != nil {
+		log.Panic(err)
+	}
 
 	ret := map[string]bool{}
-	ast.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if node.Type == blackfriday.Link {
-			u, err := url.Parse(string(node.Destination))
-			if err != nil {
-				log.Printf("parse error: %v", err)
-				return blackfriday.Terminate
-			}
-
-			if u.Scheme == "n" {
-				ret[u.Host+u.Path] = true
-			}
-		}
-
-		return blackfriday.GoToNext
-	})
+	for k := range t.found {
+		ret[k] = true
+	}
 
 	return ret
 }
