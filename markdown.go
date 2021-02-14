@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"strings"
 	"text/template"
 	"time"
 
@@ -49,15 +50,16 @@ func ToMarkdown(p *gql.Page) (*bytes.Buffer, error) {
 }
 
 type wikilinksExt struct {
-	found map[string]string
+	found map[string]bool
 }
 
 func (wl *wikilinksExt) LinkWithContext(destText string, destFilename string, context string) {
-	wl.found[destFilename] = destText
+	// log.Printf("link: %q %q %q", destText, destFilename, context)
+	wl.found[strings.ToLower(destText)] = true
 }
 
 func (wl *wikilinksExt) Normalize(in string) string {
-	return fmt.Sprintf("/page/%s", url.PathEscape(in))
+	return fmt.Sprintf("/page/%s", strings.ToLower(url.PathEscape(in)))
 }
 
 func (wl *wikilinksExt) Extend(m goldmark.Markdown) {
@@ -68,7 +70,7 @@ func (wl *wikilinksExt) Extend(m goldmark.Markdown) {
 }
 
 func buildMDParser() (goldmark.Markdown, *wikilinksExt) {
-	wl := &wikilinksExt{found: map[string]string{}}
+	wl := &wikilinksExt{found: map[string]bool{}}
 
 	return goldmark.New(
 		goldmark.WithExtensions(
@@ -134,10 +136,5 @@ func GetLinkedSlugs(p *gql.Page) map[string]bool {
 		log.Panic(err)
 	}
 
-	ret := map[string]bool{}
-	for k := range t.found {
-		ret[k] = true
-	}
-
-	return ret
+	return t.found
 }
