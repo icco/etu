@@ -40,7 +40,9 @@ func (cfg *Config) Add(c *cli.Context) error {
 		p.Content = fmt.Sprintf("[![](%s)](%s)\n\n", path.String(), raw) + p.Content
 	}
 
-	p.Meta.Set("type", "journal")
+	if p.Meta.Get("type") == "" {
+		p.Meta.Set("type", "journal")
+	}
 
 	tmpl, err := etu.ToMarkdown(p)
 	if err != nil {
@@ -61,6 +63,6 @@ func (cfg *Config) Add(c *cli.Context) error {
 		return fmt.Errorf("upload: %w", err)
 	}
 
-	log.Printf("uploaded n://%s", page.Slug)
+	log.Printf("uploaded https://etu.natwelch.com/page/%s", page.Slug)
 	return nil
 }
