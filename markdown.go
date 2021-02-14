@@ -126,6 +126,7 @@ func FromMarkdown(input io.Reader) (*gql.Page, error) {
 	return p, nil
 }
 
+// GetLinkedSlugs returns all of the pages this page links to.
 func GetLinkedSlugs(p *gql.Page) map[string]bool {
 	md, t := buildMDParser()
 	var buf bytes.Buffer
