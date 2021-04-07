@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
 	"github.com/icco/gutil/logging"
