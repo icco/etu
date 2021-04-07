@@ -12,6 +12,7 @@ type getPageResponse struct {
 	Page *gql.Page `json:"page"`
 }
 
+// GetPage returns a page by slug.
 func GetPage(ctx context.Context, client *graphql.Client, slug string) (*gql.Page, error) {
 	if slug == "" {
 		return nil, fmt.Errorf("slug required to get page")
@@ -55,6 +56,7 @@ type getPagesResponse struct {
 	Pages []*gql.Page `json:"pages"`
 }
 
+// GetPages returns all pages.
 func GetPages(ctx context.Context, client *graphql.Client) ([]*gql.Page, error) {
 	req := graphql.NewRequest(`
 query GetPages {

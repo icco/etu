@@ -31,6 +31,7 @@ records:{{range $index, $pair := .Meta.Records }}
 `
 )
 
+// ToMarkdown renders a page as a markdown file with header matter.
 func ToMarkdown(p *gql.Page) (*bytes.Buffer, error) {
 	tmpl, err := template.New("md").Funcs(template.FuncMap{
 		"jstime": func(t time.Time) string {
@@ -53,14 +54,17 @@ type wikilinksExt struct {
 	found map[string]bool
 }
 
+// LinkWithContext marks a link as found.
 func (wl *wikilinksExt) LinkWithContext(destText string, destFilename string, context string) {
 	wl.found[strings.ToLower(destText)] = true
 }
 
+// Normalize makes a slug into a consistent path string.
 func (wl *wikilinksExt) Normalize(in string) string {
 	return fmt.Sprintf("/page/%s", strings.ToLower(url.PathEscape(in)))
 }
 
+// Extend adds WikiLink support to goldmark.
 func (wl *wikilinksExt) Extend(m goldmark.Markdown) {
 	wlp := wikilink.NewWikilinksParser().WithNormalizer(wl).WithTracker(wl)
 	m.Parser().AddOptions(
@@ -84,6 +88,7 @@ func buildMDParser() (goldmark.Markdown, *wikilinksExt) {
 	), wl
 }
 
+// ToHtml renders a page as html.
 func ToHTML(p *gql.Page) h.HTML {
 	var buf bytes.Buffer
 	md, _ := buildMDParser()
@@ -94,6 +99,7 @@ func ToHTML(p *gql.Page) h.HTML {
 	return h.HTML(buf.Bytes())
 }
 
+// FromMarkdown translates a byte stream into a page.
 func FromMarkdown(input io.Reader) (*gql.Page, error) {
 	m := front.NewMatter()
 	m.Handle("---", front.YAMLHandler)
