@@ -34,13 +34,10 @@ const (
 
 	// GCPProjectID is the project ID where we should send errors.
 	GCPProjectID = "icco-cloud"
-
-	// Service is the service this is deployed to in GCP.
-	Service = "etu"
 )
 
 var (
-	log = logging.Must(logging.NewLogger(Service))
+	log = logging.Must(logging.NewLogger(etu.Service))
 )
 
 func main() {
