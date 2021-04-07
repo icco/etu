@@ -16,11 +16,13 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+// AddHeaderTransport is a http transport for adding auth headers to a request.
 type AddHeaderTransport struct {
 	T   http.RoundTripper
 	Key string
 }
 
+// RoundTrip actually adds the headers.
 func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if adt.Key == "" {
 		return nil, fmt.Errorf("no key provided")
@@ -32,6 +34,7 @@ func (adt *AddHeaderTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return adt.T.RoundTrip(req)
 }
 
+// NewGraphQLClient creates a gql client for talking to our server.
 func NewGraphQLClient(ctx context.Context, endpoint, apikey string) (*graphql.Client, error) {
 	httpclient := &http.Client{
 		Transport: &AddHeaderTransport{T: http.DefaultTransport, Key: apikey},
@@ -69,6 +72,7 @@ type imageUploadResp struct {
 	Upload string `json:"upload"`
 }
 
+// UploadImage uploads an image to photos.natwelch.com.
 func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -114,6 +118,7 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	return url.Parse(p.File)
 }
 
+// EditPage upserts a page.
 func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {
 
 	gql := `

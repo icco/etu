@@ -88,7 +88,7 @@ func buildMDParser() (goldmark.Markdown, *wikilinksExt) {
 	), wl
 }
 
-// ToHtml renders a page as html.
+// ToHTML renders a page as html.
 func ToHTML(p *gql.Page) h.HTML {
 	var buf bytes.Buffer
 	md, _ := buildMDParser()
