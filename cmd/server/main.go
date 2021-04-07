@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
+	"github.com/icco/gutil/logging"
 )
 
 type pageResponse struct {
@@ -30,7 +29,15 @@ type pageData struct {
 }
 
 const (
+	// GQLDomain is the target of our requests.
 	GQLDomain = "https://graphql.natwelch.com/graphql"
+
+	// GCPProjectID is the project ID where we should send errors.
+	GCPProjectID = "icco-cloud"
+)
+
+var (
+	log = logging.Must(logging.NewLogger(etu.Service))
 )
 
 func main() {
@@ -38,10 +45,10 @@ func main() {
 	if fromEnv := os.Getenv("PORT"); fromEnv != "" {
 		port = fromEnv
 	}
-	log.Printf("Starting up on http://localhost:%s", port)
+	log.Infow("Starting up", "host", fmt.Sprintf("http://localhost:%s", port))
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(logging.Middleware(log.Desugar(), GCPProjectID))
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
@@ -147,5 +154,5 @@ func main() {
 		}
 	})
 
-	log.Fatalln(http.ListenAndServe(":"+port, r))
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }

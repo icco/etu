@@ -12,11 +12,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Path generates a path for a file to store locally.
 func (cfg *Config) Path(filename string) string {
 	path, _ := filepath.Abs(filepath.Join(cfg.dir, url.PathEscape(filename)))
 	return path
 }
 
+// Sync downloads and uploads files based on changes to the content in the server and local host.
 func (cfg *Config) Sync(c *cli.Context) error {
 	client, err := cfg.Client(c.Context)
 	if err != nil {

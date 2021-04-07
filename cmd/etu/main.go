@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Config stores all of our settings to run our cmd line app.
 type Config struct {
 	APIKey string
 	Env    string
@@ -91,6 +92,7 @@ func main() {
 	}
 }
 
+// Client generates our gql client.
 func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	url := ""
 	switch cfg.Env {

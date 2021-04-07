@@ -5,7 +5,6 @@ import (
 	"fmt"
 	h "html/template"
 	"io"
-	"log"
 	"net/url"
 	"strings"
 	"text/template"
@@ -18,6 +17,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/util"
+	"go.uber.org/zap"
 )
 
 const (
@@ -31,6 +31,7 @@ records:{{range $index, $pair := .Meta.Records }}
 `
 )
 
+// ToMarkdown renders a page as a markdown file with header matter.
 func ToMarkdown(p *gql.Page) (*bytes.Buffer, error) {
 	tmpl, err := template.New("md").Funcs(template.FuncMap{
 		"jstime": func(t time.Time) string {
@@ -53,15 +54,17 @@ type wikilinksExt struct {
 	found map[string]bool
 }
 
+// LinkWithContext marks a link as found.
 func (wl *wikilinksExt) LinkWithContext(destText string, destFilename string, context string) {
-	// log.Printf("link: %q %q %q", destText, destFilename, context)
 	wl.found[strings.ToLower(destText)] = true
 }
 
+// Normalize makes a slug into a consistent path string.
 func (wl *wikilinksExt) Normalize(in string) string {
 	return fmt.Sprintf("/page/%s", strings.ToLower(url.PathEscape(in)))
 }
 
+// Extend adds WikiLink support to goldmark.
 func (wl *wikilinksExt) Extend(m goldmark.Markdown) {
 	wlp := wikilink.NewWikilinksParser().WithNormalizer(wl).WithTracker(wl)
 	m.Parser().AddOptions(
@@ -85,16 +88,18 @@ func buildMDParser() (goldmark.Markdown, *wikilinksExt) {
 	), wl
 }
 
+// ToHTML renders a page as html.
 func ToHTML(p *gql.Page) h.HTML {
 	var buf bytes.Buffer
 	md, _ := buildMDParser()
 	if err := md.Convert([]byte(p.Content), &buf); err != nil {
-		log.Panic(err)
+		log.Panicw("could not create html", "page", p, zap.Error(err))
 	}
 
 	return h.HTML(buf.Bytes())
 }
 
+// FromMarkdown translates a byte stream into a page.
 func FromMarkdown(input io.Reader) (*gql.Page, error) {
 	m := front.NewMatter()
 	m.Handle("---", front.YAMLHandler)
@@ -133,7 +138,7 @@ func GetLinkedSlugs(p *gql.Page) map[string]bool {
 	md, t := buildMDParser()
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(p.Content), &buf); err != nil {
-		log.Panic(err)
+		log.Panicw("could not get linked slugs", "page", p, zap.Error(err))
 	}
 
 	return t.found

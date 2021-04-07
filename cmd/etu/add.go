@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Add launches the ui for adding a new entry.
 func (cfg *Config) Add(c *cli.Context) error {
 	client, err := cfg.Client(c.Context)
 	if err != nil {

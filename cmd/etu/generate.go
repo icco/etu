@@ -31,7 +31,7 @@ func (cfg *Config) Generate(c *cli.Context) error {
 		}
 	}
 
-	for l, _ := range links {
+	for l := range links {
 		if slugs[l] == nil {
 			if err := etu.EditPage(c.Context, client, l, "TBD", &gql.PageMetaGrouping{Records: []*gql.PageMeta{&gql.PageMeta{Key: "type", Record: "stub"}}}); err != nil {
 				return fmt.Errorf("uploading %q: %w", l, err)

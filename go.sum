@@ -211,8 +211,8 @@ github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ
 github.com/hashicorp/golang-lru v0.5.4/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
-github.com/icco/graphql v0.0.0-20210403023247-8b1701e0be62 h1:/ia0l2qg+Q1ibPBG8pLHAKWBuY5S4PX0tDlRvk/RKjE=
-github.com/icco/graphql v0.0.0-20210403023247-8b1701e0be62/go.mod h1:r6/vAOXmEqgaN7N04120EEN64HPIu+XoTfkQgFmpfm4=
+github.com/icco/graphql v0.0.0-20210407152301-106c9b77e05f h1:RQ5jheYHSDipPbDhyz8vMtdgIP6pDLZFCWWQEZpuh/Q=
+github.com/icco/graphql v0.0.0-20210407152301-106c9b77e05f/go.mod h1:r6/vAOXmEqgaN7N04120EEN64HPIu+XoTfkQgFmpfm4=
 github.com/icco/gutil v0.0.0-20210403015724-09144c640035/go.mod h1:WXLPJHxzGxWyYWq+dA1f5FjsjtLlD6KYmgP5bSZ9Rgw=
 github.com/icco/gutil v0.0.0-20210403025205-f4d44dcca9ed h1:+fHBtuUcUjYQ7037Z8skqiooAv4yYK45khfC/uBlCKQ=
 github.com/icco/gutil v0.0.0-20210403025205-f4d44dcca9ed/go.mod h1:+7ztmm2CBM/lvYMteupj/wdL2Q8G0tTOGr1NaSUGqE0=
