@@ -5,7 +5,6 @@ import (
 	"fmt"
 	h "html/template"
 	"io"
-	"log"
 	"net/url"
 	"strings"
 	"text/template"
@@ -18,6 +17,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/util"
+	"go.uber.org/zap"
 )
 
 const (
@@ -54,7 +54,6 @@ type wikilinksExt struct {
 }
 
 func (wl *wikilinksExt) LinkWithContext(destText string, destFilename string, context string) {
-	// log.Printf("link: %q %q %q", destText, destFilename, context)
 	wl.found[strings.ToLower(destText)] = true
 }
 
@@ -89,7 +88,7 @@ func ToHTML(p *gql.Page) h.HTML {
 	var buf bytes.Buffer
 	md, _ := buildMDParser()
 	if err := md.Convert([]byte(p.Content), &buf); err != nil {
-		log.Panic(err)
+		log.Panicw("could not create html", "page", p, zap.Error(err))
 	}
 
 	return h.HTML(buf.Bytes())
@@ -133,7 +132,7 @@ func GetLinkedSlugs(p *gql.Page) map[string]bool {
 	md, t := buildMDParser()
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(p.Content), &buf); err != nil {
-		log.Panic(err)
+		log.Panicw("could not get linked slugs", "page", p, zap.Error(err))
 	}
 
 	return t.found
