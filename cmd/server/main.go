@@ -16,10 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type pageResponse struct {
-	Page *gql.Page `json:"page"`
-}
-
 type pageData struct {
 	Content    template.HTML
 	Title      string
