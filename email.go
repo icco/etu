@@ -1,8 +1,11 @@
 package etu
 
 import (
+	"context"
 	"fmt"
 	"os"
+
+	"github.com/machinebox/graphql"
 )
 
 type EmailRequest struct {
@@ -57,11 +60,11 @@ type EmailRequest struct {
 
 // Validate checks if the request was valid.
 func (r *EmailRequest) Validate() error {
-	if req.FromFull.Email != os.Getenv("EXPECTED_FROM_EMAIL") {
+	if r.FromFull.Email != os.Getenv("EXPECTED_FROM_EMAIL") {
 		return fmt.Errorf("%q is not a valid from email")
 	}
 
-	if req.ToFull.Email != os.Getenv("EXPECTED_TO_EMAIL") {
+	if r.ToFull[0].Email != os.Getenv("EXPECTED_TO_EMAIL") {
 		return fmt.Errorf("%q is not a valid to email")
 	}
 
