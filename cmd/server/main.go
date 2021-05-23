@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
 	"github.com/icco/gutil/logging"
+	"go.uber.org/zap"
 )
 
 type pageResponse struct {
@@ -152,6 +154,28 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	})
+
+	r.Post("/email", func(w http.ResponseWriter, r *http.Request) {
+		var req *etu.EmailRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Errorw("could not parse json", zap.Error(err))
+		}
+
+		if err := req.Validate(); err != nil {
+			log.Errorw("invalid json", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := req.Save(r.Context()); err != nil {
+			log.Errorw("failed save", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, "ok")
 	})
 
 	log.Fatal(http.ListenAndServe(":"+port, r))
