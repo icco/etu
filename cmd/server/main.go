@@ -157,6 +157,13 @@ func main() {
 	})
 
 	r.Post("/email", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		client, err := etu.NewGraphQLClient(ctx, GQLDomain, os.Getenv("GQL_TOKEN"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		var req *etu.EmailRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Errorw("could not parse json", zap.Error(err))
@@ -168,7 +175,7 @@ func main() {
 			return
 		}
 
-		if err := req.Save(r.Context()); err != nil {
+		if err := req.Save(ctx, client); err != nil {
 			log.Errorw("failed save", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

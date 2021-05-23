@@ -68,6 +68,7 @@ func (r *EmailRequest) Validate() error {
 	return nil
 }
 
-func (r *EmailRequest) Save(ctx context.Context) error {
-	return nil
+// Save uploads to graphql.
+func (r *EmailRequest) Save(ctx context.Context, client *graphql.Client) error {
+	return EditPage(ctx, client, r.Subject, r.TextBody, nil)
 }
