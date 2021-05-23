@@ -62,7 +62,7 @@ type EmailRequest struct {
 // Validate checks if the request was valid.
 func (r *EmailRequest) Validate() error {
 	if r.FromFull.Email != os.Getenv("EXPECTED_FROM_EMAIL") {
-		return fmt.Errorf("%q is not a valid from email", r.FromEmail.Email)
+		return fmt.Errorf("%q is not a valid from email", r.FromFull.Email)
 	}
 
 	if r.ToFull[0].Email != os.Getenv("EXPECTED_TO_EMAIL") {
