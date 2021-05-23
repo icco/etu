@@ -8,6 +8,7 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+// EmailRequest is a postmark inbound email message.
 type EmailRequest struct {
 	From          string `json:"From"`
 	MessageStream string `json:"MessageStream"`
@@ -61,11 +62,11 @@ type EmailRequest struct {
 // Validate checks if the request was valid.
 func (r *EmailRequest) Validate() error {
 	if r.FromFull.Email != os.Getenv("EXPECTED_FROM_EMAIL") {
-		return fmt.Errorf("%q is not a valid from email")
+		return fmt.Errorf("%q is not a valid from email", r.FromEmail.Email)
 	}
 
 	if r.ToFull[0].Email != os.Getenv("EXPECTED_TO_EMAIL") {
-		return fmt.Errorf("%q is not a valid to email")
+		return fmt.Errorf("%q is not a valid to email", r.ToFull[0].Email)
 	}
 
 	return nil
