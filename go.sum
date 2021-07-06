@@ -230,8 +230,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:
 github.com/icco/graphql v0.0.0-20210607005129-8857ee859027 h1:8Oe71ZI+YkINxg0HTis9FTQggjKU78w2BHWW3N/cTC4=
 github.com/icco/graphql v0.0.0-20210607005129-8857ee859027/go.mod h1:EEw8yVeKhdGGFgdNVApEap5wotOlWUV58eGE4yC+ejo=
 github.com/icco/gutil v0.0.0-20210607003632-0fb9226bd58b/go.mod h1:+im7r5cXXGNBptBC/3oNcyKGINMkTs28Y+ROuw/KNWk=
-github.com/icco/gutil v0.0.0-20210702143127-12e3439e77ee h1:Y2Jko7VA6EZh5nNlwN/f3Pd0MpwA6zgB9KAkCu6WVsg=
-github.com/icco/gutil v0.0.0-20210702143127-12e3439e77ee/go.mod h1:RbZ9hZI4YSvefD+qKbi6dTMnbHnbjsfk6SjjhhnPPS8=
+github.com/icco/gutil v0.0.0-20210706020035-d1bef041b1ac h1:twphw7u+LNj8B06F1S0IYhM21pbSDA3FN2rHSsxRZ3s=
+github.com/icco/gutil v0.0.0-20210706020035-d1bef041b1ac/go.mod h1:RbZ9hZI4YSvefD+qKbi6dTMnbHnbjsfk6SjjhhnPPS8=
 github.com/icco/zapdriver v1.4.0 h1:ACpofOtnSJT9eywNOoTuEhzo7YtFUGCc4xBXYFWYMkI=
 github.com/icco/zapdriver v1.4.0/go.mod h1:M9vTLsSlL3ciV1RK6uK9O/0zAdqNNIZ3n74qdCHvAl8=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=

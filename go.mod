@@ -9,7 +9,7 @@ require (
 	github.com/gernest/front v0.0.0-20210301115436-8a0b0a782d0a
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/icco/graphql v0.0.0-20210607005129-8857ee859027
-	github.com/icco/gutil v0.0.0-20210702143127-12e3439e77ee
+	github.com/icco/gutil v0.0.0-20210706020035-d1bef041b1ac
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
