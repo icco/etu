@@ -268,8 +268,6 @@ github.com/icco/graphql v0.0.0-20220115161852-1b88449db525/go.mod h1:aozTjZh3wWN
 github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8 h1:Dd1uyckLnfYlRHXdhN8VGCLGaVr1SBJifym0cD8JrPA=
 github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8/go.mod h1:CP+lgBR+jfUuimBwRMZ/dFgVOMJ1a8HzXoMNYYEncj4=
 github.com/icco/gutil v0.0.0-20220115012634-f4c905407630/go.mod h1:UiXotcDkvn8rsWcm0RuvAGdpJrKBNhM11dQoMBoJmmk=
-github.com/icco/gutil v0.0.0-20220115163816-b7b82159b0b6 h1:90PoKzDTjCyV8Xpqq+nkWvnw9qrra61BcMCS/hbfXx4=
-github.com/icco/gutil v0.0.0-20220115163816-b7b82159b0b6/go.mod h1:UiXotcDkvn8rsWcm0RuvAGdpJrKBNhM11dQoMBoJmmk=
 github.com/icco/gutil v0.0.0-20220115170613-a57da700978e h1:pJquGP067UIPoyWKRX+V/3nCOWwT4L2A7eNjCHRa2wU=
 github.com/icco/gutil v0.0.0-20220115170613-a57da700978e/go.mod h1:UiXotcDkvn8rsWcm0RuvAGdpJrKBNhM11dQoMBoJmmk=
 github.com/icco/zapdriver v1.4.0 h1:ACpofOtnSJT9eywNOoTuEhzo7YtFUGCc4xBXYFWYMkI=
