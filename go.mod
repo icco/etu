@@ -8,7 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/icco/graphql v0.0.0-20220115161852-1b88449db525
 	github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8
-	github.com/icco/gutil v0.0.0-20220115170613-a57da700978e
+	github.com/icco/gutil v0.0.0-20220115171937-06fb917087d7
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
