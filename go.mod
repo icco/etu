@@ -6,7 +6,7 @@ require (
 	github.com/dangoor/goldmark-wikilinks v1.0.0
 	github.com/gernest/front v0.0.0-20210301115436-8a0b0a782d0a
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/icco/graphql v0.0.0-20220115161852-1b88449db525
+	github.com/icco/graphql v0.0.0-20220115171111-ed4369d8ed92
 	github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8
 	github.com/icco/gutil v0.0.0-20220115171937-06fb917087d7
 	github.com/machinebox/graphql v0.2.2
