@@ -50,24 +50,10 @@ func main() {
 				},
 			},
 			{
-				Name:    "generate",
-				Aliases: []string{"g"},
+				Name:    "timer",
+				Aliases: []string{"t"},
 				Usage:   "generate missing slugs",
-				Action:  cfg.Generate,
-			},
-			{
-				Name:    "sync",
-				Aliases: []string{"s"},
-				Usage:   "Sync wiki to disk",
-				Action:  cfg.Sync,
-				Flags: []cli.Flag{
-					&cli.PathFlag{
-						Name:        "dir",
-						Usage:       "set where to store the wiki",
-						Value:       "/tmp/wiki",
-						Destination: &cfg.dir,
-					},
-				},
+				Action:  cfg.Timer,
 			},
 		},
 		Flags: []cli.Flag{
