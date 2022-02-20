@@ -8,7 +8,7 @@ require (
 	github.com/dangoor/goldmark-wikilinks v1.0.0
 	github.com/gernest/front v0.0.0-20210301115436-8a0b0a782d0a
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/icco/graphql v0.0.0-20220220011150-d61934a2a148
+	github.com/icco/graphql v0.0.0-20220220024902-490ce385cade
 	github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8
 	github.com/icco/gutil v0.0.0-20220220010526-7c82f1ebf02d
 	github.com/machinebox/graphql v0.2.2
@@ -19,12 +19,12 @@ require (
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
-	cloud.google.com/go/compute v1.2.0 // indirect
-	cloud.google.com/go/iam v0.1.1 // indirect
-	cloud.google.com/go/monitoring v1.2.0 // indirect
-	cloud.google.com/go/storage v1.18.2 // indirect
-	cloud.google.com/go/trace v1.0.0 // indirect
-	github.com/99designs/gqlgen v0.15.1 // indirect
+	cloud.google.com/go/compute v1.3.0 // indirect
+	cloud.google.com/go/iam v0.2.0 // indirect
+	cloud.google.com/go/monitoring v1.3.0 // indirect
+	cloud.google.com/go/storage v1.21.0 // indirect
+	cloud.google.com/go/trace v1.1.0 // indirect
+	github.com/99designs/gqlgen v0.16.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v1.0.0-RC1.0.20220111155622-771af0772772 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.3.0 // indirect
 	github.com/GuiaBolso/darwin v0.0.0-20191218124601-fd6d2aa3d244 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.2.0 // indirect
+	github.com/vektah/gqlparser/v2 v2.3.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.29.0 // indirect
 	go.opentelemetry.io/otel v1.4.1 // indirect
@@ -68,13 +68,13 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/api v0.68.0 // indirect
+	google.golang.org/api v0.69.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220207185906-7721543eae58 // indirect
+	google.golang.org/genproto v0.0.0-20220218161850-94dd64e39d7c // indirect
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )

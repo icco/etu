@@ -119,9 +119,9 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 }
 
 // UploadLog uploads a new log.
-func UploadLog(ctx context.Context, client *graphql.Client, log *gql.InputLog) error {
+func UploadLog(ctx context.Context, client *graphql.Client, log *gql.NewLog) error {
 	gql := `
-  mutation SaveLog($log: InputLog) {
+  mutation SaveLog($log: NewLog) {
     insertLog(
       input: $log
     ) {

@@ -304,6 +304,8 @@ github.com/icco/graphql v0.0.0-20220124024000-2ceaa0785683 h1:AFIy0seh5CvG6xkwZP
 github.com/icco/graphql v0.0.0-20220124024000-2ceaa0785683/go.mod h1:bQEsy9jxpWedUnDoJYGlBcyOyHw1KN4oXod5Z3DcDXM=
 github.com/icco/graphql v0.0.0-20220220011150-d61934a2a148 h1:mzO+Bymb/K3EhrVo/dT4PmPJqRfWPZpUlJs9Qq300o8=
 github.com/icco/graphql v0.0.0-20220220011150-d61934a2a148/go.mod h1:GzIeM9UvC9TJW+Prdul7cw8hpit4M6RIcKu6ai8DFUg=
+github.com/icco/graphql v0.0.0-20220220024902-490ce385cade h1:4JxFVpArNPkkUW2XJtfCuueCy5zjgFp6dznsGdZ1OOA=
+github.com/icco/graphql v0.0.0-20220220024902-490ce385cade/go.mod h1:Ln9sNoQlybLXt20q+gppeZi/pM7miIoI4FVW5rDAObs=
 github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8 h1:Dd1uyckLnfYlRHXdhN8VGCLGaVr1SBJifym0cD8JrPA=
 github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8/go.mod h1:CP+lgBR+jfUuimBwRMZ/dFgVOMJ1a8HzXoMNYYEncj4=
 github.com/icco/gutil v0.0.0-20220117013958-c851cb44991d/go.mod h1:UiXotcDkvn8rsWcm0RuvAGdpJrKBNhM11dQoMBoJmmk=
