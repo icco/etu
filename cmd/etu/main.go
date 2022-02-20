@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/icco/etu"
@@ -17,43 +16,40 @@ type Config struct {
 	APIKey string
 	Env    string
 
-	slug string
-	dir  string
-	file string
+	project string
 }
 
 func main() {
 	cfg := &Config{}
 	app := &cli.App{
 		Name:  "etu",
-		Usage: "Journaling from the command line",
+		Usage: "Log time",
 		Commands: []*cli.Command{
 			{
-				Name:    "add",
-				Aliases: []string{"a"},
-				Usage:   "add a log",
-				Action:  cfg.Add,
+				Name:    "timer",
+				Usage:   "record time for a project",
+				Aliases: []string{"t"},
+				Action:  cfg.Timer,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:        "slug",
-						Aliases:     []string{"s"},
-						Usage:       "slug to save page as",
-						Destination: &cfg.slug,
-					},
-					&cli.PathFlag{
-						Name:        "file",
-						Aliases:     []string{"f"},
-						Usage:       "image to upload",
-						Value:       "",
-						Destination: &cfg.file,
+						Name:        "project",
+						Usage:       "project to log for",
+						Destination: &cfg.project,
 					},
 				},
 			},
 			{
-				Name:    "timer",
-				Aliases: []string{"t"},
-				Usage:   "generate missing slugs",
-				Action:  cfg.Timer,
+				Name:    "pomodoro",
+				Usage:   "record a pomodoro for a project",
+				Aliases: []string{"p"},
+				Action:  cfg.Pomodoro,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "project",
+						Usage:       "project to log for",
+						Destination: &cfg.project,
+					},
+				},
 			},
 		},
 		Flags: []cli.Flag{
@@ -74,7 +70,8 @@ func main() {
 	}
 
 	if err := app.RunContext(context.Background(), os.Args); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
