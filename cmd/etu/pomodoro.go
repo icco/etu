@@ -13,15 +13,17 @@ import (
 const timeout = time.Second * 5
 
 type pomoModel struct {
-	timer  timer.Model
-	keymap struct {
-		start key.Binding
-		stop  key.Binding
-		reset key.Binding
-		quit  key.Binding
-	}
+	timer    timer.Model
+	keymap   keymap
 	help     help.Model
 	quitting bool
+}
+
+type keymap struct {
+	start key.Binding
+	stop  key.Binding
+	reset key.Binding
+	quit  key.Binding
 }
 
 func (m pomoModel) Init() tea.Cmd {

@@ -46,14 +46,9 @@ func (cfg *Config) Timer(c *cli.Context) error {
 
 type timerModel struct {
 	stopwatch stopwatch.Model
-	keymap    struct {
-		start key.Binding
-		stop  key.Binding
-		reset key.Binding
-		quit  key.Binding
-	}
-	help     help.Model
-	quitting bool
+	keymap    keymap
+	help      help.Model
+	quitting  bool
 }
 
 func (m timerModel) Init() tea.Cmd {
