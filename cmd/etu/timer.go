@@ -12,7 +12,7 @@ import (
 )
 
 func (cfg *Config) Timer(c *cli.Context) error {
-	m := model{
+	m := timerModel{
 		stopwatch: stopwatch.NewWithInterval(time.Millisecond),
 		keymap: keymap{
 			start: key.NewBinding(
@@ -44,25 +44,23 @@ func (cfg *Config) Timer(c *cli.Context) error {
 	return nil
 }
 
-type model struct {
+type timerModel struct {
 	stopwatch stopwatch.Model
-	keymap    keymap
-	help      help.Model
-	quitting  bool
+	keymap    struct {
+		start key.Binding
+		stop  key.Binding
+		reset key.Binding
+		quit  key.Binding
+	}
+	help     help.Model
+	quitting bool
 }
 
-type keymap struct {
-	start key.Binding
-	stop  key.Binding
-	reset key.Binding
-	quit  key.Binding
-}
-
-func (m model) Init() tea.Cmd {
+func (m timerModel) Init() tea.Cmd {
 	return m.stopwatch.Init()
 }
 
-func (m model) View() string {
+func (m timerModel) View() string {
 	// Note: you could further customize the time output by getting the
 	// duration from m.stopwatch.Elapsed(), which returns a time.Duration, and
 	// skip m.stopwatch.View() altogether.
@@ -74,7 +72,7 @@ func (m model) View() string {
 	return s
 }
 
-func (m model) helpView() string {
+func (m timerModel) helpView() string {
 	return "\n" + m.help.ShortHelpView([]key.Binding{
 		m.keymap.start,
 		m.keymap.stop,
@@ -83,7 +81,7 @@ func (m model) helpView() string {
 	})
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m timerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
