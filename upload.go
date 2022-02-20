@@ -117,29 +117,3 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 
 	return url.Parse(p.File)
 }
-
-// EditPage upserts a page.
-func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {
-
-	gql := `
-mutation SavePage($content: String!, $slug: ID!, $meta: [InputMeta]!) {
-  upsertPage(input: {
-    content: $content,
-    slug: $slug,
-    meta: $meta,
-  }) {
-    modified
-  }
-}`
-
-	req := graphql.NewRequest(gql)
-	req.Var("content", content)
-	req.Var("slug", slug)
-	req.Var("meta", meta.Records)
-
-	if err := client.Run(ctx, req, nil); err != nil {
-		return fmt.Errorf("edit page %+v: %w", req, err)
-	}
-
-	return nil
-}
