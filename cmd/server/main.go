@@ -1,19 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
 	"github.com/icco/gutil/logging"
-	"go.uber.org/zap"
 )
 
 type pageData struct {
@@ -35,7 +31,7 @@ const (
 )
 
 var (
-	log = logging.Must(logging.NewLogger(etu.Service))
+	log = logging.Must(logging.NewLogger("etu"))
 )
 
 func main() {
@@ -56,7 +52,7 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		data := &pageData{
 			Content: template.HTML(`Etu is a work in progress. <a href="https://github.com/icco/etu">github.com/icco/etu</a> for more information.`),
-			Title:   "Etu: icco's wiki",
+			Title:   "Etu: icco's time log",
 			Header:  "Etu",
 		}
 
@@ -71,114 +67,6 @@ func main() {
 		filesDir := http.Dir(filepath.Join(workDir, "cmd/server/public"))
 		fs := http.FileServer(filesDir)
 		fs.ServeHTTP(w, r)
-	})
-
-	r.Get("/pages", func(w http.ResponseWriter, r *http.Request) {
-		client, err := etu.NewGraphQLClient(r.Context(), GQLDomain, os.Getenv("GQL_TOKEN"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		pages, err := etu.GetPages(r.Context(), client)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		data := &pageData{
-			Title:  "Etu: index",
-			Header: "Etu: index",
-			Pages:  map[string][]*gql.Page{},
-		}
-
-		for _, p := range pages {
-			t := "unknown"
-			if v := p.Meta.Get("type"); v != "" {
-				t = v
-			}
-			data.Pages[t] = append(data.Pages[t], p)
-		}
-
-		if err := pagesTmpl.Execute(w, data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-
-	r.Get("/page/*", func(w http.ResponseWriter, r *http.Request) {
-		rawslug := chi.URLParam(r, "*")
-		slug, err := url.QueryUnescape(rawslug)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		client, err := etu.NewGraphQLClient(r.Context(), GQLDomain, os.Getenv("GQL_TOKEN"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		page, err := etu.GetPage(r.Context(), client, slug)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var refs []string
-		pages, err := etu.GetPages(r.Context(), client)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		for _, p := range pages {
-			linked := etu.GetLinkedSlugs(p)
-			if linked[page.Slug] {
-				refs = append(refs, p.Slug)
-			}
-		}
-
-		data := &pageData{
-			Content:    etu.ToHTML(page),
-			Title:      fmt.Sprintf("Etu: %q", page.Slug),
-			Page:       page,
-			References: refs,
-		}
-
-		if err := pageTmpl.Execute(w, data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-
-	r.Post("/email", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		client, err := etu.NewGraphQLClient(ctx, GQLDomain, os.Getenv("GQL_TOKEN"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var req *etu.EmailRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Errorw("could not parse json", zap.Error(err))
-		}
-
-		if err := req.Validate(); err != nil {
-			log.Errorw("invalid json", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if err := req.Save(ctx, client); err != nil {
-			log.Errorw("failed save", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintf(w, "ok")
 	})
 
 	log.Fatal(http.ListenAndServe(":"+port, r))
