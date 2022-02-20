@@ -117,3 +117,27 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 
 	return url.Parse(p.File)
 }
+
+// UploadLog uploads a new log.
+func UploadLog(ctx context.Context, client *graphql.Client, log *gql.InputLog) error {
+	gql := `
+  mutation SaveLog($log: InputLog) {
+    insertLog(
+      input: $log
+    ) {
+      id
+      description
+      duration
+      uri
+    }
+  }`
+
+	req := graphql.NewRequest(gql)
+	req.Var("log", log)
+
+	if err := client.Run(ctx, req, nil); err != nil {
+		return fmt.Errorf("upload log %+v: %w", req, err)
+	}
+
+	return nil
+}
