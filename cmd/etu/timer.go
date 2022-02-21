@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Timer starts counting up.
 func (cfg *Config) Timer(c *cli.Context) error {
 	m := timerModel{
 		stopwatch: stopwatch.NewWithInterval(time.Millisecond),

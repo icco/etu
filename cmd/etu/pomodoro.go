@@ -89,6 +89,7 @@ func (m pomoModel) View() string {
 	return s
 }
 
+// Pomodoro creates a 25 minute countdown to work to.
 func (cfg *Config) Pomodoro(c *cli.Context) error {
 	timeout := time.Minute * 25
 
