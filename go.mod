@@ -5,16 +5,11 @@ go 1.17
 require (
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
-	github.com/dangoor/goldmark-wikilinks v1.0.0
-	github.com/gernest/front v0.0.0-20210301115436-8a0b0a782d0a
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/icco/graphql v0.0.0-20220220024902-490ce385cade
-	github.com/icco/graphql/time v0.0.0-20201230045031-4c9970c30cc8
 	github.com/icco/gutil v0.0.0-20220220010526-7c82f1ebf02d
 	github.com/machinebox/graphql v0.2.2
 	github.com/urfave/cli/v2 v2.3.0
-	github.com/yuin/goldmark v1.4.7
-	go.uber.org/zap v1.21.0
 )
 
 require (
@@ -33,6 +28,16 @@ require (
 	github.com/charmbracelet/lipgloss v0.4.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
+	github.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect
+	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
+	github.com/cznic/internal v0.0.0-20181122101858-3279554c546e // indirect
+	github.com/cznic/lldb v1.1.0 // indirect
+	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
+	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect
+	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
+	github.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect
+	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -45,6 +50,7 @@ require (
 	github.com/imgix/imgix-go/v2 v2.0.3 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
@@ -52,6 +58,7 @@ require (
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
 	github.com/paulmach/orb v0.4.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.3.1 // indirect
@@ -66,6 +73,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
+	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
