@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/icco/etu"
 	gql "github.com/icco/graphql"
@@ -92,11 +93,15 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 }
 
 func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) error {
+	client, err := cfg.Client(ctx)
+	if err != nil {
+		return err
+	}
 
-	return etu.UploadLog(ctx, cfg.Client(), &gql.NewLog{
+	return etu.UploadLog(ctx, client, &gql.NewLog{
 		Sector:      sector,
 		Project:     project,
-		Description: description,
+		Description: &description,
 		Started:     start,
 		Stopped:     stop,
 	})
