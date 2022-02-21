@@ -118,27 +118,28 @@ func UploadImage(ctx context.Context, apikey, path string) (*url.URL, error) {
 	return url.Parse(p.File)
 }
 
-// EditPage upserts a page.
-func EditPage(ctx context.Context, client *graphql.Client, slug, content string, meta *gql.PageMetaGrouping) error {
+// UploadLog uploads a new log.
+func UploadLog(ctx context.Context, client *graphql.Client, log *gql.NewLog) error {
+	if log == nil {
+		return fmt.Errorf("log cannot be empty")
+	}
 
 	gql := `
-mutation SavePage($content: String!, $slug: ID!, $meta: [InputMeta]!) {
-  upsertPage(input: {
-    content: $content,
-    slug: $slug,
-    meta: $meta,
-  }) {
-    modified
-  }
-}`
+  mutation SaveLog($log: NewLog!) {
+    insertLog(
+      input: $log
+    ) {
+      id
+      description
+      duration
+      uri
+    }
+  }`
 
 	req := graphql.NewRequest(gql)
-	req.Var("content", content)
-	req.Var("slug", slug)
-	req.Var("meta", meta.Records)
-
+	req.Var("log", *log)
 	if err := client.Run(ctx, req, nil); err != nil {
-		return fmt.Errorf("edit page %+v: %w", req, err)
+		return fmt.Errorf("failed upload log %+v: %w", log, err)
 	}
 
 	return nil

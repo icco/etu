@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/icco/etu"
+	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
 	"github.com/urfave/cli/v2"
 )
@@ -17,55 +19,38 @@ type Config struct {
 	APIKey string
 	Env    string
 
-	slug string
-	dir  string
-	file string
+	project string
 }
 
 func main() {
 	cfg := &Config{}
 	app := &cli.App{
 		Name:  "etu",
-		Usage: "Journaling from the command line",
+		Usage: "Log time",
 		Commands: []*cli.Command{
 			{
-				Name:    "add",
-				Aliases: []string{"a"},
-				Usage:   "add a log",
-				Action:  cfg.Add,
+				Name:    "timer",
+				Usage:   "record time for a project",
+				Aliases: []string{"t"},
+				Action:  cfg.Timer,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:        "slug",
-						Aliases:     []string{"s"},
-						Usage:       "slug to save page as",
-						Destination: &cfg.slug,
-					},
-					&cli.PathFlag{
-						Name:        "file",
-						Aliases:     []string{"f"},
-						Usage:       "image to upload",
-						Value:       "",
-						Destination: &cfg.file,
+						Name:        "project",
+						Usage:       "project to log for",
+						Destination: &cfg.project,
 					},
 				},
 			},
 			{
-				Name:    "generate",
-				Aliases: []string{"g"},
-				Usage:   "generate missing slugs",
-				Action:  cfg.Generate,
-			},
-			{
-				Name:    "sync",
-				Aliases: []string{"s"},
-				Usage:   "Sync wiki to disk",
-				Action:  cfg.Sync,
+				Name:    "pomodoro",
+				Usage:   "record a pomodoro for a project",
+				Aliases: []string{"p"},
+				Action:  cfg.Pomodoro,
 				Flags: []cli.Flag{
-					&cli.PathFlag{
-						Name:        "dir",
-						Usage:       "set where to store the wiki",
-						Value:       "/tmp/wiki",
-						Destination: &cfg.dir,
+					&cli.StringFlag{
+						Name:        "project",
+						Usage:       "project to log for",
+						Destination: &cfg.project,
 					},
 				},
 			},
@@ -88,7 +73,8 @@ func main() {
 	}
 
 	if err := app.RunContext(context.Background(), os.Args); err != nil {
-		log.Fatal(err)
+		log.Printf("error running: %+v", err)
+		os.Exit(1)
 	}
 }
 
@@ -105,4 +91,22 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	}
 
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
+}
+
+// Upload creates a new log
+func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) {
+	client, err := cfg.Client(ctx)
+	if err != nil {
+		log.Printf("error creating client: %+v", err)
+	}
+
+	if err := etu.UploadLog(ctx, client, &gql.NewLog{
+		Sector:      sector,
+		Project:     project,
+		Description: &description,
+		Started:     start,
+		Stopped:     stop,
+	}); err != nil {
+		log.Printf("error uploading: %+v", err)
+	}
 }
