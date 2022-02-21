@@ -22,7 +22,7 @@ type pomoModel struct {
 	cfg      *Config
 	project  string
 	start    time.Time
-	sector   gql.Sector
+	sector   gql.WorkSector
 	desc     string
 }
 
@@ -53,14 +53,14 @@ func (m pomoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case timer.TimeoutMsg:
 		m.quitting = true
-		m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
+		m.cfg.Upload(context.Background(), m.start, time.Now(), m.sector, m.project, m.desc)
 		return m, tea.Quit
 
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keymap.quit):
 			m.quitting = true
-			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
+			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sector, m.project, m.desc)
 			return m, tea.Quit
 		case key.Matches(msg, m.keymap.reset):
 			m.timer.Timeout = timeout

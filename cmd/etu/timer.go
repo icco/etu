@@ -21,7 +21,7 @@ type timerModel struct {
 	cfg       *Config
 	project   string
 	start     time.Time
-	sector    gql.Sector
+	sector    gql.WorkSector
 	desc      string
 }
 
@@ -56,10 +56,10 @@ func (m timerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keymap.quit):
 			m.quitting = true
-			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
+			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sector, m.project, m.desc)
 			return m, tea.Quit
 		case key.Matches(msg, m.keymap.reset):
-			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
+			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sector, m.project, m.desc)
 			m.start = time.Now()
 			return m, m.stopwatch.Reset()
 		case key.Matches(msg, m.keymap.start):
@@ -70,7 +70,7 @@ func (m timerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.stop):
 			m.keymap.stop.SetEnabled(!m.stopwatch.Running())
 			m.keymap.start.SetEnabled(m.stopwatch.Running())
-			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
+			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sector, m.project, m.desc)
 			return m, m.stopwatch.Toggle()
 		}
 	}
