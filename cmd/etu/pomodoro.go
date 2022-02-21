@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
+	gql "github.com/icco/graphql"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,6 +19,11 @@ type pomoModel struct {
 	keymap   keymap
 	help     help.Model
 	quitting bool
+	cfg      *Config
+	project  string
+	start    time.Time
+	sector   gql.Sector
+	desc     string
 }
 
 type keymap struct {
@@ -46,12 +53,14 @@ func (m pomoModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case timer.TimeoutMsg:
 		m.quitting = true
+		m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
 		return m, tea.Quit
 
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keymap.quit):
 			m.quitting = true
+			m.cfg.Upload(context.Background(), m.start, time.Now(), m.sectory, m.project, m.desc)
 			return m, tea.Quit
 		case key.Matches(msg, m.keymap.reset):
 			m.timer.Timeout = timeout
@@ -73,9 +82,6 @@ func (m pomoModel) helpView() string {
 }
 
 func (m pomoModel) View() string {
-	// For a more detailed timer view you could read m.timer.Timeout to get
-	// the remaining time as a time.Duration and skip calling m.timer.View()
-	// entirely.
 	s := m.timer.View()
 
 	if m.timer.Timedout() {
@@ -94,6 +100,8 @@ func (cfg *Config) Pomodoro(c *cli.Context) error {
 	timeout := time.Minute * 25
 
 	m := pomoModel{
+		cfg:   cfg,
+		start: time.Now(),
 		timer: timer.NewWithInterval(timeout, time.Millisecond),
 		keymap: keymap{
 			start: key.NewBinding(

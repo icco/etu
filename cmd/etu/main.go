@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/icco/etu"
+	gql "github.com/icco/graphql"
 	"github.com/machinebox/graphql"
 	"github.com/urfave/cli/v2"
 )
@@ -88,4 +89,15 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	}
 
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
+}
+
+func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) error {
+
+	return etu.UploadLog(ctx, cfg.Client(), &gql.NewLog{
+		Sector:      sector,
+		Project:     project,
+		Description: description,
+		Started:     start,
+		Stopped:     stop,
+	})
 }
