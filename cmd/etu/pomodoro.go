@@ -100,9 +100,10 @@ func (cfg *Config) Pomodoro(c *cli.Context) error {
 	timeout := time.Minute * 25
 
 	m := pomoModel{
-		cfg:   cfg,
-		start: time.Now(),
-		timer: timer.NewWithInterval(timeout, time.Millisecond),
+		cfg:    cfg,
+		start:  time.Now(),
+		timer:  timer.NewWithInterval(timeout, time.Millisecond),
+		sector: gql.WorkSectorResearch,
 		keymap: keymap{
 			start: key.NewBinding(
 				key.WithKeys("s"),

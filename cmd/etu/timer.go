@@ -82,6 +82,9 @@ func (m timerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Timer starts counting up.
 func (cfg *Config) Timer(c *cli.Context) error {
 	m := timerModel{
+		cfg:       cfg,
+		start:     time.Now(),
+		sector:    gql.WorkSectorResearch,
 		stopwatch: stopwatch.NewWithInterval(time.Millisecond),
 		keymap: keymap{
 			start: key.NewBinding(
