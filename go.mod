@@ -6,8 +6,8 @@ require (
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/icco/graphql v0.0.0-20220220024902-490ce385cade
-	github.com/icco/gutil v0.0.0-20220220010526-7c82f1ebf02d
+	github.com/icco/graphql v0.0.0-20220221170456-caefd95b0ea1
+	github.com/icco/gutil v0.0.0-20220221170217-9aa326c389ec
 	github.com/machinebox/graphql v0.2.2
 	github.com/urfave/cli/v2 v2.3.0
 )
@@ -68,8 +68,8 @@ require (
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.4.1 // indirect
-	go.opentelemetry.io/otel/sdk/export/metric v0.26.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v0.26.0 // indirect
+	go.opentelemetry.io/otel/sdk/export/metric v0.27.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
