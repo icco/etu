@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -72,7 +73,7 @@ func main() {
 	}
 
 	if err := app.RunContext(context.Background(), os.Args); err != nil {
-		fmt.Println(err)
+		log.Printf("error running: %+v", err)
 		os.Exit(1)
 	}
 }
@@ -92,17 +93,19 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
 }
 
-func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) error {
+func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) {
 	client, err := cfg.Client(ctx)
 	if err != nil {
-		return err
+		log.Printf("error creating client: %+v", err)
 	}
 
-	return etu.UploadLog(ctx, client, &gql.NewLog{
+	if err := etu.UploadLog(ctx, client, &gql.NewLog{
 		Sector:      sector,
 		Project:     project,
 		Description: &description,
 		Started:     start,
 		Stopped:     stop,
-	})
+	}); err != nil {
+		log.Printf("error uploading: %+v", err)
+	}
 }
