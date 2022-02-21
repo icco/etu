@@ -93,6 +93,7 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 	return etu.NewGraphQLClient(ctx, url, cfg.APIKey)
 }
 
+// Upload creates a new log
 func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) {
 	client, err := cfg.Client(ctx)
 	if err != nil {
