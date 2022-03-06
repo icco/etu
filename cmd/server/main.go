@@ -8,19 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
-	gql "github.com/icco/graphql"
 	"github.com/icco/gutil/logging"
 )
-
-type pageData struct {
-	Content    template.HTML
-	Title      string
-	Header     string
-	SubHeader  string
-	Page       *gql.Page
-	Pages      map[string][]*gql.Page
-	References []string
-}
 
 const (
 	// GQLDomain is the target of our requests.

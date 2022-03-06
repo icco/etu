@@ -21,7 +21,7 @@ type timerModel struct {
 	cfg       *Config
 	project   string
 	start     time.Time
-	sector    gql.WorkSector
+	sector    gql.Sector
 	desc      string
 }
 
@@ -84,7 +84,7 @@ func (cfg *Config) Timer(c *cli.Context) error {
 	m := timerModel{
 		cfg:       cfg,
 		start:     time.Now(),
-		sector:    gql.WorkSectorResearch,
+		sector:    gql.SectorResearch,
 		stopwatch: stopwatch.NewWithInterval(time.Millisecond),
 		keymap: keymap{
 			start: key.NewBinding(

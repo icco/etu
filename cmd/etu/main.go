@@ -94,7 +94,7 @@ func (cfg *Config) Client(ctx context.Context) (*graphql.Client, error) {
 }
 
 // Upload creates a new log
-func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.WorkSector, project, description string) {
+func (cfg *Config) Upload(ctx context.Context, start, stop time.Time, sector gql.Sector, project, description string) {
 	client, err := cfg.Client(ctx)
 	if err != nil {
 		log.Printf("error creating client: %+v", err)

@@ -22,7 +22,7 @@ type pomoModel struct {
 	cfg      *Config
 	project  string
 	start    time.Time
-	sector   gql.WorkSector
+	sector   gql.Sector
 	desc     string
 }
 
@@ -103,7 +103,7 @@ func (cfg *Config) Pomodoro(c *cli.Context) error {
 		cfg:    cfg,
 		start:  time.Now(),
 		timer:  timer.NewWithInterval(timeout, time.Millisecond),
-		sector: gql.WorkSectorResearch,
+		sector: gql.SectorResearch,
 		keymap: keymap{
 			start: key.NewBinding(
 				key.WithKeys("s"),
