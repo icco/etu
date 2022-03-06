@@ -19,6 +19,12 @@ const (
 	GCPProjectID = "icco-cloud"
 )
 
+type pageData struct {
+	Content template.HTML
+	Title   string
+	Header  string
+}
+
 var (
 	log = logging.Must(logging.NewLogger("etu"))
 )
