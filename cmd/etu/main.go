@@ -59,6 +59,13 @@ func main() {
 				Usage:   "log work",
 				Aliases: []string{"l"},
 				Action:  cfg.Log,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "project",
+						Usage:       "project to log for",
+						Destination: &cfg.project,
+					},
+				},
 			},
 		},
 		Flags: []cli.Flag{
