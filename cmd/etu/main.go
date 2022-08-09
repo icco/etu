@@ -18,6 +18,7 @@ import (
 type Config struct {
 	APIKey string
 	Env    string
+	Log    *zap.Log
 
 	project string
 }
