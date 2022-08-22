@@ -12,7 +12,7 @@ type User {
 
 type Entry {
   id: ID!
-  datetime: Time!
+  created: Time!
   text: String!
   user: User!
 }
@@ -23,7 +23,7 @@ type Query {
 
 input NewEntry {
   text: String!
-  datetime: Time!
+  created: Time
   userId: String!
 }
 

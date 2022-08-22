@@ -46,10 +46,10 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Entry struct {
-		Datetime func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Text     func(childComplexity int) int
-		User     func(childComplexity int) int
+		Created func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Text    func(childComplexity int) int
+		User    func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -89,12 +89,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Entry.datetime":
-		if e.complexity.Entry.Datetime == nil {
+	case "Entry.created":
+		if e.complexity.Entry.Created == nil {
 			break
 		}
 
-		return e.complexity.Entry.Datetime(childComplexity), true
+		return e.complexity.Entry.Created(childComplexity), true
 
 	case "Entry.id":
 		if e.complexity.Entry.ID == nil {
@@ -240,7 +240,7 @@ type User {
 
 type Entry {
   id: ID!
-  datetime: Time!
+  created: Time!
   text: String!
   user: User!
 }
@@ -251,7 +251,7 @@ type Query {
 
 input NewEntry {
   text: String!
-  datetime: Time!
+  created: Time
   userId: String!
 }
 
@@ -378,8 +378,8 @@ func (ec *executionContext) fieldContext_Entry_id(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Entry_datetime(ctx context.Context, field graphql.CollectedField, obj *models.Entry) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Entry_datetime(ctx, field)
+func (ec *executionContext) _Entry_created(ctx context.Context, field graphql.CollectedField, obj *models.Entry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entry_created(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -392,7 +392,7 @@ func (ec *executionContext) _Entry_datetime(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Datetime, nil
+		return obj.Created, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -409,7 +409,7 @@ func (ec *executionContext) _Entry_datetime(ctx context.Context, field graphql.C
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Entry_datetime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Entry_created(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Entry",
 		Field:      field,
@@ -559,8 +559,8 @@ func (ec *executionContext) fieldContext_Mutation_createEntry(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Entry_id(ctx, field)
-			case "datetime":
-				return ec.fieldContext_Entry_datetime(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
 			case "text":
 				return ec.fieldContext_Entry_text(ctx, field)
 			case "user":
@@ -624,8 +624,8 @@ func (ec *executionContext) fieldContext_Query_entries(ctx context.Context, fiel
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Entry_id(ctx, field)
-			case "datetime":
-				return ec.fieldContext_Entry_datetime(ctx, field)
+			case "created":
+				return ec.fieldContext_Entry_created(ctx, field)
 			case "text":
 				return ec.fieldContext_Entry_text(ctx, field)
 			case "user":
@@ -2678,7 +2678,7 @@ func (ec *executionContext) unmarshalInputNewEntry(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"text", "datetime", "userId"}
+	fieldsInOrder := [...]string{"text", "created", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2693,11 +2693,11 @@ func (ec *executionContext) unmarshalInputNewEntry(ctx context.Context, obj inte
 			if err != nil {
 				return it, err
 			}
-		case "datetime":
+		case "created":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datetime"))
-			it.Datetime, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("created"))
+			it.Created, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2740,9 +2740,9 @@ func (ec *executionContext) _Entry(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "datetime":
+		case "created":
 
-			out.Values[i] = ec._Entry_datetime(ctx, field, obj)
+			out.Values[i] = ec._Entry_created(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3661,6 +3661,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	return res
 }
 

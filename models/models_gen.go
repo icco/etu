@@ -7,16 +7,16 @@ import (
 )
 
 type Entry struct {
-	ID       string    `json:"id"`
-	Datetime time.Time `json:"datetime"`
-	Text     string    `json:"text"`
-	User     *User     `json:"user"`
+	ID      string    `json:"id"`
+	Created time.Time `json:"created"`
+	Text    string    `json:"text"`
+	User    *User     `json:"user"`
 }
 
 type NewEntry struct {
-	Text     string    `json:"text"`
-	Datetime time.Time `json:"datetime"`
-	UserID   string    `json:"userId"`
+	Text    string     `json:"text"`
+	Created *time.Time `json:"created"`
+	UserID  string     `json:"userId"`
 }
 
 type User struct {

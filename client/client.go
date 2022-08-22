@@ -10,7 +10,7 @@ import (
 )
 
 func GetKey(e *models.Entry) string {
-	return fmt.Sprintf("user:%s:entries:%d", e.User.ID, e.DateTime.UnixMicro())
+	return fmt.Sprintf("user:%s:entries:%d", e.User.ID, e.Created.UnixMicro())
 }
 
 func SaveEntry(ctx context.Context, db *buntdb.DB, e *models.Entry) error {
