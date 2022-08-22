@@ -20,7 +20,10 @@ func SaveEntry(ctx context.Context, db *buntdb.DB, e *models.Entry) error {
 			return fmt.Errorf("marshal Entry: %w", err)
 		}
 
-		_, _, err := tx.Set(GetKey(e), string(bts), nil)
-		return err
+		if _, _, err := tx.Set(GetKey(e), string(bts), nil); err != nil {
+			return err
+		}
+
+		return nil
 	})
 }
