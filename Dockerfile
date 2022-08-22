@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine
+FROM golang:1.18-alpine
 
 ENV GOPROXY="https://proxy.golang.org"
 ENV GO111MODULE="on"
@@ -12,6 +12,6 @@ WORKDIR /go/src/github.com/icco/etu/
 RUN apk add --no-cache git
 COPY . .
 
-RUN go build -v -o /go/bin/server ./cmd/server
+RUN go build -v -o /go/bin/server ./server
 
 CMD ["/go/bin/server"]
