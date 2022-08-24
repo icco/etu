@@ -1,91 +1,97 @@
 module github.com/icco/etu
 
-go 1.17
+go 1.19
 
 require (
-	github.com/charmbracelet/bubbles v0.10.3
-	github.com/charmbracelet/bubbletea v0.20.0
-	github.com/go-chi/chi/v5 v5.0.7
-	github.com/icco/graphql v0.0.0-20220306032656-76180de7dc57
-	github.com/icco/gutil v0.0.0-20220221170217-9aa326c389ec
-	github.com/machinebox/graphql v0.2.2
-	github.com/urfave/cli/v2 v2.3.0
+	github.com/charmbracelet/bubbles v0.13.0
+	github.com/charmbracelet/bubbletea v0.22.1
+	github.com/charmbracelet/charm v0.12.4
+	github.com/charmbracelet/glamour v0.5.0
+	github.com/charmbracelet/lipgloss v0.5.0
+	github.com/spf13/cobra v1.5.0
 )
 
 require (
-	cloud.google.com/go v0.100.2 // indirect
-	cloud.google.com/go/compute v1.5.0 // indirect
-	cloud.google.com/go/iam v0.3.0 // indirect
-	cloud.google.com/go/monitoring v1.4.0 // indirect
-	cloud.google.com/go/storage v1.21.0 // indirect
-	cloud.google.com/go/trace v1.2.0 // indirect
-	github.com/99designs/gqlgen v0.17.1 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v1.0.0-RC1.0.20220111155622-771af0772772 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.3.0 // indirect
-	github.com/GuiaBolso/darwin v0.0.0-20191218124601-fd6d2aa3d244 // indirect
-	github.com/XSAM/otelsql v0.11.0 // indirect
-	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/alecthomas/chroma v0.10.0 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/auth0/go-jwt-middleware/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/charmbracelet/lipgloss v0.5.0 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/caarlos0/env/v6 v6.10.0 // indirect
+	github.com/caarlos0/sshmarshal v0.1.0 // indirect
+	github.com/calmh/randomart v1.1.0 // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/charmbracelet/keygen v0.3.0 // indirect
+	github.com/charmbracelet/wish v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
-	github.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect
-	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
-	github.com/cznic/internal v0.0.0-20181122101858-3279554c546e // indirect
-	github.com/cznic/lldb v1.1.0 // indirect
-	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
-	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect
-	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect
-	github.com/edsrzf/mmap-go v1.1.0 // indirect
-	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/go-logr/logr v1.2.2 // indirect
-	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
+	github.com/dgraph-io/ristretto v0.1.0 // indirect
+	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/gliderlabs/ssh v0.3.4 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
+	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/flatbuffers v2.0.7+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
-	github.com/icco/zapdriver v1.4.0 // indirect
-	github.com/imgix/imgix-go/v2 v2.0.3 // indirect
-	github.com/lib/pq v1.10.4 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/jacobsa/crypto v0.0.0-20190317225127-9f44e2d11115 // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/matryer/is v1.4.0 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.18 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/meowgorithm/babylogger v1.2.0 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.19 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/go-app-paths v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
-	github.com/paulmach/orb v0.4.0 // indirect
+	github.com/muesli/sasquatch v0.0.0-20220506032543-a98cc9b4d8ec // indirect
+	github.com/muesli/termenv v0.12.0 // indirect
+	github.com/muesli/toktok v0.1.0 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.13.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.4.1 // indirect
+	github.com/rivo/uniseg v0.3.4 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	github.com/yuin/goldmark v1.4.13 // indirect
+	github.com/yuin/goldmark-emoji v1.0.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.29.0 // indirect
-	go.opentelemetry.io/otel v1.4.1 // indirect
-	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
-	go.opentelemetry.io/otel/metric v0.27.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.4.1 // indirect
-	go.opentelemetry.io/otel/sdk/export/metric v0.26.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v0.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.4.1 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	goji.io v2.0.2+incompatible // indirect
+	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/net v0.0.0-20220822230855-b0a4917ee28c // indirect
+	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
+	golang.org/x/sys v0.0.0-20220823224334-20c2bfdbfe24 // indirect
+	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/api v0.70.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
-	google.golang.org/grpc v1.44.0 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	golang.org/x/tools v0.1.12 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+	lukechampine.com/uint128 v1.2.0 // indirect
+	modernc.org/cc/v3 v3.36.2 // indirect
+	modernc.org/ccgo/v3 v3.16.8 // indirect
+	modernc.org/libc v1.17.0 // indirect
+	modernc.org/mathutil v1.5.0 // indirect
+	modernc.org/memory v1.2.0 // indirect
+	modernc.org/opt v0.1.3 // indirect
+	modernc.org/sqlite v1.18.1 // indirect
+	modernc.org/strutil v1.1.2 // indirect
+	modernc.org/token v1.0.0 // indirect
 )

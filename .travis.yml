@@ -3,14 +3,14 @@ language: go
 dist: xenial
 os: linux
 go:
-  - "1.17"
+  - "1.19"
 env:
   - GO111MODULE=on
 script:
   - go test -v -cover ./...
   - go vet ./...
   - go install honnef.co/go/tools/cmd/staticcheck@latest
-  - staticcheck -go 1.17 ./...
+  - staticcheck -go 1.19 ./...
 notifications:
   email:
     on_success: change

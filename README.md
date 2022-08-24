@@ -1,6 +1,36 @@
 # Etu
 
-A personal time tracker. Data is stored in graphql.
+Etu is a simple journaling tool that uses [Charm](https://github.com/charmbracelet/charm)'s database and end to end encryption.
+
+## Installation
+
+TODO.
+
+## Usage
+
+```
+$ etu
+Etu. A personal command line journal.
+
+Usage:
+  etu [flags]
+  etu [command]
+
+Available Commands:
+  create      Create a new journal entry. If no date provided, current time will be used.
+  delete      Delete a journal entry.
+  help        Help about any command
+  link        Link multiple machines to your Charm account
+  list        List journal entries, with an optional starting datetime.
+  reset       Delete local db and pull down fresh copy from Charm Cloud.
+  sync        Sync local db with latest Charm Cloud db.
+
+Flags:
+  -h, --help      help for etu
+  -v, --version   version for etu
+
+Use "etu [command] --help" for more information about a command.
+```
 
 ## Inspiration
 
@@ -16,4 +46,4 @@ Other projects that inspired me:
 
 ## History
 
-I've rewritten this aproximately four times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Finally, its current form is again a time tracking app.
+I've rewritten this aproximately six times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool.
