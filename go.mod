@@ -8,7 +8,6 @@ require (
 	github.com/charmbracelet/charm v0.12.4
 	github.com/charmbracelet/glamour v0.5.0
 	github.com/charmbracelet/lipgloss v0.5.0
-	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/spf13/cobra v1.5.0
 )
 
@@ -27,6 +26,7 @@ require (
 	github.com/charmbracelet/keygen v0.3.0 // indirect
 	github.com/charmbracelet/wish v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
+	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
