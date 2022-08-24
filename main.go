@@ -39,6 +39,14 @@ var (
 		RunE:    create,
 	}
 
+	deleteCmd = &cobra.Command{
+		Use:     "delete DATETIME",
+		Aliases: []string{"d"},
+		Short:   "Delete a journal entry.",
+		Args:    cobra.ExactArgs(1),
+		RunE:    delete,
+	}
+
 	listCmd = &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"l", "new"},
@@ -77,6 +85,15 @@ func create(cmd *cobra.Command, args []string) error {
 	db.Set([]byte(time.Now().Format(time.RFC3339)), model.Data)
 
 	return nil
+}
+
+func delete(cmd *cobra.Command, args []string) error {
+	db, err := openKV()
+	if err != nil {
+		return err
+	}
+
+	return db.Delete([]byte(args[0]))
 }
 
 func list(cmd *cobra.Command, args []string) error {
@@ -161,9 +178,10 @@ func init() {
 
 	rootCmd.AddCommand(
 		createCmd,
+		deleteCmd,
 		listCmd,
-		syncCmd,
 		resetCmd,
+		syncCmd,
 		cmd.LinkCmd("etu"),
 	)
 }
