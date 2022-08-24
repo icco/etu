@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/charm/cmd"
 	"github.com/charmbracelet/charm/kv"
+	"github.com/charmbracelet/glamour"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
@@ -98,6 +99,22 @@ func list(cmd *cobra.Command, args []string) error {
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
 			err := item.Value(func(v []byte) error {
+				in := fmt.Sprintf("# %s\n%s\n", item.Key(), string(v))
+
+				r, _ := glamour.NewTermRenderer(
+					// detect background color and pick either the default dark or light theme
+					glamour.WithAutoStyle(),
+					// wrap output at specific width
+					glamour.WithWordWrap(80),
+				)
+
+				out, err := r.Render(in)
+				if err != nil {
+					return err
+				}
+
+				fmt.Print(out)
+
 				return nil
 			})
 			if err != nil {
