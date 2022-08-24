@@ -2,28 +2,37 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"time"
 
-	"github.com/icco/etu/models"
-	"github.com/tidwall/buntdb"
+	"github.com/charmbracelet/charm/kv"
 )
 
-func GetKey(e *models.Entry) string {
-	return fmt.Sprintf("user:%s:entries:%d", e.User.ID, e.Created.UnixMicro())
+type Entry struct {
+	Key  []byte
+	Data string
 }
 
-func SaveEntry(ctx context.Context, db *buntdb.DB, e *models.Entry) error {
-	return db.Update(func(tx *buntdb.Tx) error {
-		bts, err := json.Marshal(e)
-		if err != nil {
-			return fmt.Errorf("marshal Entry: %w", err)
-		}
+func TimeToKey(t time.Time) []byte {
+	return []byte(t.Format(time.RFC3339))
+}
 
-		if _, _, err := tx.Set(GetKey(e), string(bts), nil); err != nil {
-			return err
-		}
+func SaveEntry(ctx context.Context, db *kv.KV, when time.Time, text string) error {
+	return db.Set(TimeToKey(when), text)
+}
 
-		return nil
-	})
+func DeleteEntry(ctx context.Context, db *kv.KV, when time.Time) error {
+	return fmt.Errorf("unimplemented")
+}
+
+func FindNearestKey(ctx context.Context, db *kv.KV, when time.Time) []byte {
+	return nil
+}
+
+func GetEntry(ctx context.Context, db *kv.KV, when time.Time) (*Entry, error) {
+	return nil, fmt.Errorf("unimplemented")
+}
+
+func ListEntries(ctx context.Context, db *kv.KV, count int64) ([]*Entry, error) {
+	return nil, fmt.Errorf("unimplemented")
 }
