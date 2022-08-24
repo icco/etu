@@ -4,6 +4,8 @@ go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.17.15
+	github.com/charmbracelet/bubbles v0.13.0
+	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/charmbracelet/charm v0.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/spf13/cobra v1.5.0
@@ -14,6 +16,7 @@ require (
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/env/v6 v6.10.0 // indirect
@@ -21,8 +24,6 @@ require (
 	github.com/calmh/randomart v1.1.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/charmbracelet/bubbles v0.13.0 // indirect
-	github.com/charmbracelet/bubbletea v0.22.1 // indirect
 	github.com/charmbracelet/keygen v0.3.0 // indirect
 	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/charmbracelet/wish v0.5.0 // indirect

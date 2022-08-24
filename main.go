@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/charm/cmd"
 	"github.com/charmbracelet/charm/kv"
 	"github.com/dgraph-io/badger/v3"
+	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
 
@@ -63,6 +66,14 @@ func create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	model := client.CreateModel()
+	p := tea.NewProgram(model)
+	if err := p.Start(); err != nil {
+		return err
+	}
+
+	db.Set([]byte(time.Now().Format(time.RFC3339)), model.Data)
 
 	return nil
 }
