@@ -1,10 +1,9 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -20,12 +19,20 @@ type model struct {
 
 // CreateModel generates a text area for use in bubbletea.
 func CreateModel() model {
-	ti := textarea.New()
-	ti.Placeholder = "Once upon a time..."
-	ti.Focus()
+	ta := textarea.New()
+	ta.Placeholder = "What are you working on? (ctrl+d to save, ctrl+c to quit)"
+	ta.Focus()
+
+	ta.SetWidth(120)
+	ta.SetHeight(5)
+
+	// Remove cursor line styling
+	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+
+	ta.ShowLineNumbers = false
 
 	return model{
-		textarea: ti,
+		textarea: ta,
 		err:      nil,
 	}
 }
@@ -45,6 +52,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.textarea.Focused() {
 				m.textarea.Blur()
 			}
+		case tea.KeyCtrlD:
+			m.Data = []byte(m.textarea.Value())
+			return m, tea.Quit
 		case tea.KeyCtrlC:
 			return m, tea.Quit
 		default:
@@ -66,9 +76,5 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf(
-		"What are you working on?\n\n%s\n\n%s",
-		m.textarea.View(),
-		"(ctrl+c to quit)",
-	) + "\n\n"
+	return m.textarea.View()
 }
