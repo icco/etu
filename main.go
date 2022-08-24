@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/charm/cmd"
 	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/glamour"
-	"github.com/dgraph-io/badger/v3"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -105,40 +104,30 @@ func list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchSize = 10
-		opts.Reverse = true
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			err := item.Value(func(v []byte) error {
-				in := fmt.Sprintf("# %s\n%s\n", item.Key(), string(v))
+	entries, err := client.ListEntries(cmd.Context(), db, 10)
+	if err != nil {
+		return err
+	}
 
-				r, _ := glamour.NewTermRenderer(
-					// detect background color and pick either the default dark or light theme
-					glamour.WithAutoStyle(),
-					// wrap output at specific width
-					glamour.WithWordWrap(80),
-				)
+	for _, e := range entries {
+		in := fmt.Sprintf("# %s\n%s\n", e.Key, e.Data)
 
-				out, err := r.Render(in)
-				if err != nil {
-					return err
-				}
+		r, _ := glamour.NewTermRenderer(
+			// detect background color and pick either the default dark or light theme
+			glamour.WithAutoStyle(),
+			// wrap output at specific width
+			glamour.WithWordWrap(80),
+		)
 
-				fmt.Print(out)
-
-				return nil
-			})
-			if err != nil {
-				return err
-			}
+		out, err := r.Render(in)
+		if err != nil {
+			return err
 		}
 
-		return nil
-	})
+		fmt.Print(out)
+	}
+
+	return nil
 }
 
 func sync(cmd *cobra.Command, args []string) error {

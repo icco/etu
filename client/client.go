@@ -40,8 +40,8 @@ func SaveEntry(ctx context.Context, db *kv.KV, when time.Time, text string) erro
 	return db.Set(TimeToKey(when), buf.Bytes())
 }
 
-func DeleteEntry(ctx context.Context, db *kv.KV, when time.Time) error {
-	return db.Delete(TimeToKey(when))
+func DeleteEntry(ctx context.Context, db *kv.KV, key []byte) error {
+	return db.Delete(key)
 }
 
 func FindNearestKey(ctx context.Context, db *kv.KV, when time.Time) []byte {
@@ -87,7 +87,7 @@ func ListEntries(ctx context.Context, db *kv.KV, count int) ([]*Entry, error) {
 	})
 
 	var entries []*Entry
-	for i := 0; i < count; i++ {
+	for i := 0; i < count && i < len(keys); i++ {
 		e, err := GetEntry(ctx, db, keys[i])
 		if err != nil {
 			return nil, err
