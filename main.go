@@ -53,31 +53,25 @@ var (
 	syncCmd = &cobra.Command{
 		Use:   "sync",
 		Short: "Sync local db with latest Charm Cloud db.",
-		Args:  cobra.NoArgs(),
+		Args:  cobra.NoArgs,
 		RunE:  sync,
 	}
 
 	resetCmd = &cobra.Command{
 		Use:   "reset",
 		Short: "Delete local db and pull down fresh copy from Charm Cloud.",
-		Args:  cobra.NoArgs(),
+		Args:  cobra.NoArgs,
 		RunE:  reset,
 	}
 )
 
 func create(cmd *cobra.Command, args []string) error {
-	k, n, err := keyParser(args[0])
+	db, err := openKV()
 	if err != nil {
 		return err
 	}
-	db, err := openKV(n)
-	if err != nil {
-		return err
-	}
-	if len(args) == 2 {
-		return db.Set(k, []byte(args[1]))
-	}
-	return db.SetReader(k, os.Stdin)
+
+	return nil
 }
 
 func list(cmd *cobra.Command, args []string) error {
@@ -108,50 +102,32 @@ func list(cmd *cobra.Command, args []string) error {
 				continue
 			}
 			err := item.Value(func(v []byte) error {
-				if valuesIterate {
-					printFromKV(pf, v)
-				} else {
-					printFromKV(pf, k, v)
-				}
 				return nil
 			})
 			if err != nil {
 				return err
 			}
 		}
+
 		return nil
 	})
 }
 
 func sync(cmd *cobra.Command, args []string) error {
-	db, err := openKV(n)
+	db, err := openKV()
 	if err != nil {
 		return err
 	}
+
 	return db.Sync()
 }
 
 func reset(cmd *cobra.Command, args []string) error {
-	n, err := nameFromArgs(args)
-	if err != nil {
-		return err
-	}
-	db, err := openKV(n)
+	db, err := openKV()
 	if err != nil {
 		return err
 	}
 	return db.Reset()
-}
-
-func nameFromArgs(args []string) (string, error) {
-	if len(args) == 0 {
-		return "", nil
-	}
-	_, n, err := keyParser(args[0])
-	if err != nil {
-		return "", err
-	}
-	return n, nil
 }
 
 func openKV() (*kv.KV, error) {
