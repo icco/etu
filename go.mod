@@ -6,7 +6,6 @@ require (
 	github.com/99designs/gqlgen v0.17.15
 	github.com/charmbracelet/charm v0.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
-	github.com/muesli/roff v0.1.0
 	github.com/spf13/cobra v1.5.0
 	github.com/tidwall/buntdb v1.2.10
 	github.com/vektah/gqlparser/v2 v2.4.8

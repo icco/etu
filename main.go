@@ -3,17 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"unicode/utf8"
 
-	"github.com/charmbracelet/charm/client"
 	"github.com/charmbracelet/charm/cmd"
 	"github.com/charmbracelet/charm/kv"
-	"github.com/charmbracelet/charm/ui/common"
 	"github.com/dgraph-io/badger/v3"
-	"github.com/muesli/roff"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +27,7 @@ var (
 		},
 	}
 
-	newCmd = &cobra.Command{
+	createCmd = &cobra.Command{
 		Use:     "create [DATETIME]",
 		Aliases: []string{"c", "new"},
 		Short:   "Create a new journal entry. If no date provided, current time will be used.",
@@ -46,7 +39,7 @@ var (
 		Use:     "list",
 		Aliases: []string{"l", "new"},
 		Short:   "List journal entries, with an optional starting datetime.",
-		Args:    cobra.NoArgs(),
+		Args:    cobra.NoArgs,
 		RunE:    list,
 	}
 
@@ -89,18 +82,10 @@ func list(cmd *cobra.Command, args []string) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchSize = 10
 		opts.Reverse = true
-		if keysIterate {
-			opts.PrefetchValues = false
-		}
 		it := txn.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
-			k := item.Key()
-			if keysIterate {
-				printFromKV(pf, k)
-				continue
-			}
 			err := item.Value(func(v []byte) error {
 				return nil
 			})
@@ -127,6 +112,7 @@ func reset(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	return db.Reset()
 }
 
