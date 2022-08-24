@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
