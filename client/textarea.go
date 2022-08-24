@@ -1,13 +1,12 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
-func main() {
-}
 
 type errMsg error
 
@@ -18,7 +17,7 @@ type model struct {
 }
 
 // CreateModel generates a text area for use in bubbletea.
-func CreateModel() model {
+func CreateModel() *model {
 	ta := textarea.New()
 	ta.Placeholder = "What are you working on? (ctrl+d to save, ctrl+c to quit)"
 	ta.Focus()
@@ -31,17 +30,17 @@ func CreateModel() model {
 
 	ta.ShowLineNumbers = false
 
-	return model{
+	return &model{
 		textarea: ta,
 		err:      nil,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m *model) Init() tea.Cmd {
 	return textarea.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
@@ -75,6 +74,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m *model) View() string {
 	return m.textarea.View()
 }
