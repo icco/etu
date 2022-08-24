@@ -82,7 +82,7 @@ func create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), db, time.Now(), model.Data)
+	return client.SaveEntry(cmd.Context(), db, time.Now(), string(model.Data))
 }
 
 func delete(cmd *cobra.Command, args []string) error {
