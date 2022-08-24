@@ -3,8 +3,8 @@ package client
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/charmbracelet/charm/crypt"
@@ -41,15 +41,14 @@ func SaveEntry(ctx context.Context, db *kv.KV, when time.Time, text string) erro
 }
 
 func DeleteEntry(ctx context.Context, db *kv.KV, when time.Time) error {
-	return fmt.Errorf("unimplemented")
+	return db.Delete(TimeToKey(when))
 }
 
 func FindNearestKey(ctx context.Context, db *kv.KV, when time.Time) []byte {
 	return nil
 }
 
-func GetEntry(ctx context.Context, db *kv.KV, when time.Time) (*Entry, error) {
-	key := TimeToKey(when)
+func GetEntry(ctx context.Context, db *kv.KV, key []byte) (*Entry, error) {
 	d, err := db.Get(key)
 	if err != nil {
 		return nil, err
@@ -77,6 +76,25 @@ func GetEntry(ctx context.Context, db *kv.KV, when time.Time) (*Entry, error) {
 	}, nil
 }
 
-func ListEntries(ctx context.Context, db *kv.KV, count int64) ([]*Entry, error) {
-	return nil, fmt.Errorf("unimplemented")
+func ListEntries(ctx context.Context, db *kv.KV, count int) ([]*Entry, error) {
+	keys, err := db.Keys()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return string(keys[j]) < string(keys[i])
+	})
+
+	var entries []*Entry
+	for i := 0; i < count; i++ {
+		e, err := GetEntry(ctx, db, keys[i])
+		if err != nil {
+			return nil, err
+		}
+
+		entries = append(entries, e)
+	}
+
+	return entries, nil
 }
