@@ -7,7 +7,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/charm/cmd"
 	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
@@ -171,7 +170,6 @@ func init() {
 		listCmd,
 		resetCmd,
 		syncCmd,
-		cmd.LinkCmd("etu"),
 	)
 }
 
