@@ -39,23 +39,7 @@ func delete(db *sql.DB, key string) error {
 }
 
 func SaveEntry(ctx context.Context, db *sql.DB, when time.Time, text string) error {
-	cr, err := crypt.NewCrypt()
-	if err != nil {
-		return err
-	}
-
-	buf := bytes.NewBuffer(nil)
-	eb, err := cr.NewEncryptedWriter(buf)
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.WriteString(eb, text); err != nil {
-		return err
-	}
-	eb.Close()
-
-	return set(sb, TimeToKey(when), buf.Bytes())
+	return set(db, TimeToKey(when), text)
 }
 
 func DeleteEntry(ctx context.Context, db *sql.DB, key string) error {
