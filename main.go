@@ -61,13 +61,6 @@ var (
 		Args:  cobra.NoArgs,
 		RunE:  sync,
 	}
-
-	resetCmd = &cobra.Command{
-		Use:   "reset",
-		Short: "Delete local db and pull down fresh copy from Charm Cloud.",
-		Args:  cobra.NoArgs,
-		RunE:  reset,
-	}
 )
 
 func create(cmd *cobra.Command, args []string) error {
@@ -91,7 +84,7 @@ func delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return db.Delete([]byte(args[0]))
+	return client.DeleteEntry(cmd.Context(), db, args[0])
 }
 
 func list(cmd *cobra.Command, args []string) error {
@@ -101,7 +94,7 @@ func list(cmd *cobra.Command, args []string) error {
 	}
 
 	// TODO: Check if online.
-	if err := db.Sync(); err != nil {
+	if err := client.Sync(db); err != nil {
 		return err
 	}
 
@@ -140,15 +133,6 @@ func sync(cmd *cobra.Command, args []string) error {
 	return client.Sync(db)
 }
 
-func reset(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	return db.Reset()
-}
-
 func openKV() (*sql.DB, error) {
 	return sql.Open("sqlite3", dbFile)
 }
@@ -168,7 +152,6 @@ func init() {
 		createCmd,
 		deleteCmd,
 		listCmd,
-		resetCmd,
 		syncCmd,
 	)
 }
