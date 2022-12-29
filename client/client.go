@@ -1,10 +1,8 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"io"
 	"sort"
 	"time"
 )
@@ -46,8 +44,8 @@ func DeleteEntry(ctx context.Context, db *sql.DB, key string) error {
 	return delete(db, key)
 }
 
-func FindNearestKey(ctx context.Context, db *sql.DB, when time.Time) string {
-	return nil
+func FindNearestKey(ctx context.Context, db *sql.DB, when time.Time) (string, error) {
+	return "", nil
 }
 
 func GetEntry(ctx context.Context, db *sql.DB, key string) (*Entry, error) {
