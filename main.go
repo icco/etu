@@ -1,20 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/charm/cmd"
-	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
-	dbName = "charm.sh.etu.default"
+	dbFile = "etu.db"
 )
 
 var (
@@ -136,7 +138,7 @@ func sync(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return db.Sync()
+	return client.Sync(db)
 }
 
 func reset(cmd *cobra.Command, args []string) error {
@@ -148,8 +150,8 @@ func reset(cmd *cobra.Command, args []string) error {
 	return db.Reset()
 }
 
-func openKV() (*kv.KV, error) {
-	return kv.OpenWithDefaults(dbName)
+func openKV() (*sql.DB, error) {
+	return sql.Open("sqlite3", dbFile)
 }
 
 func init() {

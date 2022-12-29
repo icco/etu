@@ -3,12 +3,10 @@ package client
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"io"
 	"sort"
 	"time"
-
-	"github.com/charmbracelet/charm/crypt"
-	"github.com/charmbracelet/charm/kv"
 )
 
 type Entry struct {
@@ -20,7 +18,11 @@ func TimeToKey(t time.Time) []byte {
 	return []byte(t.Format(time.RFC3339))
 }
 
-func SaveEntry(ctx context.Context, db *kv.KV, when time.Time, text string) error {
+func Sync(db *sql.DB) error {
+	return nil
+}
+
+func SaveEntry(ctx context.Context, db *sql.DB, when time.Time, text string) error {
 	cr, err := crypt.NewCrypt()
 	if err != nil {
 		return err
