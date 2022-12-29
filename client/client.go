@@ -10,15 +10,31 @@ import (
 )
 
 type Entry struct {
-	Key  []byte
+	Key  string
 	Data string
 }
 
-func TimeToKey(t time.Time) []byte {
-	return []byte(t.Format(time.RFC3339))
+func TimeToKey(t time.Time) string {
+	return t.Format(time.RFC3339)
 }
 
 func Sync(db *sql.DB) error {
+	return nil
+}
+
+func set(db *sql.DB, key, value string) error {
+	return nil
+}
+
+func get(db *sql.DB, key string) (string, error) {
+	return "", nil
+}
+
+func keys(db *sql.DB) ([]string, error) {
+	return nil, nil
+}
+
+func delete(db *sql.DB, key string) error {
 	return nil
 }
 
@@ -39,47 +55,31 @@ func SaveEntry(ctx context.Context, db *sql.DB, when time.Time, text string) err
 	}
 	eb.Close()
 
-	return db.Set(TimeToKey(when), buf.Bytes())
+	return set(sb, TimeToKey(when), buf.Bytes())
 }
 
-func DeleteEntry(ctx context.Context, db *sql.DB, key []byte) error {
-	return db.Delete(key)
+func DeleteEntry(ctx context.Context, db *sql.DB, key string) error {
+	return delete(db, key)
 }
 
-func FindNearestKey(ctx context.Context, db *sql.DB, when time.Time) []byte {
+func FindNearestKey(ctx context.Context, db *sql.DB, when time.Time) string {
 	return nil
 }
 
-func GetEntry(ctx context.Context, db *sql.DB, key []byte) (*Entry, error) {
-	d, err := db.Get(key)
-	if err != nil {
-		return nil, err
-	}
-
-	cr, err := crypt.NewCrypt()
-	if err != nil {
-		return nil, err
-	}
-
-	br := bytes.NewReader(d)
-	deb, err := cr.NewDecryptedReader(br)
-	if err != nil {
-		return nil, err
-	}
-
-	decoded, err := io.ReadAll(deb)
+func GetEntry(ctx context.Context, db *sql.DB, key string) (*Entry, error) {
+	d, err := get(db, key)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Entry{
-		Data: string(decoded),
+		Data: d,
 		Key:  key,
 	}, nil
 }
 
 func ListEntries(ctx context.Context, db *sql.DB, count int) ([]*Entry, error) {
-	keys, err := db.Keys()
+	keys, err := keys(db)
 	if err != nil {
 		return nil, err
 	}
