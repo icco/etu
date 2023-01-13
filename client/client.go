@@ -3,15 +3,18 @@ package client
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kirsle/configdir"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 const (
-	dbFile = "etu.db"
+	dbFilename = "etu.db"
+	appName    = "etu"
 )
 
 type Post struct {
@@ -46,6 +49,13 @@ func (p *Post) BeforeSave(tx *gorm.DB) error {
 }
 
 func openDB() (*gorm.DB, error) {
+	configPath := configdir.LocalConfig(appName)
+	if err := configdir.MakePath(configPath); err != nil {
+		return nil, err
+	}
+
+	dbFile := filepath.Join(configPath, dbFilename)
+
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
