@@ -22,7 +22,7 @@ type Post struct {
 
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
 	Content   string
-	CreatedAt time.Time
+	CreatedAt time.Time `sql:"index"`
 	UpdatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
 }
@@ -84,7 +84,7 @@ func SaveEntry(ctx context.Context, text string) error {
 	p := &Post{
 		Content: text,
 	}
-	return db.WithContext(ctx).Create(p).Commit().Error
+	return db.WithContext(ctx).Create(p).Error
 }
 
 func DeletePost(ctx context.Context, key string) error {
@@ -100,5 +100,14 @@ func GetPost(ctx context.Context, key string) (*Post, error) {
 }
 
 func ListPosts(ctx context.Context, count int) ([]*Post, error) {
-	return nil, fmt.Errorf("not implemented")
+	db, err := openDB()
+	if err != nil {
+		return nil, err
+	}
+	var posts []*Post
+	if err := db.WithContext(ctx).Order("created_at desc").Find(&posts).Error; err != nil {
+		return nil, err
+	}
+
+	return posts, nil
 }
