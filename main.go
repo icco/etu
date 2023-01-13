@@ -92,7 +92,14 @@ func timeSinceLastPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return fmt.Errorf("not implemented")
+	dur, err := client.TimeSinceLastPost(cmd.Context(), db)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s", dur.String())
+
+	return nil
 }
 
 func deletePost(cmd *cobra.Command, args []string) error {
@@ -111,11 +118,6 @@ func deletePost(cmd *cobra.Command, args []string) error {
 func listPosts(cmd *cobra.Command, args []string) error {
 	db, err := openKV()
 	if err != nil {
-		return err
-	}
-
-	// TODO: Check if online.
-	if err := client.Sync(db); err != nil {
 		return err
 	}
 
