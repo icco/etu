@@ -32,38 +32,46 @@ var (
 	}
 
 	createCmd = &cobra.Command{
-		Use:     "create [DATETIME]",
+		Use:     "create",
 		Aliases: []string{"c", "new"},
 		Short:   "Create a new journal entry. If no date provided, current time will be used.",
-		Args:    cobra.MaximumNArgs(1),
-		RunE:    create,
+		Args:    cobra.NoArgs,
+		RunE:    createPost,
 	}
 
 	deleteCmd = &cobra.Command{
-		Use:     "delete DATETIME",
+		Use:     "delete ID",
 		Aliases: []string{"d"},
 		Short:   "Delete a journal entry.",
 		Args:    cobra.ExactArgs(1),
-		RunE:    delete,
+		RunE:    deletePost,
+	}
+
+	listCmd = &cobra.Command{
+		Use:     "timesince",
+		Aliases: []string{"tslp"},
+		Short:   "Output a string of time since last post.",
+		Args:    cobra.NoArgs,
+		RunE:    timeSinceLastPost,
 	}
 
 	listCmd = &cobra.Command{
 		Use:     "list",
-		Aliases: []string{"l", "new"},
+		Aliases: []string{"ls"},
 		Short:   "List journal entries, with an optional starting datetime.",
 		Args:    cobra.NoArgs,
-		RunE:    list,
+		RunE:    listPosts,
 	}
 
 	syncCmd = &cobra.Command{
 		Use:   "sync",
-		Short: "Sync local db with latest Charm Cloud db.",
+		Short: "Sync local db with cloud db.",
 		Args:  cobra.NoArgs,
-		RunE:  sync,
+		RunE:  syncPosts,
 	}
 )
 
-func create(cmd *cobra.Command, args []string) error {
+func createPost(cmd *cobra.Command, args []string) error {
 	db, err := openKV()
 	if err != nil {
 		return err
@@ -78,16 +86,20 @@ func create(cmd *cobra.Command, args []string) error {
 	return client.SaveEntry(cmd.Context(), db, time.Now(), string(model.Data))
 }
 
-func delete(cmd *cobra.Command, args []string) error {
+func deletePost(cmd *cobra.Command, args []string) error {
 	db, err := openKV()
 	if err != nil {
 		return err
 	}
 
+	if len(args) != 1 {
+		return fmt.Errorf("delete takes only one argument")
+	}
+
 	return client.DeleteEntry(cmd.Context(), db, args[0])
 }
 
-func list(cmd *cobra.Command, args []string) error {
+func listPosts(cmd *cobra.Command, args []string) error {
 	db, err := openKV()
 	if err != nil {
 		return err
@@ -124,7 +136,7 @@ func list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func sync(cmd *cobra.Command, args []string) error {
+func syncPosts(cmd *cobra.Command, args []string) error {
 	db, err := openKV()
 	if err != nil {
 		return err
