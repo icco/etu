@@ -6,3 +6,4 @@ pids
 *.pid.lock
 .env
 .DS_Store
+.dccache
