@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -71,7 +70,7 @@ func createPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), time.Now(), string(model.Data))
+	return client.SaveEntry(cmd.Context(), string(model.Data))
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
@@ -90,17 +89,17 @@ func deletePost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return client.DeleteEntry(cmd.Context(), args[0])
+	return client.DeletePost(cmd.Context(), args[0])
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListEntries(cmd.Context(), 10)
+	entries, err := client.ListPosts(cmd.Context(), 10)
 	if err != nil {
 		return err
 	}
 
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.Key, e.Data)
+		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
 
 		r, _ := glamour.NewTermRenderer(
 			// detect background color and pick either the default dark or light theme

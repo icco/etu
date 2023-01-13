@@ -7,13 +7,14 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.6.0
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.6.1
 )
 
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 )
 
 require (
