@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -10,12 +9,6 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
-
-	_ "github.com/mattn/go-sqlite3"
-)
-
-const (
-	dbFile = "etu.db"
 )
 
 var (
@@ -72,27 +65,17 @@ var (
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
 	model := client.CreateModel()
 	p := tea.NewProgram(model)
 	if err := p.Start(); err != nil {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), db, time.Now(), string(model.Data))
+	return client.SaveEntry(cmd.Context(), time.Now(), string(model.Data))
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	dur, err := client.TimeSinceLastPost(cmd.Context(), db)
+	dur, err := client.TimeSinceLastPost(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -103,25 +86,15 @@ func timeSinceLastPost(cmd *cobra.Command, args []string) error {
 }
 
 func deletePost(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
 	if len(args) != 1 {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return client.DeleteEntry(cmd.Context(), db, args[0])
+	return client.DeleteEntry(cmd.Context(), args[0])
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	entries, err := client.ListEntries(cmd.Context(), db, 10)
+	entries, err := client.ListEntries(cmd.Context(), 10)
 	if err != nil {
 		return err
 	}
@@ -148,16 +121,7 @@ func listPosts(cmd *cobra.Command, args []string) error {
 }
 
 func syncPosts(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	return client.Sync(db)
-}
-
-func openKV() (*sql.DB, error) {
-	return sql.Open("sqlite3", dbFile)
+	return client.Sync(cmd.Context())
 }
 
 func init() {

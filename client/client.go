@@ -2,13 +2,19 @@ package client
 
 import (
 	"context"
-	"database/sql"
 	"sort"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/driver/sqlite"
 )
 
+const (
+		dbFile = "etu.db"
+	 )
+
 type Post struct {
-	"gorm.io/gorm"
+	gorm.Model
 
 	ID        string
 	Content   string
