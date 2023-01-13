@@ -96,7 +96,17 @@ func DeletePost(ctx context.Context, key string) error {
 }
 
 func GetPost(ctx context.Context, key string) (*Post, error) {
-	return nil, fmt.Errorf("not implemented")
+	db, err := openDB()
+	if err != nil {
+		return nil, err
+	}
+
+	var post *Post
+	if err := db.WithContext(ctx).Find(&post, key).Error; err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }
 
 func ListPosts(ctx context.Context, count int) ([]*Post, error) {
@@ -105,7 +115,7 @@ func ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		return nil, err
 	}
 	var posts []*Post
-	if err := db.WithContext(ctx).Order("created_at desc").Find(&posts).Error; err != nil {
+	if err := db.WithContext(ctx).Order("created_at desc").Limit(count).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 
