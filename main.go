@@ -47,7 +47,7 @@ var (
 		RunE:    deletePost,
 	}
 
-	listCmd = &cobra.Command{
+	timeSinceCmd = &cobra.Command{
 		Use:     "timesince",
 		Aliases: []string{"tslp"},
 		Short:   "Output a string of time since last post.",
@@ -84,6 +84,15 @@ func createPost(cmd *cobra.Command, args []string) error {
 	}
 
 	return client.SaveEntry(cmd.Context(), db, time.Now(), string(model.Data))
+}
+
+func timeSinceLastPost(cmd *cobra.Command, args []string) error {
+	_, err := openKV()
+	if err != nil {
+		return err
+	}
+
+	return fmt.Errorf("not implemented")
 }
 
 func deletePost(cmd *cobra.Command, args []string) error {
@@ -165,6 +174,7 @@ func init() {
 		deleteCmd,
 		listCmd,
 		syncCmd,
+		timeSinceCmd,
 	)
 }
 
