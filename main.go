@@ -87,7 +87,7 @@ func createPost(cmd *cobra.Command, args []string) error {
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
-	_, err := openKV()
+	db, err := openKV()
 	if err != nil {
 		return err
 	}

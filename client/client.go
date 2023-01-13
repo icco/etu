@@ -7,9 +7,14 @@ import (
 	"time"
 )
 
-type Entry struct {
-	Key  string
-	Data string
+type Post struct {
+	"gorm.io/gorm"
+
+	ID        string
+	Content   string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
 
 func TimeToKey(t time.Time) string {
@@ -34,6 +39,10 @@ func keys(db *sql.DB) ([]string, error) {
 
 func delete(db *sql.DB, key string) error {
 	return nil
+}
+
+func TimeSinceLastPost(ctx context.Context, db *sql.DB) (time.Duration, error) {
+	return 0, nil
 }
 
 func SaveEntry(ctx context.Context, db *sql.DB, when time.Time, text string) error {
