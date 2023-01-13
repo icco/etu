@@ -2,98 +2,93 @@ package client
 
 import (
 	"context"
-	"sort"
+	"fmt"
 	"time"
 
-	"gorm.io/gorm"
+	"github.com/google/uuid"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 const (
-		dbFile = "etu.db"
-	 )
+	dbFile = "etu.db"
+)
 
 type Post struct {
 	gorm.Model
 
-	ID        string
+	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
 	Content   string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
 }
 
-func TimeToKey(t time.Time) string {
-	return t.Format(time.RFC3339)
-}
+// BeforeCreate will set a UUID as the primary key.
+func (p *Post) BeforeCreate(tx *gorm.DB) error {
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
 
-func Sync(db *sql.DB) error {
+	p.ID = uuid
+	p.CreatedAt = time.Now()
+	p.DeletedAt = nil
+	p.UpdatedAt = time.Now()
+
 	return nil
 }
 
-func set(db *sql.DB, key, value string) error {
+func (p *Post) BeforeSave(tx *gorm.DB) error {
+	p.UpdatedAt = time.Now()
+
 	return nil
 }
 
-func get(db *sql.DB, key string) (string, error) {
-	return "", nil
+func openDB() (*gorm.DB, error) {
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect database: %w", err)
+	}
+
+	if err := db.AutoMigrate(&Post{}); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
-func keys(db *sql.DB) ([]string, error) {
-	return nil, nil
+func Sync(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
 }
 
-func delete(db *sql.DB, key string) error {
-	return nil
-}
-
-func TimeSinceLastPost(ctx context.Context, db *sql.DB) (time.Duration, error) {
+func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	return 0, nil
 }
 
-func SaveEntry(ctx context.Context, db *sql.DB, when time.Time, text string) error {
-	return set(db, TimeToKey(when), text)
-}
-
-func DeleteEntry(ctx context.Context, db *sql.DB, key string) error {
-	return delete(db, key)
-}
-
-func FindNearestKey(ctx context.Context, db *sql.DB, when time.Time) (string, error) {
-	return "", nil
-}
-
-func GetEntry(ctx context.Context, db *sql.DB, key string) (*Entry, error) {
-	d, err := get(db, key)
+func SaveEntry(ctx context.Context, text string) error {
+	db, err := openDB()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &Entry{
-		Data: d,
-		Key:  key,
-	}, nil
+	p := &Post{
+		Content: text,
+	}
+	return db.WithContext(ctx).Create(p).Commit().Error
 }
 
-func ListEntries(ctx context.Context, db *sql.DB, count int) ([]*Entry, error) {
-	keys, err := keys(db)
+func DeletePost(ctx context.Context, key string) error {
+	db, err := openDB()
 	if err != nil {
-		return nil, err
+		return err
 	}
+	return db.WithContext(ctx).Delete(&Post{}, key).Error
+}
 
-	sort.Slice(keys, func(i, j int) bool {
-		return string(keys[j]) < string(keys[i])
-	})
+func GetPost(ctx context.Context, key string) (*Post, error) {
+	return nil, fmt.Errorf("not implemented")
+}
 
-	var entries []*Entry
-	for i := 0; i < count && i < len(keys); i++ {
-		e, err := GetEntry(ctx, db, keys[i])
-		if err != nil {
-			return nil, err
-		}
-
-		entries = append(entries, e)
-	}
-
-	return entries, nil
+func ListPosts(ctx context.Context, count int) ([]*Post, error) {
+	return nil, fmt.Errorf("not implemented")
 }
