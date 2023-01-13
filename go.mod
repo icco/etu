@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/google/uuid v1.3.0
+	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/spf13/cobra v1.6.1
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gorm v1.24.3
