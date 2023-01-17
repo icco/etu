@@ -3,8 +3,7 @@
 git pull
 go get -v -d -u ./...
 go mod tidy -compat=1.19
-git diff --quiet HEAD go.* || git add go.mod go.sum && git ci -m 'chore: go update'
-git push -u
+git diff --quiet HEAD go.* || git add go.mod go.sum && git ci -m 'chore: go update' && git push -u
 
 GIT_COMMIT=$(git rev-list -1 HEAD)
 go build -ldflags "-X main.CommitSHA=$GIT_COMMIT" .
