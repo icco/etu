@@ -7,11 +7,28 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/icco/gutil/logging"
+	"github.com/unrolled/render"
 )
 
 var (
 	log          = logging.Must(logging.NewLogger("etu"))
 	GCPProjectID = "icco-cloud"
+
+	// Renderer is a renderer for all occasions. These are our preferred default options.
+	// See:
+	//  - https://github.com/unrolled/render/blob/v1/README.md
+	//  - https://godoc.org/gopkg.in/unrolled/render.v1
+	Renderer = render.New(render.Options{
+		Charset:                   "UTF-8",
+		Directory:                 "./server/views",
+		DisableHTTPErrorRendering: true,
+		Extensions:                []string{".tmpl", ".html"},
+		Funcs:                     []template.FuncMap{{}},
+		IndentJSON:                false,
+		IndentXML:                 true,
+		Layout:                    "layout",
+		RequirePartials:           true,
+	})
 )
 
 func main() {
