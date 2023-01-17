@@ -73,7 +73,17 @@ func Sync(ctx context.Context) error {
 }
 
 func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	return 0, nil
+	posts, err := ListPosts(ctx, 1)
+	if err != nil {
+		return err
+	}
+
+	if len(posts) != 1 {
+		return 0, fmt.Errorf("incorrect number of posts found")
+	}
+
+	dur := time.Now().Sub(posts[0].CreatedAt)
+	return dur, nil
 }
 
 func SaveEntry(ctx context.Context, text string) error {
