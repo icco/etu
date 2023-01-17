@@ -75,7 +75,7 @@ func Sync(ctx context.Context) error {
 func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	posts, err := ListPosts(ctx, 1)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if len(posts) != 1 {
