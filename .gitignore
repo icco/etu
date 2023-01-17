@@ -8,3 +8,5 @@ pids
 .DS_Store
 .dccache
 etu
+
+dist/
