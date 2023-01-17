@@ -79,7 +79,7 @@ func timeSinceLastPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("%s", dur.String())
+	fmt.Printf("%0.1fh", dur.Hours())
 
 	return nil
 }
