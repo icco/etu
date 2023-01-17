@@ -12,6 +12,7 @@ require (
 	github.com/icco/gutil v0.0.0-20230109013008-90a8cfeacc3d
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/spf13/cobra v1.6.1
+	github.com/unrolled/render v1.5.0
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gorm v1.24.3
 )
@@ -23,6 +24,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/dlclark/regexp2 v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/icco/zapdriver v1.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
