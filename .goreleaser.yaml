@@ -11,7 +11,6 @@ builds:
       - CGO_ENABLED=1
     goos:
       - linux
-      - windows
       - darwin
 
 archives:
@@ -34,10 +33,6 @@ snapshot:
   name_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
 
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
