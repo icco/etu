@@ -1,100 +1,133 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"io"
-	"sort"
+	"fmt"
+	"path/filepath"
 	"time"
 
-	"github.com/charmbracelet/charm/crypt"
-	"github.com/charmbracelet/charm/kv"
+	"github.com/google/uuid"
+	"github.com/kirsle/configdir"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-type Entry struct {
-	Key  []byte
-	Data string
+const (
+	dbFilename = "etu.db"
+	appName    = "etu"
+)
+
+type Post struct {
+	gorm.Model
+
+	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
+	Content   string
+	CreatedAt time.Time `sql:"index"`
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
 }
 
-func TimeToKey(t time.Time) []byte {
-	return []byte(t.Format(time.RFC3339))
-}
-
-func SaveEntry(ctx context.Context, db *kv.KV, when time.Time, text string) error {
-	cr, err := crypt.NewCrypt()
+// BeforeCreate will set a UUID as the primary key.
+func (p *Post) BeforeCreate(tx *gorm.DB) error {
+	uuid, err := uuid.NewRandom()
 	if err != nil {
 		return err
 	}
 
-	buf := bytes.NewBuffer(nil)
-	eb, err := cr.NewEncryptedWriter(buf)
-	if err != nil {
-		return err
-	}
+	p.ID = uuid
+	p.CreatedAt = time.Now()
+	p.DeletedAt = nil
+	p.UpdatedAt = time.Now()
 
-	if _, err := io.WriteString(eb, text); err != nil {
-		return err
-	}
-	eb.Close()
-
-	return db.Set(TimeToKey(when), buf.Bytes())
-}
-
-func DeleteEntry(ctx context.Context, db *kv.KV, key []byte) error {
-	return db.Delete(key)
-}
-
-func FindNearestKey(ctx context.Context, db *kv.KV, when time.Time) []byte {
 	return nil
 }
 
-func GetEntry(ctx context.Context, db *kv.KV, key []byte) (*Entry, error) {
-	d, err := db.Get(key)
-	if err != nil {
-		return nil, err
-	}
+func (p *Post) BeforeSave(tx *gorm.DB) error {
+	p.UpdatedAt = time.Now()
 
-	cr, err := crypt.NewCrypt()
-	if err != nil {
-		return nil, err
-	}
-
-	br := bytes.NewReader(d)
-	deb, err := cr.NewDecryptedReader(br)
-	if err != nil {
-		return nil, err
-	}
-
-	decoded, err := io.ReadAll(deb)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Entry{
-		Data: string(decoded),
-		Key:  key,
-	}, nil
+	return nil
 }
 
-func ListEntries(ctx context.Context, db *kv.KV, count int) ([]*Entry, error) {
-	keys, err := db.Keys()
+func openDB() (*gorm.DB, error) {
+	configPath := configdir.LocalConfig(appName)
+	if err := configdir.MakePath(configPath); err != nil {
+		return nil, err
+	}
+
+	dbFile := filepath.Join(configPath, dbFilename)
+
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect database: %w", err)
+	}
+
+	if err := db.AutoMigrate(&Post{}); err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func Sync(ctx context.Context) error {
+	return fmt.Errorf("not implemented")
+}
+
+func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+	posts, err := ListPosts(ctx, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(posts) != 1 {
+		return 0, fmt.Errorf("incorrect number of posts found")
+	}
+
+	dur := time.Now().Sub(posts[0].CreatedAt)
+	return dur, nil
+}
+
+func SaveEntry(ctx context.Context, text string) error {
+	db, err := openDB()
+	if err != nil {
+		return err
+	}
+	p := &Post{
+		Content: text,
+	}
+	return db.WithContext(ctx).Create(p).Error
+}
+
+func DeletePost(ctx context.Context, key string) error {
+	db, err := openDB()
+	if err != nil {
+		return err
+	}
+	return db.WithContext(ctx).Delete(&Post{}, key).Error
+}
+
+func GetPost(ctx context.Context, key string) (*Post, error) {
+	db, err := openDB()
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(keys, func(i, j int) bool {
-		return string(keys[j]) < string(keys[i])
-	})
-
-	var entries []*Entry
-	for i := 0; i < count && i < len(keys); i++ {
-		e, err := GetEntry(ctx, db, keys[i])
-		if err != nil {
-			return nil, err
-		}
-
-		entries = append(entries, e)
+	var post *Post
+	if err := db.WithContext(ctx).Find(&post, key).Error; err != nil {
+		return nil, err
 	}
 
-	return entries, nil
+	return post, nil
+}
+
+func ListPosts(ctx context.Context, count int) ([]*Post, error) {
+	db, err := openDB()
+	if err != nil {
+		return nil, err
+	}
+	var posts []*Post
+	if err := db.WithContext(ctx).Order("created_at desc").Limit(count).Find(&posts).Error; err != nil {
+		return nil, err
+	}
+
+	return posts, nil
 }

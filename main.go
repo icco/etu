@@ -3,18 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/charm/cmd"
-	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
-)
-
-const (
-	dbName = "charm.sh.etu.default"
 )
 
 var (
@@ -31,86 +24,82 @@ var (
 	}
 
 	createCmd = &cobra.Command{
-		Use:     "create [DATETIME]",
+		Use:     "create",
 		Aliases: []string{"c", "new"},
 		Short:   "Create a new journal entry. If no date provided, current time will be used.",
-		Args:    cobra.MaximumNArgs(1),
-		RunE:    create,
+		Args:    cobra.NoArgs,
+		RunE:    createPost,
 	}
 
 	deleteCmd = &cobra.Command{
-		Use:     "delete DATETIME",
+		Use:     "delete ID",
 		Aliases: []string{"d"},
 		Short:   "Delete a journal entry.",
 		Args:    cobra.ExactArgs(1),
-		RunE:    delete,
+		RunE:    deletePost,
+	}
+
+	timeSinceCmd = &cobra.Command{
+		Use:     "timesince",
+		Aliases: []string{"tslp"},
+		Short:   "Output a string of time since last post.",
+		Args:    cobra.NoArgs,
+		RunE:    timeSinceLastPost,
 	}
 
 	listCmd = &cobra.Command{
 		Use:     "list",
-		Aliases: []string{"l", "new"},
+		Aliases: []string{"ls"},
 		Short:   "List journal entries, with an optional starting datetime.",
 		Args:    cobra.NoArgs,
-		RunE:    list,
+		RunE:    listPosts,
 	}
 
 	syncCmd = &cobra.Command{
 		Use:   "sync",
-		Short: "Sync local db with latest Charm Cloud db.",
+		Short: "Sync local db with cloud db.",
 		Args:  cobra.NoArgs,
-		RunE:  sync,
-	}
-
-	resetCmd = &cobra.Command{
-		Use:   "reset",
-		Short: "Delete local db and pull down fresh copy from Charm Cloud.",
-		Args:  cobra.NoArgs,
-		RunE:  reset,
+		RunE:  syncPosts,
 	}
 )
 
-func create(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
+func createPost(cmd *cobra.Command, args []string) error {
 	model := client.CreateModel()
 	p := tea.NewProgram(model)
 	if err := p.Start(); err != nil {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), db, time.Now(), string(model.Data))
+	return client.SaveEntry(cmd.Context(), string(model.Data))
 }
 
-func delete(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
+func timeSinceLastPost(cmd *cobra.Command, args []string) error {
+	dur, err := client.TimeSinceLastPost(cmd.Context())
 	if err != nil {
 		return err
 	}
 
-	return db.Delete([]byte(args[0]))
+	fmt.Printf("%0.1fh", dur.Hours())
+
+	return nil
 }
 
-func list(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
+func deletePost(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("delete takes only one argument")
 	}
 
-	// TODO: Check if online.
-	if err := db.Sync(); err != nil {
-		return err
-	}
+	return client.DeletePost(cmd.Context(), args[0])
+}
 
-	entries, err := client.ListEntries(cmd.Context(), db, 10)
+func listPosts(cmd *cobra.Command, args []string) error {
+	entries, err := client.ListPosts(cmd.Context(), 10)
 	if err != nil {
 		return err
 	}
 
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.Key, e.Data)
+		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
 
 		r, _ := glamour.NewTermRenderer(
 			// detect background color and pick either the default dark or light theme
@@ -130,26 +119,8 @@ func list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func sync(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	return db.Sync()
-}
-
-func reset(cmd *cobra.Command, args []string) error {
-	db, err := openKV()
-	if err != nil {
-		return err
-	}
-
-	return db.Reset()
-}
-
-func openKV() (*kv.KV, error) {
-	return kv.OpenWithDefaults(dbName)
+func syncPosts(cmd *cobra.Command, args []string) error {
+	return client.Sync(cmd.Context())
 }
 
 func init() {
@@ -167,9 +138,8 @@ func init() {
 		createCmd,
 		deleteCmd,
 		listCmd,
-		resetCmd,
 		syncCmd,
-		cmd.LinkCmd("etu"),
+		timeSinceCmd,
 	)
 }
 

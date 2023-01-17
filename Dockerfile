@@ -9,9 +9,9 @@ EXPOSE 8080
 
 WORKDIR /go/src/github.com/icco/etu/
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git gcc
 COPY . .
 
-RUN go build -v -o /go/bin/etu .
+RUN go build -v -o /go/bin/etu ./server
 
 CMD ["/go/bin/etu"]
