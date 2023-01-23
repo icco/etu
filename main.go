@@ -39,9 +39,17 @@ var (
 		RunE:    deletePost,
 	}
 
+	mostRecentCmd = &cobra.Command{
+		Use:     "last",
+		Aliases: []string{"l"},
+		Short:   "Output a string of time since last post.",
+		Args:    cobra.NoArgs,
+		RunE:    mostRecentPost,
+	}
+
 	timeSinceCmd = &cobra.Command{
 		Use:     "timesince",
-		Aliases: []string{"tslp"},
+		Aliases: []string{"ts", "tslp"},
 		Short:   "Output a string of time since last post.",
 		Args:    cobra.NoArgs,
 		RunE:    timeSinceLastPost,
@@ -92,12 +100,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	return client.DeletePost(cmd.Context(), args[0])
 }
 
-func listPosts(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListPosts(cmd.Context(), 10)
-	if err != nil {
-		return err
-	}
-
+func renderPosts(entries []*Post) error {
 	for _, e := range entries {
 		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
 
@@ -117,6 +120,25 @@ func listPosts(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+
+}
+
+func mostRecentPost(cmd *cobra.Command, args []string) error {
+	entries, err := client.ListPosts(cmd.Context(), 1)
+	if err != nil {
+		return err
+	}
+
+	return renderPosts(entries)
+}
+
+func listPosts(cmd *cobra.Command, args []string) error {
+	entries, err := client.ListPosts(cmd.Context(), 25)
+	if err != nil {
+		return err
+	}
+
+	return renderPosts(entries)
 }
 
 func syncPosts(cmd *cobra.Command, args []string) error {
@@ -138,6 +160,7 @@ func init() {
 		createCmd,
 		deleteCmd,
 		listCmd,
+		mostRecentCmd,
 		syncCmd,
 		timeSinceCmd,
 	)
