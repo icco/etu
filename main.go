@@ -100,7 +100,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	return client.DeletePost(cmd.Context(), args[0])
 }
 
-func renderPosts(entries []*Post) error {
+func renderPosts(entries []*client.Post) error {
 	for _, e := range entries {
 		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
 
