@@ -53,27 +53,66 @@ func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
 }
 
 func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
-	client := c.GetClient()
-	//resp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
-	//	Query: "test",
-	//	Filter: notionapi.SearchFilter{
-	//		Value:    "page",
-	//		Property: "object",
-	//	},
-	//})
-	//fmt.Printf("found: %+v\n", resp)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//for _, r := range resp.Results {
-	//	fmt.Printf("%+v\n", r)
-	//}
-
-	resp, err := client.Database.Get(ctx, notionapi.DatabaseID("eab666044f114a55ad9c86c2fed176f7"))
+	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("found: %+v\n", resp)
 
-	return nil, nil
+	client := c.GetClient()
+	resp, err := client.Database.Query(ctx, dbID, &notionapi.DatabaseQueryRequest{
+		Sorts: []notionapi.SortObject{
+			{Property: "Created At", Direction: notionapi.SortOrderDESC},
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var ret []*Post
+	for _, page := range resp.Results {
+
+		client.Page.Get()
+
+		ret = append(ret, &Post{
+			Title:      page.,
+			Tags:       page.Properties["Tags"].GetID(),
+			Text:       page.GetObject().String(),
+			CreatedAt:  page.CreatedTime,
+			ModifiedAt: page.LastEditedTime,
+		})
+	}
+
+	return ret, nil
+}
+
+func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error) {
+	client := c.GetClient()
+	resp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
+		Query: c.rootPage,
+		Filter: notionapi.SearchFilter{
+			Value:    "database",
+			Property: "object",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.Results) == 0 {
+		return "", fmt.Errorf("root page not found")
+	}
+
+	if len(resp.Results) > 1 {
+		return "", fmt.Errorf("multiple root pages found")
+	}
+
+	db, ok := resp.Results[0].(*notionapi.Database)
+	if !ok {
+		return "", fmt.Errorf("root page is not a database")
+	}
+
+	id := notionapi.DatabaseID(db.ID.String())
+
+	return id, nil
 }
