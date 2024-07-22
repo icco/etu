@@ -14,6 +14,8 @@ var (
 	Version   = ""
 	CommitSHA = ""
 
+	cfg *client.Config
+
 	rootCmd = &cobra.Command{
 		Use:   "etu",
 		Short: "Etu. A personal command line journal.",
@@ -72,11 +74,11 @@ func createPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), string(model.Data))
+	return cfg.SaveEntry(cmd.Context(), string(model.Data))
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
-	dur, err := client.TimeSinceLastPost(cmd.Context())
+	dur, err := cfg.TimeSinceLastPost(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -91,7 +93,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return client.DeletePost(cmd.Context(), args[0])
+	return cfg.DeletePost(cmd.Context(), args[0])
 }
 
 func renderPosts(entries []*client.Post) error {
@@ -118,7 +120,7 @@ func renderPosts(entries []*client.Post) error {
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListPosts(cmd.Context(), 1)
+	entries, err := cfg.ListPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
 	}
@@ -127,7 +129,7 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListPosts(cmd.Context(), 25)
+	entries, err := cfg.ListPosts(cmd.Context(), 25)
 	if err != nil {
 		return err
 	}
@@ -156,6 +158,13 @@ func init() {
 }
 
 func main() {
+	var err error
+	cfg, err = client.New(os.Getenv("NOTION_KEY"))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

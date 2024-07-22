@@ -17,7 +17,8 @@ type Post struct {
 }
 
 type Config struct {
-	key string
+	key      string
+	rootPage string
 }
 
 func New(key string) (*Config, error) {
@@ -25,7 +26,10 @@ func New(key string) (*Config, error) {
 		return nil, fmt.Errorf("key cannot be empty")
 	}
 
-	return &Config{key: key}, nil
+	return &Config{
+		key:      key,
+		rootPage: "Journal",
+	}, nil
 }
 
 func (c *Config) GetClient() *notionapi.Client {
@@ -49,5 +53,6 @@ func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
 }
 
 func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
+
 	return nil, fmt.Errorf("not implemented")
 }
