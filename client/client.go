@@ -33,7 +33,7 @@ func New(key string) (*Config, error) {
 }
 
 func (c *Config) GetClient() *notionapi.Client {
-	return notionapi.NewClient(notionapi.Token(c.key))
+	return notionapi.NewClient(notionapi.Token(c.key), notionapi.WithVersion("2022-06-28"))
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
@@ -53,6 +53,27 @@ func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
 }
 
 func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
+	client := c.GetClient()
+	//resp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
+	//	Query: "test",
+	//	Filter: notionapi.SearchFilter{
+	//		Value:    "page",
+	//		Property: "object",
+	//	},
+	//})
+	//fmt.Printf("found: %+v\n", resp)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//for _, r := range resp.Results {
+	//	fmt.Printf("%+v\n", r)
+	//}
 
-	return nil, fmt.Errorf("not implemented")
+	resp, err := client.Database.Get(ctx, notionapi.DatabaseID("eab666044f114a55ad9c86c2fed176f7"))
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("found: %+v\n", resp)
+
+	return nil, nil
 }
