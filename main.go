@@ -62,13 +62,6 @@ var (
 		Args:    cobra.NoArgs,
 		RunE:    listPosts,
 	}
-
-	syncCmd = &cobra.Command{
-		Use:   "sync",
-		Short: "Sync local db with cloud db.",
-		Args:  cobra.NoArgs,
-		RunE:  syncPosts,
-	}
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
@@ -102,7 +95,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 
 func renderPosts(entries []*client.Post) error {
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
+		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Text)
 
 		r, _ := glamour.NewTermRenderer(
 			// detect background color and pick either the default dark or light theme
@@ -141,10 +134,6 @@ func listPosts(cmd *cobra.Command, args []string) error {
 	return renderPosts(entries)
 }
 
-func syncPosts(cmd *cobra.Command, args []string) error {
-	return client.Sync(cmd.Context())
-}
-
 func init() {
 	if len(CommitSHA) >= 7 {
 		vt := rootCmd.VersionTemplate()
@@ -161,7 +150,6 @@ func init() {
 		deleteCmd,
 		listCmd,
 		mostRecentCmd,
-		syncCmd,
 		timeSinceCmd,
 	)
 }
