@@ -33,7 +33,7 @@ func New(key string) (*Config, error) {
 }
 
 func (c *Config) GetClient() *notionapi.Client {
-	return notionapi.NewClient(c.key)
+	return notionapi.NewClient(notionapi.Token(c.key))
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
