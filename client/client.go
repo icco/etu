@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/jomei/notionapi"
 )
 
 type Post struct {
@@ -14,22 +16,38 @@ type Post struct {
 	ModifiedAt time.Time
 }
 
-func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+type Config struct {
+	key string
+}
+
+func New(key string) (*Config, error) {
+	if key == "" {
+		return nil, fmt.Errorf("key cannot be empty")
+	}
+
+	return &Config{key: key}, nil
+}
+
+func (c *Config) GetClient() *notionapi.Client {
+	return notionapi.NewClient(c.key)
+}
+
+func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	return time.Duration(0), fmt.Errorf("not implemented")
 }
 
-func SaveEntry(ctx context.Context, text string) error {
+func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	return fmt.Errorf("not implemented")
 }
 
-func DeletePost(ctx context.Context, key string) error {
+func (c *Config) DeletePost(ctx context.Context, key string) error {
 	return fmt.Errorf("not implemented")
 }
 
-func GetPost(ctx context.Context, key string) (*Post, error) {
+func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func ListPosts(ctx context.Context, count int) ([]*Post, error) {
+func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	return nil, fmt.Errorf("not implemented")
 }
