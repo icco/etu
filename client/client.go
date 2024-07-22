@@ -68,15 +68,18 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("resp: %+v\n", resp)
 
 	var ret []*Post
 	for _, page := range resp.Results {
 
-		client.Page.Get()
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), nil)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("blockResp: %+v\n", blockResp)
 
 		ret = append(ret, &Post{
-			Title:      page.,
-			Tags:       page.Properties["Tags"].GetID(),
 			Text:       page.GetObject().String(),
 			CreatedAt:  page.CreatedTime,
 			ModifiedAt: page.LastEditedTime,
