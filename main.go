@@ -65,7 +65,7 @@ var (
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
-	model := client.CreateModel()
+	model := createModel()
 	p := tea.NewProgram(model)
 	_, err := p.Run()
 	if err != nil {
