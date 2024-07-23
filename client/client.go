@@ -59,9 +59,13 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 			DatabaseID: dbID,
 		},
 		Properties: notionapi.Properties{
-			"ID": notionapi.TitleProperty{Title: []notionapi.RichText{{PlainText: post.ID}}},
+			"ID": notionapi.TitleProperty{
+				Title: []notionapi.RichText{
+					{Text: &notionapi.Text{Content: post.ID}},
+				},
+			},
 		},
-		Children: ToBlocks(text),
+		Children: ToBlocks(post.Text),
 	}); err != nil {
 		return err
 	}
