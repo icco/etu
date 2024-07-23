@@ -79,7 +79,7 @@ func ToBlocks(text string) []notionapi.Block {
 		blocks = append(blocks, &notionapi.ParagraphBlock{
 			Paragraph: notionapi.Paragraph{
 				RichText: []notionapi.RichText{
-					{PlainText: line},
+					{Text: &notionapi.Text{Content: line}},
 				},
 			},
 		})
