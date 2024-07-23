@@ -111,6 +111,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		Sorts: []notionapi.SortObject{
 			{Property: "Created At", Direction: notionapi.SortOrderDESC},
 		},
+		PageSize: count,
 	})
 
 	if err != nil {
