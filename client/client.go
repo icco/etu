@@ -76,13 +76,17 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 func ToBlocks(text string) []notionapi.Block {
 	var blocks []notionapi.Block
 	for _, line := range strings.Split(text, "\n") {
-		blocks = append(blocks, &notionapi.ParagraphBlock{
+		block := &notionapi.ParagraphBlock{
 			Paragraph: notionapi.Paragraph{
 				RichText: []notionapi.RichText{
 					{Text: &notionapi.Text{Content: line}},
 				},
 			},
-		})
+		}
+		block.Type = notionapi.BlockTypeParagraph
+		block.Object = notionapi.ObjectTypeBlock
+
+		blocks = append(blocks, block)
 	}
 
 	return blocks
