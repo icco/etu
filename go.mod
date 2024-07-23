@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.26.6
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.12.1
+	github.com/google/uuid v1.6.0
 	github.com/jomei/notionapi v1.13.1
 	github.com/spf13/cobra v1.8.1
 )
