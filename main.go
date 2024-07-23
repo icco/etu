@@ -42,11 +42,10 @@ var (
 	}
 
 	mostRecentCmd = &cobra.Command{
-		Use:     "last",
-		Aliases: []string{"l"},
-		Short:   "Output a string of time since last post.",
-		Args:    cobra.NoArgs,
-		RunE:    mostRecentPost,
+		Use:   "last",
+		Short: "Output a string of time since last post.",
+		Args:  cobra.NoArgs,
+		RunE:  mostRecentPost,
 	}
 
 	timeSinceCmd = &cobra.Command{
@@ -59,7 +58,7 @@ var (
 
 	listCmd = &cobra.Command{
 		Use:     "list",
-		Aliases: []string{"ls"},
+		Aliases: []string{"l"},
 		Short:   "List journal entries, with an optional starting datetime.",
 		Args:    cobra.NoArgs,
 		RunE:    listPosts,
