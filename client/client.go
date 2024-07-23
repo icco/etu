@@ -88,16 +88,29 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		}
 		id := idData.Title[0].PlainText
 
-		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), nil)
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 10})
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("blockResp: %+v\n", blockResp)
+
+		text := ""
+		for _, block := range blockResp.Results {
+			switch block.GetType() {
+			case notionapi.BlockTypeParagraph:
+				paragraph, ok := block.(*notionapi.ParagraphBlock)
+				if !ok {
+					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
+				}
+				text += paragraph.GetRichTextString()
+			default:
+				fmt.Printf("skipping block type: %s\n", block.GetType())
+			}
+		}
 
 		ret = append(ret, &Post{
 			ID:         id,
 			Tags:       tags,
-			Text:       page.GetObject().String(),
+			Text:       text,
 			CreatedAt:  page.CreatedTime,
 			ModifiedAt: page.LastEditedTime,
 		})
