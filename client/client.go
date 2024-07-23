@@ -9,7 +9,7 @@ import (
 )
 
 type Post struct {
-	Title      string
+	ID         string
 	Tags       []string
 	Text       string
 	CreatedAt  time.Time
@@ -71,10 +71,22 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 
 	var ret []*Post
 	for _, page := range resp.Results {
-		tags := page.Properties["Tags"]
-		id := page.Properties["ID"]
-		fmt.Printf("tags: %+v\n", tags)
-		fmt.Printf("id: %+v\n", id)
+		rawTags := page.Properties["Tags"]
+		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
+		if !ok {
+			return nil, fmt.Errorf("tags property is not a multi-select: %+v", rawTags)
+		}
+		var tags []string
+		for _, tag := range tagData.MultiSelect {
+			tags = append(tags, tag.Name)
+		}
+
+		rawID := page.Properties["ID"]
+		idData, ok := rawID.(*notionapi.TitleProperty)
+		if !ok {
+			return nil, fmt.Errorf("id property is not a title: %+v", rawID)
+		}
+		id := idData.Title[0].PlainText
 
 		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), nil)
 		if err != nil {
@@ -83,6 +95,8 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		fmt.Printf("blockResp: %+v\n", blockResp)
 
 		ret = append(ret, &Post{
+			ID:         id,
+			Tags:       tags,
 			Text:       page.GetObject().String(),
 			CreatedAt:  page.CreatedTime,
 			ModifiedAt: page.LastEditedTime,
