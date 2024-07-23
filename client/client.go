@@ -3,131 +3,198 @@ package client
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kirsle/configdir"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-)
-
-const (
-	dbFilename = "etu.db"
-	appName    = "etu"
+	"github.com/jomei/notionapi"
 )
 
 type Post struct {
-	gorm.Model
-
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
-	Content   string
-	CreatedAt time.Time `sql:"index"`
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	ID         string
+	Tags       []string
+	Text       string
+	CreatedAt  time.Time
+	ModifiedAt time.Time
 }
 
-// BeforeCreate will set a UUID as the primary key.
-func (p *Post) BeforeCreate(tx *gorm.DB) error {
-	uuid, err := uuid.NewRandom()
+type Config struct {
+	key      string
+	rootPage string
+}
+
+func New(key string) (*Config, error) {
+	if key == "" {
+		return nil, fmt.Errorf("key cannot be empty")
+	}
+
+	return &Config{
+		key:      key,
+		rootPage: "Journal",
+	}, nil
+}
+
+func (c *Config) GetClient() *notionapi.Client {
+	return notionapi.NewClient(notionapi.Token(c.key), notionapi.WithVersion("2022-06-28"))
+}
+
+func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+	return time.Duration(0), fmt.Errorf("not implemented")
+}
+
+func (c *Config) SaveEntry(ctx context.Context, text string) error {
+	post := &Post{
+		Text: text,
+		ID:   uuid.New().String(),
+	}
+
+	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
 		return err
 	}
 
-	p.ID = uuid
-	p.CreatedAt = time.Now()
-	p.DeletedAt = nil
-	p.UpdatedAt = time.Now()
+	client := c.GetClient()
+	if _, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
+		Parent: notionapi.Parent{
+			DatabaseID: dbID,
+		},
+		Properties: notionapi.Properties{
+			"ID": notionapi.TitleProperty{
+				Title: []notionapi.RichText{
+					{Text: &notionapi.Text{Content: post.ID}},
+				},
+			},
+		},
+		Children: ToBlocks(post.Text),
+	}); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (p *Post) BeforeSave(tx *gorm.DB) error {
-	p.UpdatedAt = time.Now()
+func ToBlocks(text string) []notionapi.Block {
+	var blocks []notionapi.Block
+	for _, line := range strings.Split(text, "\n") {
+		block := &notionapi.ParagraphBlock{
+			Paragraph: notionapi.Paragraph{
+				RichText: []notionapi.RichText{
+					{Text: &notionapi.Text{Content: line}},
+				},
+			},
+		}
+		block.Type = notionapi.BlockTypeParagraph
+		block.Object = notionapi.ObjectTypeBlock
 
-	return nil
+		blocks = append(blocks, block)
+	}
+
+	return blocks
 }
 
-func openDB() (*gorm.DB, error) {
-	configPath := configdir.LocalConfig(appName)
-	if err := configdir.MakePath(configPath); err != nil {
-		return nil, err
-	}
-
-	dbFile := filepath.Join(configPath, dbFilename)
-
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect database: %w", err)
-	}
-
-	if err := db.AutoMigrate(&Post{}); err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func Sync(ctx context.Context) error {
+func (c *Config) DeletePost(ctx context.Context, key string) error {
 	return fmt.Errorf("not implemented")
 }
 
-func TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	posts, err := ListPosts(ctx, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	if len(posts) != 1 {
-		return 0, fmt.Errorf("incorrect number of posts found")
-	}
-
-	dur := time.Now().Sub(posts[0].CreatedAt)
-	return dur, nil
+func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
-func SaveEntry(ctx context.Context, text string) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-	p := &Post{
-		Content: text,
-	}
-	return db.WithContext(ctx).Create(p).Error
-}
-
-func DeletePost(ctx context.Context, key string) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-	return db.WithContext(ctx).Delete(&Post{}, key).Error
-}
-
-func GetPost(ctx context.Context, key string) (*Post, error) {
-	db, err := openDB()
+func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
+	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var post *Post
-	if err := db.WithContext(ctx).Find(&post, key).Error; err != nil {
-		return nil, err
-	}
+	client := c.GetClient()
+	resp, err := client.Database.Query(ctx, dbID, &notionapi.DatabaseQueryRequest{
+		Sorts: []notionapi.SortObject{
+			{Property: "Created At", Direction: notionapi.SortOrderDESC},
+		},
+		PageSize: count,
+	})
 
-	return post, nil
-}
-
-func ListPosts(ctx context.Context, count int) ([]*Post, error) {
-	db, err := openDB()
 	if err != nil {
 		return nil, err
 	}
-	var posts []*Post
-	if err := db.WithContext(ctx).Order("created_at desc").Limit(count).Find(&posts).Error; err != nil {
-		return nil, err
+
+	var ret []*Post
+	for _, page := range resp.Results {
+		rawTags := page.Properties["Tags"]
+		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
+		if !ok {
+			return nil, fmt.Errorf("tags property is not a multi-select: %+v", rawTags)
+		}
+		var tags []string
+		for _, tag := range tagData.MultiSelect {
+			tags = append(tags, tag.Name)
+		}
+
+		rawID := page.Properties["ID"]
+		idData, ok := rawID.(*notionapi.TitleProperty)
+		if !ok {
+			return nil, fmt.Errorf("id property is not a title: %+v", rawID)
+		}
+		id := idData.Title[0].PlainText
+
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 10})
+		if err != nil {
+			return nil, err
+		}
+
+		text := ""
+		for _, block := range blockResp.Results {
+			switch block.GetType() {
+			case notionapi.BlockTypeParagraph:
+				paragraph, ok := block.(*notionapi.ParagraphBlock)
+				if !ok {
+					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
+				}
+				text += paragraph.GetRichTextString()
+			default:
+				fmt.Printf("skipping block type: %s\n", block.GetType())
+			}
+		}
+
+		ret = append(ret, &Post{
+			ID:         id,
+			Tags:       tags,
+			Text:       text,
+			CreatedAt:  page.CreatedTime,
+			ModifiedAt: page.LastEditedTime,
+		})
 	}
 
-	return posts, nil
+	return ret, nil
+}
+
+func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error) {
+	client := c.GetClient()
+	resp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
+		Query: c.rootPage,
+		Filter: notionapi.SearchFilter{
+			Value:    "database",
+			Property: "object",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.Results) == 0 {
+		return "", fmt.Errorf("root page not found")
+	}
+
+	if len(resp.Results) > 1 {
+		return "", fmt.Errorf("multiple root pages found")
+	}
+
+	db, ok := resp.Results[0].(*notionapi.Database)
+	if !ok {
+		return "", fmt.Errorf("root page is not a database")
+	}
+
+	id := notionapi.DatabaseID(db.ID.String())
+
+	return id, nil
 }

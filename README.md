@@ -1,10 +1,8 @@
 # Etu
 
-Etu is a simple journaling tool that uses [Charm](https://github.com/charmbracelet/charm)'s database and end to end encryption.
+Etu is a simple journaling tool that uses Notion as a database.
 
-## Installation
-
-TODO.
+It should be noted the main goal of Etu is to write interstitial journals. See https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef for more on this topic.
 
 ## Usage
 
@@ -20,10 +18,9 @@ Available Commands:
   create      Create a new journal entry. If no date provided, current time will be used.
   delete      Delete a journal entry.
   help        Help about any command
-  link        Link multiple machines to your Charm account
+  last        Output a string of time since last post.
   list        List journal entries, with an optional starting datetime.
-  reset       Delete local db and pull down fresh copy from Charm Cloud.
-  sync        Sync local db with latest Charm Cloud db.
+  timesince   Output a string of time since last post.
 
 Flags:
   -h, --help      help for etu
@@ -36,7 +33,7 @@ Use "etu [command] --help" for more information about a command.
 
 Etu is [the personifcation of time](https://en.wikipedia.org/wiki/Time_and_fate_deities) according to the [Lakota](https://en.wikipedia.org/wiki/Lakota_people).
 
-Etu is inspired heavily by the work of @neauoire at [wiki.xxiivv.com](https://wiki.xxiivv.com/#about), [Time Travelers](https://github.com/merveilles/Time-Travelers), and the screenshots in the [inspiration](https://github.com/icco/etu/tree/main/inspiration) folder. 
+Etu is inspired heavily by the work of @neauoire at [wiki.xxiivv.com](https://wiki.xxiivv.com/#about), [Time Travelers](https://github.com/merveilles/Time-Travelers), and the screenshots in the [inspiration](https://github.com/icco/etu/tree/main/inspiration) folder.
 
 Other projects that inspired me:
 
@@ -46,4 +43,4 @@ Other projects that inspired me:
 
 ## History
 
-I've rewritten this aproximately six times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool.
+I've rewritten this aproximately seven times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool. First with Charm as a DB, then with SQLite, then with Notion.

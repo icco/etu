@@ -1,17 +1,15 @@
-FROM golang:1.19-alpine
+# syntax=docker/dockerfile:1
+FROM golang:1.22-alpine
 
-ENV GOPROXY="https://proxy.golang.org"
-ENV GO111MODULE="on"
-ENV NAT_ENV="production"
-ENV PORT=8080
+WORKDIR /go/src/app
 
-EXPOSE 8080
+# Download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
 
-WORKDIR /go/src/github.com/icco/etu/
+COPY . ./
 
-RUN apk add --no-cache git gcc
-COPY . .
+ARG VERSION=local
+RUN CGO_ENABLED=0 GOOS=linux go build -o etu -ldflags="-X 'main.Version=$VERSION'"
 
-RUN go build -v -o /go/bin/etu ./server
-
-CMD ["/go/bin/etu"]
+CMD ["./etu"]

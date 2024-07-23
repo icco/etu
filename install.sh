@@ -2,7 +2,7 @@
 
 git pull
 go get -v -d -u ./...
-go mod tidy -compat=1.19
+go mod tidy
 git diff --quiet HEAD go.* || git add go.mod go.sum && git ci -m 'chore: go update' && git push -u
 
 GIT_COMMIT=$(git rev-list -1 HEAD)

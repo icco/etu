@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"github.com/charmbracelet/bubbles/textarea"
@@ -14,8 +14,8 @@ type model struct {
 	Data     []byte
 }
 
-// CreateModel generates a text area for use in bubbletea.
-func CreateModel() *model {
+// createModel generates a text area for use in bubbletea.
+func createModel() *model {
 	ta := textarea.New()
 	ta.Placeholder = "What are you working on? (ctrl+d to save, ctrl+c to quit)"
 	ta.Focus()

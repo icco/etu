@@ -14,6 +14,8 @@ var (
 	Version   = ""
 	CommitSHA = ""
 
+	cfg *client.Config
+
 	rootCmd = &cobra.Command{
 		Use:   "etu",
 		Short: "Etu. A personal command line journal.",
@@ -40,11 +42,10 @@ var (
 	}
 
 	mostRecentCmd = &cobra.Command{
-		Use:     "last",
-		Aliases: []string{"l"},
-		Short:   "Output a string of time since last post.",
-		Args:    cobra.NoArgs,
-		RunE:    mostRecentPost,
+		Use:   "last",
+		Short: "Output a string of time since last post.",
+		Args:  cobra.NoArgs,
+		RunE:  mostRecentPost,
 	}
 
 	timeSinceCmd = &cobra.Command{
@@ -57,32 +58,26 @@ var (
 
 	listCmd = &cobra.Command{
 		Use:     "list",
-		Aliases: []string{"ls"},
+		Aliases: []string{"l"},
 		Short:   "List journal entries, with an optional starting datetime.",
 		Args:    cobra.NoArgs,
 		RunE:    listPosts,
 	}
-
-	syncCmd = &cobra.Command{
-		Use:   "sync",
-		Short: "Sync local db with cloud db.",
-		Args:  cobra.NoArgs,
-		RunE:  syncPosts,
-	}
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
-	model := client.CreateModel()
+	model := createModel()
 	p := tea.NewProgram(model)
-	if err := p.Start(); err != nil {
+	_, err := p.Run()
+	if err != nil {
 		return err
 	}
 
-	return client.SaveEntry(cmd.Context(), string(model.Data))
+	return cfg.SaveEntry(cmd.Context(), string(model.Data))
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
-	dur, err := client.TimeSinceLastPost(cmd.Context())
+	dur, err := cfg.TimeSinceLastPost(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -97,12 +92,12 @@ func deletePost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return client.DeletePost(cmd.Context(), args[0])
+	return cfg.DeletePost(cmd.Context(), args[0])
 }
 
 func renderPosts(entries []*client.Post) error {
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Content)
+		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Text)
 
 		r, _ := glamour.NewTermRenderer(
 			// detect background color and pick either the default dark or light theme
@@ -124,7 +119,7 @@ func renderPosts(entries []*client.Post) error {
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListPosts(cmd.Context(), 1)
+	entries, err := cfg.ListPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
 	}
@@ -133,16 +128,12 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	entries, err := client.ListPosts(cmd.Context(), 25)
+	entries, err := cfg.ListPosts(cmd.Context(), 25)
 	if err != nil {
 		return err
 	}
 
 	return renderPosts(entries)
-}
-
-func syncPosts(cmd *cobra.Command, args []string) error {
-	return client.Sync(cmd.Context())
 }
 
 func init() {
@@ -161,12 +152,18 @@ func init() {
 		deleteCmd,
 		listCmd,
 		mostRecentCmd,
-		syncCmd,
 		timeSinceCmd,
 	)
 }
 
 func main() {
+	var err error
+	cfg, err = client.New(os.Getenv("NOTION_KEY"))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
