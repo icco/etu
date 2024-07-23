@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jomei/notionapi"
 )
 
@@ -41,7 +43,45 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 }
 
 func (c *Config) SaveEntry(ctx context.Context, text string) error {
-	return fmt.Errorf("not implemented")
+	post := &Post{
+		Text: text,
+		ID:   uuid.New().String(),
+	}
+
+	dbID, err := c.getDatabaseID(ctx)
+	if err != nil {
+		return err
+	}
+
+	client := c.GetClient()
+	if _, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
+		Parent: notionapi.Parent{
+			DatabaseID: dbID,
+		},
+		Properties: notionapi.Properties{
+			"ID": notionapi.TitleProperty{Title: []notionapi.RichText{{PlainText: post.ID}}},
+		},
+		Children: ToBlocks(text),
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ToBlocks(text string) []notionapi.Block {
+	var blocks []notionapi.Block
+	for _, line := range strings.Split(text, "\n") {
+		blocks = append(blocks, &notionapi.ParagraphBlock{
+			Paragraph: notionapi.Paragraph{
+				RichText: []notionapi.RichText{
+					{PlainText: line},
+				},
+			},
+		})
+	}
+
+	return blocks
 }
 
 func (c *Config) DeletePost(ctx context.Context, key string) error {
