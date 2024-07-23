@@ -39,7 +39,16 @@ func (c *Config) GetClient() *notionapi.Client {
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	return time.Duration(0), fmt.Errorf("not implemented")
+	posts, err := c.ListPosts(ctx, 1)
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	if len(posts) == 0 {
+		return time.Duration(0), fmt.Errorf("no posts found")
+	}
+
+	return time.Since(posts[0].CreatedAt), nil
 }
 
 func (c *Config) SaveEntry(ctx context.Context, text string) error {
