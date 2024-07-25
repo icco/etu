@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -39,6 +41,13 @@ func (c *Config) GetClient() *notionapi.Client {
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+	cache, err := c.cacheFromFile()
+	if err == nil {
+		if time.Since(cache.Saved) < time.Hour {
+			return cache.Duration, nil
+		}
+	}
+
 	posts, err := c.ListPosts(ctx, 1)
 	if err != nil {
 		return time.Duration(0), err
@@ -47,8 +56,54 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	if len(posts) == 0 {
 		return time.Duration(0), fmt.Errorf("no posts found")
 	}
+	dur := time.Since(posts[0].CreatedAt)
+	if err := c.cacheToFile(dur); err != nil {
+		return time.Duration(0), err
+	}
 
-	return time.Since(posts[0].CreatedAt), nil
+	return dur, nil
+}
+
+type cacheData struct {
+	Saved    time.Time
+	Duration time.Duration
+}
+
+func (c *Config) cacheToFile(dur time.Duration) error {
+	f, err := os.Create("/tmp/etu.cache")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	data := cacheData{
+		Saved:    time.Now(),
+		Duration: dur,
+	}
+
+	// Create an encoder and send a value.
+	enc := gob.NewEncoder(f)
+	if err := enc.Encode(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Config) cacheFromFile() (cacheData, error) {
+	var data cacheData
+	f, err := os.Open("/tmp/etu.cache")
+	if err != nil {
+		return data, err
+	}
+	defer f.Close()
+
+	dec := gob.NewDecoder(f)
+	if err := dec.Decode(&data); err != nil {
+		return data, err
+	}
+
+	return data, nil
 }
 
 func (c *Config) SaveEntry(ctx context.Context, text string) error {
