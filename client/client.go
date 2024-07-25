@@ -43,7 +43,7 @@ func (c *Config) GetClient() *notionapi.Client {
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	cache, err := c.cacheFromFile()
 	if err == nil {
-		if time.Since(cache.Saved) < time.Hour {
+		if time.Since(cache.Saved) < 10*time.Minute {
 			return cache.Duration, nil
 		}
 	}
