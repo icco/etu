@@ -117,7 +117,6 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	if err != nil {
 		return err
 	}
-	post.Tags = tags
 
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {

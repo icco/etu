@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -15,7 +16,7 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	messages := []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleUser,
-			Content: fmt.Sprintf("given the journal entry %q, generate three words to summarize the content.", text),
+			Content: fmt.Sprintf("given the journal entry %q, generate a few options of single words to summarize the content. Output should be a comma seperated list.", text),
 		},
 	}
 
@@ -29,7 +30,15 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println(resp)
 
-	return tags, nil
+	for _, choice := range resp.Choices {
+		outText := choice.Message.Content
+		newTags := strings.Split(outText, ",")
+		for _, tag := range newTags {
+			tags = append(tags, strings.TrimSpace(tag))
+		}
+	}
+	log.Printf("tags: %+v", tags)
+
+	return nil, nil
 }
