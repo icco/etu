@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/icco/etu/ai"
 	"github.com/jomei/notionapi"
 )
 
@@ -111,6 +112,12 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 		Text: text,
 		ID:   uuid.New().String(),
 	}
+
+	tags, err := ai.GetTags(ctx, post)
+	if err != nil {
+		return err
+	}
+	post.Tags = tags
 
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {

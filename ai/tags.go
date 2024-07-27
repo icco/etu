@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -14,12 +15,12 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	messages := []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleUser,
-			Content: text,
+			Content: fmt.Sprintf("given the journal entry %q, generate three words to summarize the content.", text),
 		},
 	}
 
 	req := openai.ChatCompletionRequest{
-		Model:    openai.GPT4,
+		Model:    openai.GPT4oMini20240718,
 		Messages: messages,
 	}
 
