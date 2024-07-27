@@ -101,12 +101,16 @@ func renderPosts(entries []*client.Post) error {
 		items = append(items, listItem{post: e})
 	}
 
-	m := listModel{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-	m.list.Title = "Most recent posts"
+	m := listModel{list: list.New(items, itemDelegate{}, 0, 0)}
+	m.list.Title = ""
+	m.list.SetShowStatusBar(false)
+	m.list.SetFilteringEnabled(false)
+	m.list.SetShowTitle(false)
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	m.list.Styles.HelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 
-	if _, err := p.Run(); err != nil {
+	if _, err := tea.NewProgram(m).Run(); err != nil {
 		return err
 	}
 
