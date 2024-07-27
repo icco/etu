@@ -214,11 +214,13 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 				if !ok {
 					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
 				}
-				text += paragraph.GetRichTextString()
+				text += paragraph.GetRichTextString() + "\n"
 			default:
 				fmt.Printf("skipping block type: %s\n", block.GetType())
 			}
 		}
+
+		text = strings.TrimSpace(text)
 
 		ret = append(ret, &Post{
 			ID:         id,

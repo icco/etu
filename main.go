@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -96,22 +97,26 @@ func deletePost(cmd *cobra.Command, args []string) error {
 }
 
 func renderPosts(entries []*client.Post) error {
+	var items []list.Item
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Text)
+		items = append(items, listItem{post: e})
+	}
 
-		r, _ := glamour.NewTermRenderer(
-			// detect background color and pick either the default dark or light theme
-			glamour.WithAutoStyle(),
-			// wrap output at specific width
-			glamour.WithWordWrap(80),
-		)
+	buffer := 6
+	maxSize := 10
+	height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
 
-		out, err := r.Render(in)
-		if err != nil {
-			return err
-		}
+	m := listModel{list: list.New(items, itemDelegate{}, 0, int(height))}
+	m.list.Title = "Interstitial Notes"
+	m.list.SetShowStatusBar(false)
+	m.list.SetFilteringEnabled(false)
+	m.list.SetShowTitle(true)
+	m.list.SetShowHelp(true)
 
-		fmt.Print(out)
+	m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		return err
 	}
 
 	return nil
