@@ -102,14 +102,16 @@ func renderPosts(entries []*client.Post) error {
 		items = append(items, listItem{post: e})
 	}
 
-	height := math.Min(10, float64(len(items)+2))
+	buffer := 6
+	maxSize := 10
+	height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
 
 	m := listModel{list: list.New(items, itemDelegate{}, 0, int(height))}
-	m.list.Title = ""
+	m.list.Title = "Interstitial Notes"
 	m.list.SetShowStatusBar(false)
 	m.list.SetFilteringEnabled(false)
-	m.list.SetShowTitle(false)
-	m.list.SetShowHelp(false)
+	m.list.SetShowTitle(true)
+	m.list.SetShowHelp(true)
 
 	m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 
