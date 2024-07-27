@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/icco/etu/client"
@@ -96,20 +97,18 @@ func deletePost(cmd *cobra.Command, args []string) error {
 }
 
 func renderPosts(entries []*client.Post) error {
+	var items []list.Item
 	for _, e := range entries {
-		in := fmt.Sprintf("%s\n", e.Text)
+		items = append(items, listItem{post: e})
+	}
 
-		r, _ := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(120),
-		)
+	m := listModel{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+	m.list.Title = "Most recent posts"
 
-		out, err := r.Render(in)
-		if err != nil {
-			return err
-		}
+	p := tea.NewProgram(m, tea.WithAltScreen())
 
-		fmt.Print(out)
+	if _, err := p.Run(); err != nil {
+		return err
 	}
 
 	return nil
