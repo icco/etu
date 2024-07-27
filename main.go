@@ -97,13 +97,11 @@ func deletePost(cmd *cobra.Command, args []string) error {
 
 func renderPosts(entries []*client.Post) error {
 	for _, e := range entries {
-		in := fmt.Sprintf("# %s\n%s\n", e.CreatedAt, e.Text)
+		in := fmt.Sprintf("%s\n", e.Text)
 
 		r, _ := glamour.NewTermRenderer(
-			// detect background color and pick either the default dark or light theme
 			glamour.WithAutoStyle(),
-			// wrap output at specific width
-			glamour.WithWordWrap(80),
+			glamour.WithWordWrap(120),
 		)
 
 		out, err := r.Render(in)
