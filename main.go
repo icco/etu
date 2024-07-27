@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -101,14 +102,16 @@ func renderPosts(entries []*client.Post) error {
 		items = append(items, listItem{post: e})
 	}
 
-	m := listModel{list: list.New(items, itemDelegate{}, 0, 0)}
+	height := math.Min(10, float64(len(items)+2))
+
+	m := listModel{list: list.New(items, itemDelegate{}, 0, int(height))}
 	m.list.Title = ""
 	m.list.SetShowStatusBar(false)
 	m.list.SetFilteringEnabled(false)
 	m.list.SetShowTitle(false)
+	m.list.SetShowHelp(false)
 
 	m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	m.list.Styles.HelpStyle = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		return err
