@@ -78,12 +78,19 @@ func createPost(cmd *cobra.Command, args []string) error {
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
+	ret := "???"
 	dur, err := cfg.TimeSinceLastPost(cmd.Context())
-	if err != nil {
-		return err
+	if err == nil {
+
+		switch {
+		case dur.Hours() > 24:
+			ret = fmt.Sprintf("%0.1fd", dur.Hours()/24)
+		default:
+			ret = fmt.Sprintf("%0.1fh", dur.Hours())
+		}
 	}
 
-	fmt.Printf("%0.1fh", dur.Hours())
+	fmt.Print(ret)
 
 	return nil
 }
