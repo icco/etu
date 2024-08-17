@@ -37,7 +37,12 @@ func New(key string) (*Config, error) {
 }
 
 func (c *Config) GetClient() *notionapi.Client {
-	return notionapi.NewClient(notionapi.Token(c.key), notionapi.WithVersion("2022-06-28"))
+	// TODO: figure out timeouts
+	return notionapi.NewClient(
+		notionapi.Token(c.key),
+		notionapi.WithVersion("2022-06-28"),
+		notionapi.WithRetry(2),
+	)
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
