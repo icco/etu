@@ -45,6 +45,23 @@ func (c *Config) GetClient() *notionapi.Client {
 	)
 }
 
+func (c *Config) UpdateCache(ctx context.Context) error {
+	posts, err := c.ListPosts(ctx, 1)
+	if err != nil {
+		return err
+	}
+
+	if len(posts) == 0 {
+		return fmt.Errorf("no posts found")
+	}
+	dur := time.Since(posts[0].CreatedAt)
+	if err := c.cacheToFile(dur); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	cache, _ := c.cacheFromFile()
 	if cache != nil {
@@ -52,18 +69,7 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	}
 
 	go func() {
-		posts, err := c.ListPosts(ctx, 1)
-		if err != nil {
-			return
-		}
-
-		if len(posts) == 0 {
-			return
-		}
-		dur := time.Since(posts[0].CreatedAt)
-		if err := c.cacheToFile(dur); err != nil {
-			return
-		}
+		c.UpdateCache(context.Background())
 	}()
 
 	return time.Duration(0), fmt.Errorf("duration calculating async")
@@ -136,6 +142,10 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 		},
 		Children: ToBlocks(post.Text),
 	}); err != nil {
+		return err
+	}
+
+	if err := c.UpdateCache(ctx); err != nil {
 		return err
 	}
 
