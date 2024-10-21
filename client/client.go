@@ -63,16 +63,19 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	cache, _ := c.cacheFromFile()
-	if cache != nil {
+	if cache, _ := c.cacheFromFile(); cache != nil {
 		return cache.Duration, nil
 	}
 
-	go func() {
-		c.UpdateCache(context.Background())
-	}()
+	if err := c.UpdateCache(ctx); err != nil {
+		return time.Duration(0), fmt.Errorf("updating cache %w", err)
+	}
 
-	return time.Duration(0), fmt.Errorf("duration calculating async")
+	if cache, _ := c.cacheFromFile(); cache != nil {
+		return cache.Duration, nil
+	}
+
+	return time.Duration(0), fmt.Errorf("cache still not found")
 }
 
 type cacheData struct {
