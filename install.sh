@@ -1,7 +1,7 @@
 #! /bin/zsh -ex
 
 git pull
-go get -v -d -u ./...
+go get -v -u ./...
 go mod tidy
 git diff --quiet HEAD go.* || git add go.mod go.sum && git ci -m 'chore: go update' && git push -u
 

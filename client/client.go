@@ -46,28 +46,37 @@ func (c *Config) GetClient() *notionapi.Client {
 	)
 }
 
-func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	cache, err := c.cacheFromFile()
-	if err == nil {
-		if time.Since(cache.Saved) < 10*time.Minute {
-			return cache.Duration, nil
-		}
-	}
-
+func (c *Config) UpdateCache(ctx context.Context) error {
 	posts, err := c.ListPosts(ctx, 1)
 	if err != nil {
-		return time.Duration(0), err
+		return err
 	}
 
 	if len(posts) == 0 {
-		return time.Duration(0), fmt.Errorf("no posts found")
+		return fmt.Errorf("no posts found")
 	}
 	dur := time.Since(posts[0].CreatedAt)
 	if err := c.cacheToFile(dur); err != nil {
-		return time.Duration(0), err
+		return err
 	}
 
-	return dur, nil
+	return nil
+}
+
+func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+	if cache, _ := c.cacheFromFile(); cache != nil {
+		return cache.Duration, nil
+	}
+
+	if err := c.UpdateCache(ctx); err != nil {
+		return time.Duration(0), fmt.Errorf("updating cache %w", err)
+	}
+
+	if cache, _ := c.cacheFromFile(); cache != nil {
+		return cache.Duration, nil
+	}
+
+	return time.Duration(0), fmt.Errorf("cache still not found")
 }
 
 type cacheData struct {
@@ -96,17 +105,17 @@ func (c *Config) cacheToFile(dur time.Duration) error {
 	return nil
 }
 
-func (c *Config) cacheFromFile() (cacheData, error) {
-	var data cacheData
+func (c *Config) cacheFromFile() (*cacheData, error) {
+	data := &cacheData{}
 	f, err := os.Open("/tmp/etu.cache")
 	if err != nil {
-		return data, err
+		return nil, err
 	}
 	defer f.Close()
 
 	dec := gob.NewDecoder(f)
-	if err := dec.Decode(&data); err != nil {
-		return data, err
+	if err := dec.Decode(data); err != nil {
+		return nil, err
 	}
 
 	return data, nil
@@ -150,6 +159,10 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 		},
 		Children: ToBlocks(post.Text),
 	}); err != nil {
+		return err
+	}
+
+	if err := c.UpdateCache(ctx); err != nil {
 		return err
 	}
 
