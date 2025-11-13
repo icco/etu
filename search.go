@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -39,10 +38,12 @@ func newSearchModel(posts []*client.Post) searchModel {
 	ti.Focus()
 	ti.CharLimit = 200
 	ti.Width = 50
+
+	// Style the textinput components
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
 	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	ti.CursorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
 
 	// Pre-compute searchable posts for performance
 	searchable := search.NewSearchablePosts(posts)
@@ -145,18 +146,18 @@ func (m searchModel) View() string {
 		return ""
 	}
 
-	var b strings.Builder
-
-	// Render search input with styling
+	// Style the input with a border
 	inputView := searchInputStyle.Render(m.textInput.View())
-	b.WriteString("\n")
-	b.WriteString(docStyle.Render(inputView))
-	b.WriteString("\n")
 
-	// Render list
-	b.WriteString(docStyle.Render(m.list.View()))
+	// Combine input and list with proper spacing
+	view := lipgloss.JoinVertical(
+		lipgloss.Left,
+		inputView,
+		"",
+		m.list.View(),
+	)
 
-	return b.String()
+	return docStyle.Render(view)
 }
 
 func searchPosts(cmd *cobra.Command, args []string) error {
