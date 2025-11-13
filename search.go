@@ -100,6 +100,22 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.filtered = msg.posts
 
+		// Update list with results
+		if len(m.filtered) > 0 {
+			var items []list.Item
+			for _, p := range m.filtered {
+				items = append(items, listItem{post: p})
+			}
+
+			buffer := 6
+			maxSize := 10
+			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+			m.list.SetItems(items)
+			m.list.SetHeight(int(height))
+			m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
+		}
+		m.textInput.Blur()
+
 	case spinner.TickMsg:
 		if m.loading {
 			var cmd tea.Cmd
@@ -125,7 +141,11 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.query = query
 				m.loading = true
 				m.loadErr = nil
+				m.filtered = nil // Clear previous results
 				m.showResults = true
+
+				// Clear the list
+				m.list.SetItems([]list.Item{})
 
 				// Start async search
 				return m, tea.Batch(
@@ -149,25 +169,12 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textInput, cmd = m.textInput.Update(msg)
 			cmds = append(cmds, cmd)
 		} else {
-			// In results list phase - update list when we have results
+			// In results list phase - only update list if we have results
 			if !m.loading && len(m.filtered) > 0 {
-				var items []list.Item
-				for _, p := range m.filtered {
-					items = append(items, listItem{post: p})
-				}
-
-				buffer := 6
-				maxSize := 10
-				height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-				m.list.SetItems(items)
-				m.list.SetHeight(int(height))
-				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
-				m.textInput.Blur()
+				var cmd tea.Cmd
+				m.list, cmd = m.list.Update(msg)
+				cmds = append(cmds, cmd)
 			}
-
-			var cmd tea.Cmd
-			m.list, cmd = m.list.Update(msg)
-			cmds = append(cmds, cmd)
 		}
 	}
 
