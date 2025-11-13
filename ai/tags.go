@@ -40,5 +40,5 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	}
 	log.Printf("tags: %+v", tags)
 
-	return nil, nil
+	return tags, nil
 }
