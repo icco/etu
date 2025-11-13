@@ -12,20 +12,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/icco/etu/client"
-	"github.com/icco/etu/search"
 	"github.com/spf13/cobra"
 )
-
-type postsLoadedMsg struct {
-	posts []*client.Post
-	err   error
-}
 
 type searchModel struct {
 	textInput   textinput.Model
 	list        list.Model
 	spinner     spinner.Model
-	searchable  *search.SearchablePosts
 	filtered    []*client.Post
 	selected    *client.Post
 	quitting    bool
@@ -36,10 +29,15 @@ type searchModel struct {
 	cfg         *client.Config
 }
 
-func loadPosts(cfg *client.Config) tea.Cmd {
+type searchCompleteMsg struct {
+	posts []*client.Post
+	err   error
+}
+
+func performSearch(cfg *client.Config, query string) tea.Cmd {
 	return func() tea.Msg {
-		posts, err := cfg.ListAllPosts(context.Background())
-		return postsLoadedMsg{posts: posts, err: err}
+		posts, err := cfg.SearchPosts(context.Background(), query, 50) // Limit to 50 results
+		return searchCompleteMsg{posts: posts, err: err}
 	}
 }
 
@@ -80,33 +78,27 @@ func newSearchModel(cfg *client.Config) searchModel {
 		textInput:   ti,
 		list:        l,
 		spinner:     sp,
-		searchable:  nil,
 		showResults: false,
-		loading:     true,
+		loading:     false,
 		cfg:         cfg,
 	}
 }
 
 func (m searchModel) Init() tea.Cmd {
-	return tea.Batch(
-		textinput.Blink,
-		m.spinner.Tick,
-		loadPosts(m.cfg),
-	)
+	return textinput.Blink
 }
 
 func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case postsLoadedMsg:
+	case searchCompleteMsg:
 		m.loading = false
 		if msg.err != nil {
 			m.loadErr = msg.err
 			return m, nil
 		}
-		// Pre-compute searchable posts for performance
-		m.searchable = search.NewSearchablePosts(msg.posts)
+		m.filtered = msg.posts
 
 	case spinner.TickMsg:
 		if m.loading {
@@ -129,36 +121,17 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if !m.showResults {
 				// User pressed enter on search query - perform search and show results
-				if m.searchable == nil {
-					// Posts not loaded yet, can't search
-					return m, nil
-				}
 				query := strings.TrimSpace(m.textInput.Value())
-				if query == "" {
-					// Empty query, show all posts
-					m.filtered = m.searchable.Search("")
-				} else {
-					m.filtered = m.searchable.Search(query)
-				}
 				m.query = query
+				m.loading = true
+				m.loadErr = nil
 				m.showResults = true
 
-				// Update list with results
-				var items []list.Item
-				for _, p := range m.filtered {
-					items = append(items, listItem{post: p})
-				}
-
-				buffer := 6
-				maxSize := 10
-				height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-				m.list.SetItems(items)
-				m.list.SetHeight(int(height))
-				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
-
-				// Blur the text input and focus the list
-				m.textInput.Blur()
-				return m, nil
+				// Start async search
+				return m, tea.Batch(
+					m.spinner.Tick,
+					performSearch(m.cfg, query),
+				)
 			} else {
 				// User pressed enter on a list item - select it
 				if m.list.SelectedItem() != nil {
@@ -176,7 +149,22 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textInput, cmd = m.textInput.Update(msg)
 			cmds = append(cmds, cmd)
 		} else {
-			// In results list phase
+			// In results list phase - update list when we have results
+			if !m.loading && len(m.filtered) > 0 {
+				var items []list.Item
+				for _, p := range m.filtered {
+					items = append(items, listItem{post: p})
+				}
+
+				buffer := 6
+				maxSize := 10
+				height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+				m.list.SetItems(items)
+				m.list.SetHeight(int(height))
+				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
+				m.textInput.Blur()
+			}
+
 			var cmd tea.Cmd
 			m.list, cmd = m.list.Update(msg)
 			cmds = append(cmds, cmd)
@@ -196,27 +184,31 @@ func (m searchModel) View() string {
 	if !m.showResults {
 		// Show search prompt
 		s.WriteString("\n  ")
-		if m.loading {
-			loadingText := fmt.Sprintf("%s Loading journal entries...", m.spinner.View())
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
-		} else if m.loadErr != nil {
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error loading entries: " + m.loadErr.Error()))
-		} else {
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Search journal entries:"))
-		}
+		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Search journal entries:"))
 		s.WriteString("\n\n  ")
 		s.WriteString(m.textInput.View())
 		s.WriteString("\n")
 	} else {
 		// Show results list
 		s.WriteString("\n  ")
-		if m.query == "" {
-			s.WriteString("All journal entries:")
+		if m.loading {
+			loadingText := fmt.Sprintf("%s Searching...", m.spinner.View())
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
+		} else if m.loadErr != nil {
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error searching: " + m.loadErr.Error()))
 		} else {
-			s.WriteString(fmt.Sprintf("Search results for %q:", m.query))
+			if m.query == "" {
+				s.WriteString("All journal entries:")
+			} else {
+				s.WriteString(fmt.Sprintf("Search results for %q:", m.query))
+			}
 		}
 		s.WriteString("\n\n")
-		s.WriteString(m.list.View())
+		if !m.loading && len(m.filtered) > 0 {
+			s.WriteString(m.list.View())
+		} else if !m.loading && len(m.filtered) == 0 {
+			s.WriteString("  No results found.\n")
+		}
 		s.WriteString("\n")
 	}
 

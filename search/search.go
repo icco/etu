@@ -4,49 +4,78 @@ import (
 	"strings"
 
 	"github.com/icco/etu/client"
-	"github.com/sahilm/fuzzy"
 )
 
-// SearchablePosts wraps posts with pre-computed search strings for efficient searching.
-type SearchablePosts struct {
-	posts        []*client.Post
-	searchStrings []string
+// MatchScore represents how well a post matches the search query
+type MatchScore struct {
+	Post  *client.Post
+	Score int
 }
 
-// NewSearchablePosts creates a new SearchablePosts instance with pre-computed search strings.
-func NewSearchablePosts(posts []*client.Post) *SearchablePosts {
-	searchStrings := make([]string, len(posts))
-	for i, p := range posts {
-		searchStr := strings.ToLower(p.Text)
-		// Also include tags in search
-		if len(p.Tags) > 0 {
-			searchStr += " " + strings.ToLower(strings.Join(p.Tags, " "))
-		}
-		searchStrings[i] = searchStr
-	}
-
-	return &SearchablePosts{
-		posts:         posts,
-		searchStrings: searchStrings,
-	}
-}
-
-// Search performs fuzzy search on the pre-computed search strings.
+// SimpleSearch performs a lightweight string matching search.
 // Returns posts sorted by relevance (best matches first).
-func (sp *SearchablePosts) Search(query string) []*client.Post {
+func SimpleSearch(query string, posts []*client.Post) []*client.Post {
 	if query == "" {
-		return sp.posts
+		return posts
 	}
 
-	// Perform fuzzy search
-	matches := fuzzy.Find(strings.ToLower(query), sp.searchStrings)
-
-	// Map results back to posts
+	queryLower := strings.ToLower(query)
+	queryWords := strings.Fields(queryLower)
+	
+	var matches []MatchScore
+	
+	for _, post := range posts {
+		score := 0
+		searchText := strings.ToLower(post.Text)
+		searchTags := strings.ToLower(strings.Join(post.Tags, " "))
+		fullText := searchText + " " + searchTags
+		
+		// Exact phrase match gets highest score
+		if strings.Contains(fullText, queryLower) {
+			score += 100
+		}
+		
+		// Count word matches
+		matchedWords := 0
+		for _, word := range queryWords {
+			if strings.Contains(fullText, word) {
+				matchedWords++
+				score += 10
+			}
+		}
+		
+		// Bonus for matching all words
+		if matchedWords == len(queryWords) {
+			score += 50
+		}
+		
+		// Tag matches get extra points
+		for _, tag := range post.Tags {
+			if strings.Contains(strings.ToLower(tag), queryLower) {
+				score += 30
+			}
+		}
+		
+		// Only include posts with some match
+		if score > 0 {
+			matches = append(matches, MatchScore{Post: post, Score: score})
+		}
+	}
+	
+	// Sort by score (descending)
+	for i := 0; i < len(matches)-1; i++ {
+		for j := i + 1; j < len(matches); j++ {
+			if matches[i].Score < matches[j].Score {
+				matches[i], matches[j] = matches[j], matches[i]
+			}
+		}
+	}
+	
 	result := make([]*client.Post, len(matches))
 	for i, match := range matches {
-		result[i] = sp.posts[match.Index]
+		result[i] = match.Post
 	}
-
+	
 	return result
 }
 

@@ -217,18 +217,25 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	return c.processPages(ctx, client, resp.Results)
 }
 
-// ListAllPosts fetches all posts using pagination
-func (c *Config) ListAllPosts(ctx context.Context) ([]*Post, error) {
+// SearchPosts searches posts incrementally without loading everything into memory.
+// It fetches pages in batches and searches them as it goes.
+func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) ([]*Post, error) {
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	client := c.GetClient()
-	var allPosts []*Post
+	var results []*Post
 	var cursor notionapi.Cursor
+	
+	// If query is empty, just return recent posts
+	if query == "" {
+		return c.ListPosts(ctx, maxResults)
+	}
 
-	for {
+	// Search incrementally - fetch pages and search them
+	for len(results) < maxResults {
 		req := &notionapi.DatabaseQueryRequest{
 			Sorts: []notionapi.SortObject{
 				{Property: "Created At", Direction: notionapi.SortOrderDESC},
@@ -248,7 +255,16 @@ func (c *Config) ListAllPosts(ctx context.Context) ([]*Post, error) {
 		if err != nil {
 			return nil, err
 		}
-		allPosts = append(allPosts, posts...)
+
+		// Search this batch
+		for _, post := range posts {
+			if c.matchesQuery(post, query) {
+				results = append(results, post)
+				if len(results) >= maxResults {
+					return results, nil
+				}
+			}
+		}
 
 		// Check if there are more pages
 		if !resp.HasMore {
@@ -257,7 +273,17 @@ func (c *Config) ListAllPosts(ctx context.Context) ([]*Post, error) {
 		cursor = resp.NextCursor
 	}
 
-	return allPosts, nil
+	return results, nil
+}
+
+// matchesQuery performs a simple string match check
+func (c *Config) matchesQuery(post *Post, query string) bool {
+	queryLower := strings.ToLower(query)
+	textLower := strings.ToLower(post.Text)
+	tagsLower := strings.ToLower(strings.Join(post.Tags, " "))
+	
+	// Check if query appears in text or tags
+	return strings.Contains(textLower, queryLower) || strings.Contains(tagsLower, queryLower)
 }
 
 func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
