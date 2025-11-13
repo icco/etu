@@ -3,7 +3,6 @@ package ai
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -38,7 +37,7 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 			tags = append(tags, strings.TrimSpace(tag))
 		}
 	}
-	log.Printf("tags: %+v", tags)
+	// log.Printf("tags: %+v", tags)
 
 	return tags, nil
 }
