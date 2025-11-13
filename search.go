@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -13,26 +15,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	searchInputStyle = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("170")).
-		Padding(0, 1).
-		MarginBottom(1)
-)
-
-type searchModel struct {
-	textInput  textinput.Model
-	list       list.Model
-	searchable *search.SearchablePosts
-	filtered   []*client.Post
-	selected   *client.Post
-	quitting   bool
-	width      int
-	height     int
+type postsLoadedMsg struct {
+	posts []*client.Post
+	err   error
 }
 
-func newSearchModel(posts []*client.Post) searchModel {
+type searchModel struct {
+	textInput   textinput.Model
+	list        list.Model
+	searchable  *search.SearchablePosts
+	filtered    []*client.Post
+	selected    *client.Post
+	quitting    bool
+	query       string
+	showResults bool
+	loading     bool
+	loadErr     error
+	cfg         *client.Config
+}
+
+func loadPosts(cfg *client.Config) tea.Cmd {
+	return func() tea.Msg {
+		posts, err := cfg.ListAllPosts(context.Background())
+		return postsLoadedMsg{posts: posts, err: err}
+	}
+}
+
+func newSearchModel(cfg *client.Config) searchModel {
 	ti := textinput.New()
 	ti.Placeholder = "Search journal entries..."
 	ti.Focus()
@@ -45,18 +54,11 @@ func newSearchModel(posts []*client.Post) searchModel {
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
 
-	// Pre-compute searchable posts for performance
-	searchable := search.NewSearchablePosts(posts)
-
-	// Create initial list with all posts
+	// Create empty list initially - will be populated when user searches
 	var items []list.Item
-	for _, p := range posts {
-		items = append(items, listItem{post: p})
-	}
-
 	buffer := 6
 	maxSize := 10
-	height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+	height := math.Min(float64(maxSize+buffer), float64(buffer))
 
 	l := list.New(items, itemDelegate{}, 0, int(height))
 	l.Title = "Search Results"
@@ -68,26 +70,38 @@ func newSearchModel(posts []*client.Post) searchModel {
 	l.Styles.Title = l.Styles.Title.Foreground(lipgloss.Color("170")).Bold(true)
 
 	return searchModel{
-		textInput:  ti,
-		list:       l,
-		searchable: searchable,
-		filtered:   posts,
+		textInput:   ti,
+		list:        l,
+		searchable:  nil,
+		showResults: false,
+		loading:     true,
+		cfg:         cfg,
 	}
 }
 
 func (m searchModel) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(
+		textinput.Blink,
+		loadPosts(m.cfg),
+	)
 }
 
 func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case postsLoadedMsg:
+		m.loading = false
+		if msg.err != nil {
+			m.loadErr = msg.err
+			return m, nil
+		}
+		// Pre-compute searchable posts for performance
+		m.searchable = search.NewSearchablePosts(msg.posts)
+
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
 		m.list.SetWidth(msg.Width)
-		m.textInput.Width = msg.Width - 4 // Account for margins
+		m.textInput.Width = msg.Width - 4
 		return m, nil
 
 	case tea.KeyMsg:
@@ -97,46 +111,61 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			// If we have a selected item, print it and exit
-			if m.list.SelectedItem() != nil {
-				item := m.list.SelectedItem().(listItem)
-				m.selected = item.post
-				m.quitting = true
-				return m, tea.Quit
+			if !m.showResults {
+				// User pressed enter on search query - perform search and show results
+				if m.searchable == nil {
+					// Posts not loaded yet, can't search
+					return m, nil
+				}
+				query := strings.TrimSpace(m.textInput.Value())
+				if query == "" {
+					// Empty query, show all posts
+					m.filtered = m.searchable.Search("")
+				} else {
+					m.filtered = m.searchable.Search(query)
+				}
+				m.query = query
+				m.showResults = true
+
+				// Update list with results
+				var items []list.Item
+				for _, p := range m.filtered {
+					items = append(items, listItem{post: p})
+				}
+
+				buffer := 6
+				maxSize := 10
+				height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+				m.list.SetItems(items)
+				m.list.SetHeight(int(height))
+				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
+
+				// Blur the text input and focus the list
+				m.textInput.Blur()
+				return m, nil
+			} else {
+				// User pressed enter on a list item - select it
+				if m.list.SelectedItem() != nil {
+					item := m.list.SelectedItem().(listItem)
+					m.selected = item.post
+					m.quitting = true
+					return m, tea.Quit
+				}
 			}
 		}
 
-		// Update text input
-		var cmd tea.Cmd
-		oldQuery := m.textInput.Value()
-		m.textInput, cmd = m.textInput.Update(msg)
-		cmds = append(cmds, cmd)
-
-		// Only update list if query changed
-		newQuery := m.textInput.Value()
-		if oldQuery != newQuery {
-			// Perform fuzzy search on text input change
-			m.filtered = m.searchable.Search(newQuery)
-
-			// Update list items efficiently using SetItems
-			var items []list.Item
-			for _, p := range m.filtered {
-				items = append(items, listItem{post: p})
-			}
-
-			buffer := 6
-			maxSize := 10
-			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-			m.list.SetItems(items)
-			m.list.SetHeight(int(height))
-			m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
+		if !m.showResults {
+			// Still in search input phase
+			var cmd tea.Cmd
+			m.textInput, cmd = m.textInput.Update(msg)
+			cmds = append(cmds, cmd)
+		} else {
+			// In results list phase
+			var cmd tea.Cmd
+			m.list, cmd = m.list.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 	}
-
-	// Update list
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
-	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -146,42 +175,51 @@ func (m searchModel) View() string {
 		return ""
 	}
 
-	// Style the input with a border
-	inputView := searchInputStyle.Render(m.textInput.View())
+	var s strings.Builder
 
-	// Combine input and list with proper spacing
-	view := lipgloss.JoinVertical(
-		lipgloss.Left,
-		inputView,
-		"",
-		m.list.View(),
-	)
+	if !m.showResults {
+		// Show search prompt
+		s.WriteString("\n  ")
+		if m.loading {
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Loading journal entries..."))
+		} else if m.loadErr != nil {
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error loading entries: " + m.loadErr.Error()))
+		} else {
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Search journal entries:"))
+		}
+		s.WriteString("\n\n  ")
+		s.WriteString(m.textInput.View())
+		if m.loading {
+			s.WriteString(" (loading...)")
+		}
+		s.WriteString("\n")
+	} else {
+		// Show results list
+		s.WriteString("\n  ")
+		if m.query == "" {
+			s.WriteString("All journal entries:")
+		} else {
+			s.WriteString(fmt.Sprintf("Search results for %q:", m.query))
+		}
+		s.WriteString("\n\n")
+		s.WriteString(m.list.View())
+		s.WriteString("\n")
+	}
 
-	return docStyle.Render(view)
+	return docStyle.Render(s.String())
 }
 
 func searchPosts(cmd *cobra.Command, args []string) error {
-	// Fetch a large number of posts for searching
-	// Notion API has a limit, so we'll fetch 100 posts
-	entries, err := cfg.ListPosts(cmd.Context(), 100)
+	model := newSearchModel(cfg)
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	finalModel, err := p.Run()
 	if err != nil {
 		return err
 	}
 
-	if len(entries) == 0 {
-		fmt.Println("No journal entries found.")
-		return nil
-	}
-
-	model := newSearchModel(entries)
-	p := tea.NewProgram(model, tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		return err
-	}
-
 	// If a post was selected, print it
-	if model.selected != nil {
-		fmt.Println(model.selected.Text)
+	if finalModel.(searchModel).selected != nil {
+		fmt.Println(finalModel.(searchModel).selected.Text)
 	}
 
 	return nil

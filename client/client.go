@@ -214,8 +214,55 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		return nil, err
 	}
 
+	return c.processPages(ctx, client, resp.Results)
+}
+
+// ListAllPosts fetches all posts using pagination
+func (c *Config) ListAllPosts(ctx context.Context) ([]*Post, error) {
+	dbID, err := c.getDatabaseID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client := c.GetClient()
+	var allPosts []*Post
+	var cursor notionapi.Cursor
+
+	for {
+		req := &notionapi.DatabaseQueryRequest{
+			Sorts: []notionapi.SortObject{
+				{Property: "Created At", Direction: notionapi.SortOrderDESC},
+			},
+			PageSize: 100, // Max page size
+		}
+		if cursor != "" {
+			req.StartCursor = cursor
+		}
+
+		resp, err := client.Database.Query(ctx, dbID, req)
+		if err != nil {
+			return nil, err
+		}
+
+		posts, err := c.processPages(ctx, client, resp.Results)
+		if err != nil {
+			return nil, err
+		}
+		allPosts = append(allPosts, posts...)
+
+		// Check if there are more pages
+		if !resp.HasMore {
+			break
+		}
+		cursor = resp.NextCursor
+	}
+
+	return allPosts, nil
+}
+
+func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
 	var ret []*Post
-	for _, page := range resp.Results {
+	for _, page := range pages {
 		rawTags := page.Properties["Tags"]
 		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
 		if !ok {
@@ -233,7 +280,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		}
 		id := idData.Title[0].PlainText
 
-		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 10})
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 100})
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +295,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 				}
 				text += paragraph.GetRichTextString() + "\n"
 			default:
-				fmt.Printf("skipping block type: %s\n", block.GetType())
+				// Silently skip other block types
 			}
 		}
 
