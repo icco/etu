@@ -8,18 +8,29 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/icco/etu/client"
 	"github.com/icco/etu/search"
 	"github.com/spf13/cobra"
 )
 
+var (
+	searchInputStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("170")).
+		Padding(0, 1).
+		MarginBottom(1)
+)
+
 type searchModel struct {
-	textInput textinput.Model
-	list      list.Model
-	allPosts  []*client.Post
-	filtered  []*client.Post
-	selected  *client.Post
-	quitting  bool
+	textInput  textinput.Model
+	list       list.Model
+	searchable *search.SearchablePosts
+	filtered   []*client.Post
+	selected   *client.Post
+	quitting   bool
+	width      int
+	height     int
 }
 
 func newSearchModel(posts []*client.Post) searchModel {
@@ -28,6 +39,13 @@ func newSearchModel(posts []*client.Post) searchModel {
 	ti.Focus()
 	ti.CharLimit = 200
 	ti.Width = 50
+	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
+	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	ti.CursorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+
+	// Pre-compute searchable posts for performance
+	searchable := search.NewSearchablePosts(posts)
 
 	// Create initial list with all posts
 	var items []list.Item
@@ -46,12 +64,13 @@ func newSearchModel(posts []*client.Post) searchModel {
 	l.SetShowTitle(true)
 	l.SetShowHelp(true)
 	l.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	l.Styles.Title = l.Styles.Title.Foreground(lipgloss.Color("170")).Bold(true)
 
 	return searchModel{
-		textInput: ti,
-		list:      l,
-		allPosts:  posts,
-		filtered:  posts,
+		textInput:  ti,
+		list:       l,
+		searchable: searchable,
+		filtered:   posts,
 	}
 }
 
@@ -64,7 +83,10 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
 		m.list.SetWidth(msg.Width)
+		m.textInput.Width = msg.Width - 4 // Account for margins
 		return m, nil
 
 	case tea.KeyMsg:
@@ -85,29 +107,29 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Update text input
 		var cmd tea.Cmd
+		oldQuery := m.textInput.Value()
 		m.textInput, cmd = m.textInput.Update(msg)
 		cmds = append(cmds, cmd)
 
-		// Perform fuzzy search on text input change
-		query := m.textInput.Value()
-		m.filtered = search.SearchPosts(query, m.allPosts)
+		// Only update list if query changed
+		newQuery := m.textInput.Value()
+		if oldQuery != newQuery {
+			// Perform fuzzy search on text input change
+			m.filtered = m.searchable.Search(newQuery)
 
-		// Update list items
-		var items []list.Item
-		for _, p := range m.filtered {
-			items = append(items, listItem{post: p})
+			// Update list items efficiently using SetItems
+			var items []list.Item
+			for _, p := range m.filtered {
+				items = append(items, listItem{post: p})
+			}
+
+			buffer := 6
+			maxSize := 10
+			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+			m.list.SetItems(items)
+			m.list.SetHeight(int(height))
+			m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
 		}
-
-		buffer := 6
-		maxSize := 10
-		height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-		m.list = list.New(items, itemDelegate{}, 0, int(height))
-		m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
-		m.list.SetShowStatusBar(false)
-		m.list.SetFilteringEnabled(false)
-		m.list.SetShowTitle(true)
-		m.list.SetShowHelp(true)
-		m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	}
 
 	// Update list
@@ -124,10 +146,16 @@ func (m searchModel) View() string {
 	}
 
 	var b strings.Builder
+
+	// Render search input with styling
+	inputView := searchInputStyle.Render(m.textInput.View())
 	b.WriteString("\n")
-	b.WriteString(m.textInput.View())
-	b.WriteString("\n\n")
+	b.WriteString(docStyle.Render(inputView))
+	b.WriteString("\n")
+
+	// Render list
 	b.WriteString(docStyle.Render(m.list.View()))
+
 	return b.String()
 }
 
