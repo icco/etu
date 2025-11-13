@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/icco/etu/ai"
 	"github.com/jomei/notionapi"
 )
 
@@ -126,9 +127,19 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 		ID:   uuid.New().String(),
 	}
 
+	tags, err := ai.GenerateTags(ctx, text)
+	if err != nil {
+		return err
+	}
+
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
 		return err
+	}
+
+	tagOptions := make([]notionapi.Option, len(tags))
+	for i, tag := range tags {
+		tagOptions[i] = notionapi.Option{Name: tag}
 	}
 
 	client := c.GetClient()
@@ -141,6 +152,9 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 				Title: []notionapi.RichText{
 					{Text: &notionapi.Text{Content: post.ID}},
 				},
+			},
+			"Tags": notionapi.MultiSelectProperty{
+				MultiSelect: tagOptions,
 			},
 		},
 		Children: ToBlocks(post.Text),
