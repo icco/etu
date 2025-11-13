@@ -64,6 +64,14 @@ var (
 		Args:    cobra.NoArgs,
 		RunE:    listPosts,
 	}
+
+	searchCmd = &cobra.Command{
+		Use:     "search",
+		Aliases: []string{"s"},
+		Short:   "Search journal entries using fuzzy search.",
+		Args:    cobra.NoArgs,
+		RunE:    searchPosts,
+	}
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
@@ -165,6 +173,7 @@ func init() {
 		listCmd,
 		mostRecentCmd,
 		timeSinceCmd,
+		searchCmd,
 	)
 }
 

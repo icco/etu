@@ -15,6 +15,7 @@ import (
 
 type Post struct {
 	ID         string
+	PageID     string // Notion page ID for fetching full content
 	Tags       []string
 	Text       string
 	CreatedAt  time.Time
@@ -214,8 +215,123 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		return nil, err
 	}
 
-	var ret []*Post
-	for _, page := range resp.Results {
+	return c.processPages(ctx, client, resp.Results)
+}
+
+// SearchPosts uses Notion's native Search API to find matching pages,
+// then fetches content only for those matches. This is much faster than
+// fetching all pages and searching them locally.
+func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) ([]*Post, error) {
+	dbID, err := c.getDatabaseID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client := c.GetClient()
+	
+	// If query is empty, just return recent posts
+	if query == "" {
+		return c.ListPosts(ctx, maxResults)
+	}
+
+	// Use Notion's Search API to find matching pages
+	// Search within the database by filtering for pages in this database
+	searchResp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
+		Query: query,
+		Filter: notionapi.SearchFilter{
+			Value:    "page",
+			Property: "object",
+		},
+		PageSize: maxResults,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter results to only include pages from our database
+	var matchingPages []notionapi.Page
+	for _, result := range searchResp.Results {
+		if page, ok := result.(*notionapi.Page); ok {
+			// Check if this page belongs to our database
+			if page.Parent.Type == notionapi.ParentTypeDatabaseID && page.Parent.DatabaseID == notionapi.DatabaseID(dbID) {
+				matchingPages = append(matchingPages, *page)
+			}
+		}
+	}
+
+	// If no results from search API, fall back to database query with text filter
+	if len(matchingPages) == 0 {
+		return c.searchViaDatabaseQuery(ctx, dbID, query, maxResults)
+	}
+
+	// Fetch content only for matching pages
+	return c.processPages(ctx, client, matchingPages)
+}
+
+// searchViaDatabaseQuery is a fallback that queries the database directly
+// when Search API doesn't return results (e.g., for very specific queries)
+func (c *Config) searchViaDatabaseQuery(ctx context.Context, dbID notionapi.DatabaseID, query string, maxResults int) ([]*Post, error) {
+	client := c.GetClient()
+	var results []*Post
+	var cursor notionapi.Cursor
+	
+	// Search incrementally - fetch pages and search them
+	for len(results) < maxResults {
+		req := &notionapi.DatabaseQueryRequest{
+			Sorts: []notionapi.SortObject{
+				{Property: "Created At", Direction: notionapi.SortOrderDESC},
+			},
+			PageSize: 100, // Max page size
+		}
+		if cursor != "" {
+			req.StartCursor = cursor
+		}
+
+		resp, err := client.Database.Query(ctx, dbID, req)
+		if err != nil {
+			return nil, err
+		}
+
+		posts, err := c.processPages(ctx, client, resp.Results)
+		if err != nil {
+			return nil, err
+		}
+
+		// Search this batch
+		for _, post := range posts {
+			if c.matchesQuery(post, query) {
+				results = append(results, post)
+				if len(results) >= maxResults {
+					return results, nil
+				}
+			}
+		}
+
+		// Check if there are more pages
+		if !resp.HasMore {
+			break
+		}
+		cursor = resp.NextCursor
+	}
+
+	return results, nil
+}
+
+// matchesQuery performs a simple string match check
+func (c *Config) matchesQuery(post *Post, query string) bool {
+	queryLower := strings.ToLower(query)
+	textLower := strings.ToLower(post.Text)
+	tagsLower := strings.ToLower(strings.Join(post.Tags, " "))
+	
+	// Check if query appears in text or tags
+	return strings.Contains(textLower, queryLower) || strings.Contains(tagsLower, queryLower)
+}
+
+// processPages processes pages into Posts, fetching only a preview of content for performance
+func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
+	ret := make([]*Post, 0, len(pages))
+	
+	for _, page := range pages {
 		rawTags := page.Properties["Tags"]
 		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
 		if !ok {
@@ -233,7 +349,8 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 		}
 		id := idData.Title[0].PlainText
 
-		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 10})
+		// Fetch only first few blocks for preview (much faster)
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 5})
 		if err != nil {
 			return nil, err
 		}
@@ -248,7 +365,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 				}
 				text += paragraph.GetRichTextString() + "\n"
 			default:
-				fmt.Printf("skipping block type: %s\n", block.GetType())
+				// Silently skip other block types
 			}
 		}
 
@@ -256,6 +373,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 
 		ret = append(ret, &Post{
 			ID:         id,
+			PageID:     page.ID.String(),
 			Tags:       tags,
 			Text:       text,
 			CreatedAt:  page.CreatedTime,
@@ -264,6 +382,46 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	}
 
 	return ret, nil
+}
+
+// GetPostFullContent fetches the full content of a post by page ID
+func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
+	client := c.GetClient()
+	
+	// Fetch all blocks directly using page ID
+	text := ""
+	var cursor string
+	for {
+		pagination := &notionapi.Pagination{PageSize: 100}
+		if cursor != "" {
+			pagination.StartCursor = notionapi.Cursor(cursor)
+		}
+		
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(pageID), pagination)
+		if err != nil {
+			return "", err
+		}
+
+		for _, block := range blockResp.Results {
+			switch block.GetType() {
+			case notionapi.BlockTypeParagraph:
+				paragraph, ok := block.(*notionapi.ParagraphBlock)
+				if !ok {
+					return "", fmt.Errorf("paragraph is incorrect block type: %+v", block)
+				}
+				text += paragraph.GetRichTextString() + "\n"
+			default:
+				// Silently skip other block types
+			}
+		}
+
+		if !blockResp.HasMore {
+			break
+		}
+		cursor = blockResp.NextCursor
+	}
+
+	return strings.TrimSpace(text), nil
 }
 
 func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error) {
