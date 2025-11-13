@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
@@ -111,49 +109,20 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	return cfg.DeletePost(cmd.Context(), args[0])
 }
 
-func renderPosts(entries []*client.Post) error {
-	var items []list.Item
-	for _, e := range entries {
-		items = append(items, listItem{post: e})
-	}
-
-	buffer := 6
-	maxSize := 10
-	height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-
-	m := listModel{list: list.New(items, itemDelegate{}, 0, int(height))}
-	m.list.Title = "Interstitial Notes"
-	m.list.SetShowStatusBar(false)
-	m.list.SetFilteringEnabled(false)
-	m.list.SetShowTitle(true)
-	m.list.SetShowHelp(true)
-
-	m.list.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-
-	if _, err := tea.NewProgram(m).Run(); err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	entries, err := cfg.ListPosts(cmd.Context(), 1)
-	if err != nil {
+	model := newListModel(cfg, 1)
+	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
-
-	return renderPosts(entries)
+	return nil
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	entries, err := cfg.ListPosts(cmd.Context(), 25)
-	if err != nil {
+	model := newListModel(cfg, 25)
+	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
-
-	return renderPosts(entries)
+	return nil
 }
 
 func init() {
