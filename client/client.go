@@ -217,8 +217,9 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	return c.processPages(ctx, client, resp.Results)
 }
 
-// SearchPosts searches posts incrementally without loading everything into memory.
-// It fetches pages in batches and searches them as it goes.
+// SearchPosts uses Notion's native Search API to find matching pages,
+// then fetches content only for those matches. This is much faster than
+// fetching all pages and searching them locally.
 func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) ([]*Post, error) {
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
@@ -226,14 +227,53 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	}
 
 	client := c.GetClient()
-	var results []*Post
-	var cursor notionapi.Cursor
 	
 	// If query is empty, just return recent posts
 	if query == "" {
 		return c.ListPosts(ctx, maxResults)
 	}
 
+	// Use Notion's Search API to find matching pages
+	// Search within the database by filtering for pages in this database
+	searchResp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
+		Query: query,
+		Filter: notionapi.SearchFilter{
+			Value:    "page",
+			Property: "object",
+		},
+		PageSize: maxResults,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter results to only include pages from our database
+	var matchingPages []notionapi.Page
+	for _, result := range searchResp.Results {
+		if page, ok := result.(*notionapi.Page); ok {
+			// Check if this page belongs to our database
+			if page.Parent.Type == notionapi.ParentTypeDatabaseID && page.Parent.DatabaseID == notionapi.DatabaseID(dbID) {
+				matchingPages = append(matchingPages, *page)
+			}
+		}
+	}
+
+	// If no results from search API, fall back to database query with text filter
+	if len(matchingPages) == 0 {
+		return c.searchViaDatabaseQuery(ctx, dbID, query, maxResults)
+	}
+
+	// Fetch content only for matching pages
+	return c.processPages(ctx, client, matchingPages)
+}
+
+// searchViaDatabaseQuery is a fallback that queries the database directly
+// when Search API doesn't return results (e.g., for very specific queries)
+func (c *Config) searchViaDatabaseQuery(ctx context.Context, dbID notionapi.DatabaseID, query string, maxResults int) ([]*Post, error) {
+	client := c.GetClient()
+	var results []*Post
+	var cursor notionapi.Cursor
+	
 	// Search incrementally - fetch pages and search them
 	for len(results) < maxResults {
 		req := &notionapi.DatabaseQueryRequest{
@@ -287,7 +327,8 @@ func (c *Config) matchesQuery(post *Post, query string) bool {
 }
 
 func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
-	var ret []*Post
+	ret := make([]*Post, 0, len(pages))
+	
 	for _, page := range pages {
 		rawTags := page.Properties["Tags"]
 		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
@@ -306,23 +347,37 @@ func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pag
 		}
 		id := idData.Title[0].PlainText
 
-		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 100})
-		if err != nil {
-			return nil, err
-		}
-
+		// Fetch blocks with pagination to get all content
 		text := ""
-		for _, block := range blockResp.Results {
-			switch block.GetType() {
-			case notionapi.BlockTypeParagraph:
-				paragraph, ok := block.(*notionapi.ParagraphBlock)
-				if !ok {
-					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
-				}
-				text += paragraph.GetRichTextString() + "\n"
-			default:
-				// Silently skip other block types
+		var cursor string
+		for {
+			pagination := &notionapi.Pagination{PageSize: 100}
+			if cursor != "" {
+				pagination.StartCursor = notionapi.Cursor(cursor)
 			}
+			
+			blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), pagination)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, block := range blockResp.Results {
+				switch block.GetType() {
+				case notionapi.BlockTypeParagraph:
+					paragraph, ok := block.(*notionapi.ParagraphBlock)
+					if !ok {
+						return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
+					}
+					text += paragraph.GetRichTextString() + "\n"
+				default:
+					// Silently skip other block types
+				}
+			}
+
+			if !blockResp.HasMore {
+				break
+			}
+			cursor = blockResp.NextCursor
 		}
 
 		text = strings.TrimSpace(text)
