@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,6 +24,7 @@ type postsLoadedMsg struct {
 type searchModel struct {
 	textInput   textinput.Model
 	list        list.Model
+	spinner     spinner.Model
 	searchable  *search.SearchablePosts
 	filtered    []*client.Post
 	selected    *client.Post
@@ -54,6 +56,11 @@ func newSearchModel(cfg *client.Config) searchModel {
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
 
+	// Initialize spinner
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+
 	// Create empty list initially - will be populated when user searches
 	var items []list.Item
 	buffer := 6
@@ -72,6 +79,7 @@ func newSearchModel(cfg *client.Config) searchModel {
 	return searchModel{
 		textInput:   ti,
 		list:        l,
+		spinner:     sp,
 		searchable:  nil,
 		showResults: false,
 		loading:     true,
@@ -82,6 +90,7 @@ func newSearchModel(cfg *client.Config) searchModel {
 func (m searchModel) Init() tea.Cmd {
 	return tea.Batch(
 		textinput.Blink,
+		m.spinner.Tick,
 		loadPosts(m.cfg),
 	)
 }
@@ -98,6 +107,13 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Pre-compute searchable posts for performance
 		m.searchable = search.NewSearchablePosts(msg.posts)
+
+	case spinner.TickMsg:
+		if m.loading {
+			var cmd tea.Cmd
+			m.spinner, cmd = m.spinner.Update(msg)
+			return m, cmd
+		}
 
 	case tea.WindowSizeMsg:
 		m.list.SetWidth(msg.Width)
@@ -181,7 +197,8 @@ func (m searchModel) View() string {
 		// Show search prompt
 		s.WriteString("\n  ")
 		if m.loading {
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Loading journal entries..."))
+			loadingText := fmt.Sprintf("%s Loading journal entries...", m.spinner.View())
+			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
 		} else if m.loadErr != nil {
 			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error loading entries: " + m.loadErr.Error()))
 		} else {
@@ -189,9 +206,6 @@ func (m searchModel) View() string {
 		}
 		s.WriteString("\n\n  ")
 		s.WriteString(m.textInput.View())
-		if m.loading {
-			s.WriteString(" (loading...)")
-		}
 		s.WriteString("\n")
 	} else {
 		// Show results list
