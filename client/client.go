@@ -15,6 +15,7 @@ import (
 
 type Post struct {
 	ID         string
+	PageID     string // Notion page ID for fetching full content
 	Tags       []string
 	Text       string
 	CreatedAt  time.Time
@@ -326,6 +327,7 @@ func (c *Config) matchesQuery(post *Post, query string) bool {
 	return strings.Contains(textLower, queryLower) || strings.Contains(tagsLower, queryLower)
 }
 
+// processPages processes pages into Posts, fetching only a preview of content for performance
 func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
 	ret := make([]*Post, 0, len(pages))
 	
@@ -347,43 +349,31 @@ func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pag
 		}
 		id := idData.Title[0].PlainText
 
-		// Fetch blocks with pagination to get all content
+		// Fetch only first few blocks for preview (much faster)
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 5})
+		if err != nil {
+			return nil, err
+		}
+
 		text := ""
-		var cursor string
-		for {
-			pagination := &notionapi.Pagination{PageSize: 100}
-			if cursor != "" {
-				pagination.StartCursor = notionapi.Cursor(cursor)
-			}
-			
-			blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), pagination)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, block := range blockResp.Results {
-				switch block.GetType() {
-				case notionapi.BlockTypeParagraph:
-					paragraph, ok := block.(*notionapi.ParagraphBlock)
-					if !ok {
-						return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
-					}
-					text += paragraph.GetRichTextString() + "\n"
-				default:
-					// Silently skip other block types
+		for _, block := range blockResp.Results {
+			switch block.GetType() {
+			case notionapi.BlockTypeParagraph:
+				paragraph, ok := block.(*notionapi.ParagraphBlock)
+				if !ok {
+					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
 				}
+				text += paragraph.GetRichTextString() + "\n"
+			default:
+				// Silently skip other block types
 			}
-
-			if !blockResp.HasMore {
-				break
-			}
-			cursor = blockResp.NextCursor
 		}
 
 		text = strings.TrimSpace(text)
 
 		ret = append(ret, &Post{
 			ID:         id,
+			PageID:     page.ID.String(),
 			Tags:       tags,
 			Text:       text,
 			CreatedAt:  page.CreatedTime,
@@ -392,6 +382,46 @@ func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pag
 	}
 
 	return ret, nil
+}
+
+// GetPostFullContent fetches the full content of a post by page ID
+func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
+	client := c.GetClient()
+	
+	// Fetch all blocks directly using page ID
+	text := ""
+	var cursor string
+	for {
+		pagination := &notionapi.Pagination{PageSize: 100}
+		if cursor != "" {
+			pagination.StartCursor = notionapi.Cursor(cursor)
+		}
+		
+		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(pageID), pagination)
+		if err != nil {
+			return "", err
+		}
+
+		for _, block := range blockResp.Results {
+			switch block.GetType() {
+			case notionapi.BlockTypeParagraph:
+				paragraph, ok := block.(*notionapi.ParagraphBlock)
+				if !ok {
+					return "", fmt.Errorf("paragraph is incorrect block type: %+v", block)
+				}
+				text += paragraph.GetRichTextString() + "\n"
+			default:
+				// Silently skip other block types
+			}
+		}
+
+		if !blockResp.HasMore {
+			break
+		}
+		cursor = blockResp.NextCursor
+	}
+
+	return strings.TrimSpace(text), nil
 }
 
 func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error) {

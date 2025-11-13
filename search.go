@@ -230,9 +230,17 @@ func searchPosts(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// If a post was selected, print it
+	// If a post was selected, fetch and print full content
 	if finalModel.(searchModel).selected != nil {
-		fmt.Println(finalModel.(searchModel).selected.Text)
+		selectedPost := finalModel.(searchModel).selected
+		// Always fetch full content since we only fetch previews for list
+		fullText, err := cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
+		if err == nil {
+			fmt.Println(fullText)
+		} else {
+			// Fallback to preview text
+			fmt.Println(selectedPost.Text)
+		}
 	}
 
 	return nil
