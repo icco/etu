@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -73,14 +74,31 @@ var (
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
-	model := createModel()
-	p := tea.NewProgram(model)
-	_, err := p.Run()
+	// Check if stdin has data (piped input)
+	stat, err := os.Stdin.Stat()
 	if err != nil {
 		return err
 	}
 
-	return cfg.SaveEntry(cmd.Context(), string(model.Data))
+	var content []byte
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		// stdin is a pipe or redirected input
+		content, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("failed to read from stdin: %w", err)
+		}
+	} else {
+		// stdin is a terminal, use interactive TUI
+		model := createModel()
+		p := tea.NewProgram(model)
+		_, err := p.Run()
+		if err != nil {
+			return err
+		}
+		content = model.Data
+	}
+
+	return cfg.SaveEntry(cmd.Context(), string(content))
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
