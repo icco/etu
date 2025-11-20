@@ -1,0 +1,73 @@
+# GoReleaser configuration for etu
+# https://goreleaser.com
+
+project_name: etu
+
+builds:
+  - id: etu
+    main: .
+    binary: etu
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.CommitSHA={{.Commit}}
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: default
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+# Homebrew Formula configuration
+# This will create a formula in the homebrew-tap repository
+brews:
+  - name: etu
+    tap:
+      owner: icco
+      name: homebrew-tap
+    homepage: https://github.com/icco/etu
+    description: "A personal command line journal"
+    license: MIT
+    test: |
+      system "#{bin}/etu --version"
+    install: |
+      bin.install "etu"
+
+# Release configuration
+release:
+  github:
+    owner: icco
+    name: etu
+  mode: replace
+  header: |
+    ## Changelog
+  footer: |
+    ---
+    **Full Changelog**: https://github.com/icco/etu/compare/{{ .PreviousTag }}...{{ .Tag }}
