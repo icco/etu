@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,6 +27,8 @@ type Config struct {
 	key        string
 	rootPage   string
 	cachedDbID notionapi.DatabaseID // Cache database ID to avoid repeated API calls
+	client     *notionapi.Client     // Cached Notion client
+	clientOnce sync.Once             // Ensures client is initialized only once
 }
 
 func New(key string) (*Config, error) {
@@ -40,12 +43,15 @@ func New(key string) (*Config, error) {
 }
 
 func (c *Config) GetClient() *notionapi.Client {
-	// TODO: figure out timeouts
-	return notionapi.NewClient(
-		notionapi.Token(c.key),
-		notionapi.WithVersion("2022-06-28"),
-		notionapi.WithRetry(2),
-	)
+	c.clientOnce.Do(func() {
+		// TODO: figure out timeouts
+		c.client = notionapi.NewClient(
+			notionapi.Token(c.key),
+			notionapi.WithVersion("2022-06-28"),
+			notionapi.WithRetry(2),
+		)
+	})
+	return c.client
 }
 
 func (c *Config) UpdateCache(ctx context.Context) error {
@@ -66,8 +72,12 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 }
 
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	if cache, _ := c.cacheFromFile(); cache != nil {
-		return cache.Duration, nil
+	cache, _ := c.cacheFromFile()
+	if cache != nil {
+		// Use cache if it's less than 5 minutes old (avoids unnecessary API calls)
+		if time.Since(cache.Saved) < 5*time.Minute {
+			return cache.Duration, nil
+		}
 	}
 
 	if err := c.UpdateCache(ctx); err != nil {
@@ -359,60 +369,93 @@ func (c *Config) matchesQuery(post *Post, query string) bool {
 }
 
 // processPages processes pages into Posts, fetching only a preview of content for performance
+// Block fetching is parallelized for better performance when processing multiple pages
 func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pages []notionapi.Page) ([]*Post, error) {
-	ret := make([]*Post, 0, len(pages))
-	
-	for _, page := range pages {
-		rawTags := page.Properties["Tags"]
-		tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
-		if !ok {
-			return nil, fmt.Errorf("tags property is not a multi-select: %+v", rawTags)
-		}
-		var tags []string
-		for _, tag := range tagData.MultiSelect {
-			tags = append(tags, tag.Name)
-		}
-
-		rawID := page.Properties["ID"]
-		idData, ok := rawID.(*notionapi.TitleProperty)
-		if !ok {
-			return nil, fmt.Errorf("id property is not a title: %+v", rawID)
-		}
-		id := idData.Title[0].PlainText
-
-		// Fetch only first few blocks for preview (much faster)
-		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(page.ID), &notionapi.Pagination{PageSize: 5})
-		if err != nil {
-			return nil, err
-		}
-
-		text := ""
-		for _, block := range blockResp.Results {
-			switch block.GetType() {
-			case notionapi.BlockTypeParagraph:
-				paragraph, ok := block.(*notionapi.ParagraphBlock)
-				if !ok {
-					return nil, fmt.Errorf("paragraph is incorrect block type: %+v", block)
-				}
-				text += paragraph.GetRichTextString() + "\n"
-			default:
-				// Silently skip other block types
-			}
-		}
-
-		text = strings.TrimSpace(text)
-
-		ret = append(ret, &Post{
-			ID:         id,
-			PageID:     page.ID.String(),
-			Tags:       tags,
-			Text:       text,
-			CreatedAt:  page.CreatedTime,
-			ModifiedAt: page.LastEditedTime,
-		})
+	if len(pages) == 0 {
+		return []*Post{}, nil
 	}
 
-	return ret, nil
+	type pageResult struct {
+		post *Post
+		err  error
+		idx  int
+	}
+
+	results := make(chan pageResult, len(pages))
+
+	// Process all pages in parallel
+	for i, page := range pages {
+		go func(idx int, p notionapi.Page) {
+			// Extract tags
+			rawTags := p.Properties["Tags"]
+			tagData, ok := rawTags.(*notionapi.MultiSelectProperty)
+			if !ok {
+				results <- pageResult{err: fmt.Errorf("tags property is not a multi-select: %+v", rawTags), idx: idx}
+				return
+			}
+			var tags []string
+			for _, tag := range tagData.MultiSelect {
+				tags = append(tags, tag.Name)
+			}
+
+			// Extract ID
+			rawID := p.Properties["ID"]
+			idData, ok := rawID.(*notionapi.TitleProperty)
+			if !ok {
+				results <- pageResult{err: fmt.Errorf("id property is not a title: %+v", rawID), idx: idx}
+				return
+			}
+			id := idData.Title[0].PlainText
+
+			// Fetch only first few blocks for preview (much faster)
+			blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(p.ID), &notionapi.Pagination{PageSize: 5})
+			if err != nil {
+				results <- pageResult{err: err, idx: idx}
+				return
+			}
+
+			text := ""
+			for _, block := range blockResp.Results {
+				switch block.GetType() {
+				case notionapi.BlockTypeParagraph:
+					paragraph, ok := block.(*notionapi.ParagraphBlock)
+					if !ok {
+						results <- pageResult{err: fmt.Errorf("paragraph is incorrect block type: %+v", block), idx: idx}
+						return
+					}
+					text += paragraph.GetRichTextString() + "\n"
+				default:
+					// Silently skip other block types
+				}
+			}
+
+			text = strings.TrimSpace(text)
+
+			results <- pageResult{
+				post: &Post{
+					ID:         id,
+					PageID:     p.ID.String(),
+					Tags:       tags,
+					Text:       text,
+					CreatedAt:  p.CreatedTime,
+					ModifiedAt: p.LastEditedTime,
+				},
+				idx: idx,
+			}
+		}(i, page)
+	}
+
+	// Collect results in order
+	posts := make([]*Post, len(pages))
+	for i := 0; i < len(pages); i++ {
+		result := <-results
+		if result.err != nil {
+			return nil, result.err
+		}
+		posts[result.idx] = result.post
+	}
+
+	return posts, nil
 }
 
 // GetPostFullContent fetches the full content of a post by page ID
