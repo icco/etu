@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual triggering
+  push:
+    # Also run on tag pushes (for manual releases)
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for semantic versioning
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install svu (Semantic Version Util)
+        run: |
+          curl -sSL https://github.com/caarlos0/svu/releases/latest/download/svu-linux-amd64 -o /usr/local/bin/svu
+          chmod +x /usr/local/bin/svu
+
+      - name: Check if new version needed
+        id: version_check
+        run: |
+          # If this is a tag push, use the tag directly
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            tag_name="${GITHUB_REF#refs/tags/}"
+            echo "NEW_VERSION=$tag_name" >> $GITHUB_ENV
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+            echo "Using pushed tag: $tag_name"
+            exit 0
+          fi
+          
+          # For scheduled runs or manual triggers, generate next version
+          # Get the latest tag
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$latest_tag" ]; then
+            # No tags exist, start with v0.1.0
+            echo "NEW_VERSION=v0.1.0" >> $GITHUB_ENV
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+            echo "No existing tags found, will create v0.1.0"
+          else
+            # Generate next patch version
+            next_version=$(svu patch)
+            echo "NEW_VERSION=$next_version" >> $GITHUB_ENV
+            
+            # Check if this version already exists
+            if git rev-parse "$next_version" >/dev/null 2>&1; then
+              echo "SHOULD_RELEASE=false" >> $GITHUB_ENV
+              echo "Version $next_version already exists, skipping release"
+            else
+              echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+              echo "Next version will be: $next_version"
+            fi
+          fi
+
+      - name: Create and push tag
+        if: env.SHOULD_RELEASE == 'true' && github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $NEW_VERSION
+          git push origin $NEW_VERSION
+
+      - name: Run GoReleaser
+        if: env.SHOULD_RELEASE == 'true'
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
