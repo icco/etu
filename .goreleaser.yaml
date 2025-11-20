@@ -51,7 +51,7 @@ brews:
   - name: etu
     tap:
       owner: icco
-      name: tap
+      name: homebrew-tap
     homepage: https://github.com/icco/etu
     description: "A personal command line journal"
     license: MIT
