@@ -23,8 +23,9 @@ type Post struct {
 }
 
 type Config struct {
-	key      string
-	rootPage string
+	key        string
+	rootPage   string
+	cachedDbID notionapi.DatabaseID // Cache database ID to avoid repeated API calls
 }
 
 func New(key string) (*Config, error) {
@@ -128,25 +129,51 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 		ID:   uuid.New().String(),
 	}
 
-	tags, err := ai.GenerateTags(ctx, text)
-	if err != nil {
-		return err
+	// Run tag generation and database ID lookup in parallel
+	type tagResult struct {
+		tags []string
+		err  error
+	}
+	type dbResult struct {
+		dbID notionapi.DatabaseID
+		err  error
 	}
 
-	dbID, err := c.getDatabaseID(ctx)
-	if err != nil {
-		return err
+	tagChan := make(chan tagResult, 1)
+	dbChan := make(chan dbResult, 1)
+
+	// Generate tags in parallel
+	go func() {
+		tags, err := ai.GenerateTags(ctx, text)
+		tagChan <- tagResult{tags: tags, err: err}
+	}()
+
+	// Get database ID in parallel
+	go func() {
+		dbID, err := c.getDatabaseID(ctx)
+		dbChan <- dbResult{dbID: dbID, err: err}
+	}()
+
+	// Wait for both results
+	tagRes := <-tagChan
+	if tagRes.err != nil {
+		return tagRes.err
 	}
 
-	tagOptions := make([]notionapi.Option, len(tags))
-	for i, tag := range tags {
+	dbRes := <-dbChan
+	if dbRes.err != nil {
+		return dbRes.err
+	}
+
+	tagOptions := make([]notionapi.Option, len(tagRes.tags))
+	for i, tag := range tagRes.tags {
 		tagOptions[i] = notionapi.Option{Name: tag}
 	}
 
 	client := c.GetClient()
-	if _, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
+	createdPage, err := client.Page.Create(ctx, &notionapi.PageCreateRequest{
 		Parent: notionapi.Parent{
-			DatabaseID: dbID,
+			DatabaseID: dbRes.dbID,
 		},
 		Properties: notionapi.Properties{
 			"ID": notionapi.TitleProperty{
@@ -159,12 +186,16 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 			},
 		},
 		Children: ToBlocks(post.Text),
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 
-	if err := c.UpdateCache(ctx); err != nil {
-		return err
+	// Update cache using the created page's timestamp (much faster than querying)
+	dur := time.Since(createdPage.CreatedTime)
+	if err := c.cacheToFile(dur); err != nil {
+		// Don't fail the save if cache update fails
+		_ = err
 	}
 
 	return nil
@@ -425,6 +456,11 @@ func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string,
 }
 
 func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error) {
+	// Return cached database ID if available
+	if c.cachedDbID != "" {
+		return c.cachedDbID, nil
+	}
+
 	client := c.GetClient()
 	resp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
 		Query: c.rootPage,
@@ -451,6 +487,9 @@ func (c *Config) getDatabaseID(ctx context.Context) (notionapi.DatabaseID, error
 	}
 
 	id := notionapi.DatabaseID(db.ID.String())
+
+	// Cache the database ID for future use
+	c.cachedDbID = id
 
 	return id, nil
 }
