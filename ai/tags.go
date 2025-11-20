@@ -5,12 +5,25 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	openai "github.com/sashabaranov/go-openai"
 )
 
+var (
+	openAIClient *openai.Client
+	clientOnce   sync.Once
+)
+
+func getOpenAIClient() *openai.Client {
+	clientOnce.Do(func() {
+		openAIClient = openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	})
+	return openAIClient
+}
+
 func GenerateTags(ctx context.Context, text string) ([]string, error) {
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	client := getOpenAIClient()
 
 	messages := []openai.ChatCompletionMessage{
 		{
