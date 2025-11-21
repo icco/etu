@@ -29,13 +29,13 @@ func (i listItem) Description() string { return i.post.Text }
 func (i listItem) FilterValue() string { return i.post.Text }
 
 type listModel struct {
-	list     list.Model
-	spinner  spinner.Model
-	loading  bool
-	loadErr  error
-	posts    []*client.Post
-	cfg      *client.Config
-	count    int
+	list    list.Model
+	spinner spinner.Model
+	loading bool
+	loadErr error
+	posts   []*client.Post
+	cfg     *client.Config
+	count   int
 }
 
 type listCompleteMsg struct {
