@@ -51,7 +51,7 @@ changelog:
 # This will create a formula in the homebrew-tap repository
 brews:
   - name: etu
-    tap:
+    repository:
       owner: icco
       name: homebrew-tap
     homepage: https://github.com/icco/etu
