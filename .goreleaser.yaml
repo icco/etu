@@ -65,9 +65,6 @@ release:
     owner: icco
     name: etu
   mode: replace
-  # Changelog is automatically included by GoReleaser
-  header: |
-    ## Changelog
   footer: |
     ---
     **Full Changelog**: https://github.com/icco/etu/compare/{{ .PreviousTag }}...{{ .Tag }}
