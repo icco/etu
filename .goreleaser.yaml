@@ -60,18 +60,18 @@ changelog:
 # If you don't need Homebrew releases, comment out this entire section
 # To fix permission issues, create a Personal Access Token (PAT) with repo
 # permissions and add it as a secret named GH_PAT in your repository settings
-homebrew:
-  name: etu
-  repository:
-    owner: icco
-    name: homebrew-tap
-  homepage: https://github.com/icco/etu
-  description: "A personal command line journal"
-  license: MIT
-  test: |
-    system "#{bin}/etu --version"
-  install: |
-    bin.install "etu"
+brews:
+  - name: etu
+    tap:
+      owner: icco
+      name: homebrew-tap
+    homepage: https://github.com/icco/etu
+    description: "A personal command line journal"
+    license: MIT
+    test: |
+      system "#{bin}/etu --version"
+    install: |
+      bin.install "etu"
 
 # Release configuration
 release:
