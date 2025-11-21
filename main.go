@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -167,15 +168,21 @@ func init() {
 }
 
 func main() {
+	if os.Getenv("NOTION_KEY") == "" {
+		log.Fatal("NOTION_KEY is required")
+	}
+
+	if os.Getenv("OPENAI_API_KEY") == "" {
+		log.Fatal("OPENAI_API_KEY is required")
+	}
+
 	var err error
 	cfg, err = client.New(os.Getenv("NOTION_KEY"))
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
