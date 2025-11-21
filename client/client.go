@@ -14,23 +14,31 @@ import (
 	"github.com/jomei/notionapi"
 )
 
+// Post represents a journal entry.
 type Post struct {
-	ID         string
-	PageID     string // Notion page ID for fetching full content
-	Tags       []string
-	Text       string
-	CreatedAt  time.Time
+	// ID is the unique identifier of the post.
+	ID     string
+	PageID string // Notion page ID for fetching full content
+	// Tags are the tags associated with the post.
+	Tags []string
+	// Text is the content of the post.
+	Text string
+	// CreatedAt is the time the post was created.
+	CreatedAt time.Time
+	// ModifiedAt is the time the post was last modified.
 	ModifiedAt time.Time
 }
 
+// Config holds the configuration for the client.
 type Config struct {
 	key        string
 	rootPage   string
 	cachedDbID notionapi.DatabaseID // Cache database ID to avoid repeated API calls
-	client     *notionapi.Client     // Cached Notion client
-	clientOnce sync.Once             // Ensures client is initialized only once
+	client     *notionapi.Client    // Cached Notion client
+	clientOnce sync.Once            // Ensures client is initialized only once
 }
 
+// New creates a new client configuration.
 func New(key string) (*Config, error) {
 	if key == "" {
 		return nil, fmt.Errorf("key cannot be empty")
@@ -42,6 +50,7 @@ func New(key string) (*Config, error) {
 	}, nil
 }
 
+// GetClient returns a cached Notion client.
 func (c *Config) GetClient() *notionapi.Client {
 	c.clientOnce.Do(func() {
 		// TODO: figure out timeouts
@@ -54,6 +63,7 @@ func (c *Config) GetClient() *notionapi.Client {
 	return c.client
 }
 
+// UpdateCache updates the cache with the latest post.
 func (c *Config) UpdateCache(ctx context.Context) error {
 	posts, err := c.ListPosts(ctx, 1)
 	if err != nil {
@@ -71,6 +81,7 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+// TimeSinceLastPost returns the time since the last post was created.
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	cache, _ := c.cacheFromFile()
 	if cache != nil {
@@ -133,6 +144,7 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 	return data, nil
 }
 
+// SaveEntry saves a new journal entry to Notion.
 func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	post := &Post{
 		Text: text,
@@ -211,6 +223,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	return nil
 }
 
+// ToBlocks converts a string of text to a list of Notion blocks.
 func ToBlocks(text string) []notionapi.Block {
 	var blocks []notionapi.Block
 	for _, line := range strings.Split(text, "\n") {
@@ -230,14 +243,17 @@ func ToBlocks(text string) []notionapi.Block {
 	return blocks
 }
 
+// DeletePost deletes a journal entry.
 func (c *Config) DeletePost(ctx context.Context, key string) error {
 	return fmt.Errorf("not implemented")
 }
 
+// GetPost retrieves a journal entry by its key.
 func (c *Config) GetPost(ctx context.Context, key string) (*Post, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
+// ListPosts lists the most recent journal entries.
 func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
@@ -269,7 +285,7 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	}
 
 	client := c.GetClient()
-	
+
 	// If query is empty, just return recent posts
 	if query == "" {
 		return c.ListPosts(ctx, maxResults)
@@ -315,7 +331,7 @@ func (c *Config) searchViaDatabaseQuery(ctx context.Context, dbID notionapi.Data
 	client := c.GetClient()
 	var results []*Post
 	var cursor notionapi.Cursor
-	
+
 	// Search incrementally - fetch pages and search them
 	for len(results) < maxResults {
 		req := &notionapi.DatabaseQueryRequest{
@@ -363,7 +379,7 @@ func (c *Config) matchesQuery(post *Post, query string) bool {
 	queryLower := strings.ToLower(query)
 	textLower := strings.ToLower(post.Text)
 	tagsLower := strings.ToLower(strings.Join(post.Tags, " "))
-	
+
 	// Check if query appears in text or tags
 	return strings.Contains(textLower, queryLower) || strings.Contains(tagsLower, queryLower)
 }
@@ -461,7 +477,7 @@ func (c *Config) processPages(ctx context.Context, client *notionapi.Client, pag
 // GetPostFullContent fetches the full content of a post by page ID
 func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
 	client := c.GetClient()
-	
+
 	// Fetch all blocks directly using page ID
 	text := ""
 	var cursor string
@@ -470,7 +486,7 @@ func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string,
 		if cursor != "" {
 			pagination.StartCursor = notionapi.Cursor(cursor)
 		}
-		
+
 		blockResp, err := client.Block.GetChildren(ctx, notionapi.BlockID(pageID), pagination)
 		if err != nil {
 			return "", err

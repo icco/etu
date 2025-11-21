@@ -22,6 +22,7 @@ func getOpenAIClient() *openai.Client {
 	return openAIClient
 }
 
+// GenerateTags generates a list of tags for a given text using OpenAI.
 func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	client := getOpenAIClient()
 

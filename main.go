@@ -11,7 +11,9 @@ import (
 )
 
 var (
+	// Version is the version of the application.
 	Version   = ""
+	// CommitSHA is the git commit SHA of the build.
 	CommitSHA = ""
 
 	cfg *client.Config
