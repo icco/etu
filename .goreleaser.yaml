@@ -29,25 +29,20 @@ archives:
 checksum:
   name_template: checksums.txt
 snapshot:
-  version_template: '{{ .Tag }}-next'
+  version_template: "{{ .Tag }}-next"
 changelog:
   use: git
   sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
-      - '^chore:'
   groups:
     - title: Features
-      regexp: '^feat:'
+      regexp: "^feat:"
       order: 0
     - title: Bug Fixes
-      regexp: '^fix:'
+      regexp: "^fix:"
       order: 1
     - title: Other Changes
       order: 999
-brews:
+homebrew_casks:
   - name: etu
     repository:
       owner: icco
@@ -55,10 +50,14 @@ brews:
     homepage: https://github.com/icco/etu
     description: A personal command line journal
     license: MIT
-    test: |
-      system "#{bin}/etu --version"
-    install: |
-      bin.install "etu"
+    binaries:
+      - etu
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/etu"]
+          end
 # Release configuration
 release:
   github:
