@@ -1,6 +1,8 @@
 # GoReleaser configuration for etu
 # https://goreleaser.com
 
+version: 2
+
 project_name: etu
 
 builds:
