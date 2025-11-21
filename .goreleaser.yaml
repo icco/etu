@@ -44,6 +44,7 @@ changelog:
       order: 999
 homebrew_casks:
   - name: etu
+    directory: Casks
     repository:
       owner: icco
       name: homebrew-tap
