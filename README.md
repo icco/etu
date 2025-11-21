@@ -20,6 +20,7 @@ Available Commands:
   help        Help about any command
   last        Output a string of time since last post.
   list        List journal entries, with an optional starting datetime.
+  search      Search journal entries using fuzzy search.
   timesince   Output a string of time since last post.
 
 Flags:
