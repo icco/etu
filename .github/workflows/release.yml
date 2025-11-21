@@ -13,6 +13,9 @@ on:
 permissions:
   contents: write
   packages: write
+  # Additional permissions may be needed for homebrew tap repository
+  # If homebrew publishing fails, create a Personal Access Token (PAT)
+  # with repo permissions and add it as a secret named GH_PAT
 
 jobs:
   release:
@@ -61,5 +64,7 @@ jobs:
           version: "~> v2"
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use GITHUB_TOKEN for releases in the same repo
+          # For homebrew tap, use a PAT if available, otherwise fall back to GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
