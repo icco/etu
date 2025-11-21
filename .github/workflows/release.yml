@@ -3,20 +3,12 @@ name: Release
 on:
   schedule:
     # Run daily at midnight UTC
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch: # Allows manual triggering
-  push:
-    # Also run on tag pushes (for manual releases)
-    tags:
-      - "v*"
 
 permissions:
   contents: write
   packages: write
-  # Additional permissions may be needed for homebrew tap repository
-  # If homebrew publishing fails, create a Personal Access Token (PAT)
-  # with repo permissions and add it as a secret named GH_PAT
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -67,4 +59,3 @@ jobs:
           # Use GITHUB_TOKEN for releases in the same repo
           # For homebrew tap, use a PAT if available, otherwise fall back to GITHUB_TOKEN
           GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-

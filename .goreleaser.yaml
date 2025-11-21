@@ -34,7 +34,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   use: git
@@ -53,16 +53,9 @@ changelog:
       order: 1
     - title: "Other Changes"
       order: 999
-
-# Homebrew Formula configuration
-# This will create a formula in the homebrew-tap repository
-# Note: Requires GITHUB_TOKEN with permissions to write to icco/homebrew-tap
-# If you don't need Homebrew releases, comment out this entire section
-# To fix permission issues, create a Personal Access Token (PAT) with repo
-# permissions and add it as a secret named GH_PAT in your repository settings
 brews:
   - name: etu
-    tap:
+    repository:
       owner: icco
       name: homebrew-tap
     homepage: https://github.com/icco/etu
