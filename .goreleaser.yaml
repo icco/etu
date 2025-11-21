@@ -2,9 +2,7 @@
 # https://goreleaser.com
 
 version: 2
-
 project_name: etu
-
 builds:
   - id: etu
     main: .
@@ -22,36 +20,32 @@ builds:
       - -X main.CommitSHA={{.Commit}}
     env:
       - CGO_ENABLED=0
-
 archives:
   - id: default
     # Format is auto-detected: tar.gz for Unix, zip for Windows
     files:
       - README.md
       - LICENSE
-
 checksum:
-  name_template: "checksums.txt"
-
+  name_template: checksums.txt
 snapshot:
-  version_template: "{{ .Tag }}-next"
-
+  version_template: '{{ .Tag }}-next'
 changelog:
   use: git
   sort: asc
   filters:
     exclude:
-      - "^docs:"
-      - "^test:"
-      - "^chore:"
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
   groups:
-    - title: "Features"
-      regexp: "^feat:"
+    - title: Features
+      regexp: '^feat:'
       order: 0
-    - title: "Bug Fixes"
-      regexp: "^fix:"
+    - title: Bug Fixes
+      regexp: '^fix:'
       order: 1
-    - title: "Other Changes"
+    - title: Other Changes
       order: 999
 brews:
   - name: etu
@@ -59,13 +53,12 @@ brews:
       owner: icco
       name: homebrew-tap
     homepage: https://github.com/icco/etu
-    description: "A personal command line journal"
+    description: A personal command line journal
     license: MIT
     test: |
       system "#{bin}/etu --version"
     install: |
       bin.install "etu"
-
 # Release configuration
 release:
   github:
