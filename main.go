@@ -23,6 +23,32 @@ var (
 		Use:   "etu",
 		Short: "Etu. A personal command line journal.",
 		Args:  cobra.NoArgs,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Skip config initialization for these commands
+			curr := cmd
+			for curr != nil {
+				if curr.Name() == "completion" || curr.Name() == "help" || curr.Name() == "__complete" {
+					return nil
+				}
+				curr = curr.Parent()
+			}
+
+			if os.Getenv("NOTION_KEY") == "" {
+				return fmt.Errorf("NOTION_KEY is required")
+			}
+
+			if os.Getenv("OPENAI_API_KEY") == "" {
+				return fmt.Errorf("OPENAI_API_KEY is required")
+			}
+
+			var err error
+			cfg, err = client.New(os.Getenv("NOTION_KEY"))
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -168,20 +194,6 @@ func init() {
 }
 
 func main() {
-	if os.Getenv("NOTION_KEY") == "" {
-		log.Fatal("NOTION_KEY is required")
-	}
-
-	if os.Getenv("OPENAI_API_KEY") == "" {
-		log.Fatal("OPENAI_API_KEY is required")
-	}
-
-	var err error
-	cfg, err = client.New(os.Getenv("NOTION_KEY"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
