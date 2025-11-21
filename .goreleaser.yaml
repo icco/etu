@@ -3,6 +3,12 @@
 
 version: 2
 project_name: etu
+before:
+  hooks:
+    - mkdir -p completions
+    - go run . completion bash > completions/etu.bash
+    - go run . completion zsh > completions/_etu
+    - go run . completion fish > completions/etu.fish
 builds:
   - id: etu
     main: .
@@ -26,6 +32,7 @@ archives:
     files:
       - README.md
       - LICENSE
+      - completions/*
 checksum:
   name_template: checksums.txt
 snapshot:
@@ -53,6 +60,10 @@ homebrew_casks:
     license: MIT
     binaries:
       - etu
+    completions:
+      bash: completions/etu.bash
+      zsh: completions/_etu
+      fish: completions/etu.fish
     hooks:
       post:
         install: |
