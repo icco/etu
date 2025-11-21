@@ -30,11 +30,13 @@ jobs:
 
       - name: Install svu (Semantic Version Util)
         run: |
-          curl -sSL https://github.com/caarlos0/svu/releases/latest/download/svu-linux-amd64 -o /usr/local/bin/svu
-          chmod +x /usr/local/bin/svu
+          curl -sSL https://github.com/caarlos0/svu/releases/latest/download/svu-linux-amd64 -o /tmp/svu
+          chmod +x /tmp/svu
+          sudo mv /tmp/svu /usr/local/bin/svu
 
       - name: Check if new version needed
         id: version_check
+        shell: bash
         run: |
           # If this is a tag push, use the tag directly
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
