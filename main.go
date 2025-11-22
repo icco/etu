@@ -74,7 +74,7 @@ var (
 
 	mostRecentCmd = &cobra.Command{
 		Use:   "last",
-		Short: "Output a string of time since last post.",
+		Short: "Output the most recent journal entry.",
 		Args:  cobra.NoArgs,
 		RunE:  mostRecentPost,
 	}
