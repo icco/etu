@@ -1,12 +1,10 @@
 name: Lint Checks
 on:
   workflow_call:
-    inputs:
-      environments:
-        description: JSON array of environments for tofu lint
-        required: false
-        type: string
-        default: '[]'
+  push:
+    branches:
+      - main
+  pull_request:
 permissions:
   contents: write
   pull-requests: write
