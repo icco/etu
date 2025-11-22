@@ -29,7 +29,7 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 	messages := []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleUser,
-			Content: fmt.Sprintf("given the journal entry %q, generate a few options of single words to summarize the content. Output should be a comma seperated list. You should only output the list of tags, no other text. You should only output three tags maximum.", text),
+			Content: fmt.Sprintf("given the journal entry %q, generate a few options of single words to summarize the content. Output should be a comma separated list. You should only output the list of tags, no other text. You should only output three tags maximum.", text),
 		},
 	}
 
