@@ -9,7 +9,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/icco/etu/client"
@@ -53,20 +52,17 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 }
 
 type postListModel struct {
-	list        list.Model
-	spinner     spinner.Model
-	textInput   textinput.Model
-	loading     bool
-	loadErr     error
-	posts       []*client.Post
-	selected    *client.Post
-	cfg         *client.Config
-	count       int
-	title       string
-	isSearch    bool
-	query       string
-	showResults bool
-	quitting    bool
+	list     list.Model
+	spinner  spinner.Model
+	loading  bool
+	loadErr  error
+	posts    []*client.Post
+	selected *client.Post
+	cfg      *client.Config
+	count    int
+	title    string
+	query    string
+	quitting bool
 }
 
 type postsLoadedMsg struct {
@@ -74,11 +70,11 @@ type postsLoadedMsg struct {
 	err   error
 }
 
-func loadPosts(cfg *client.Config, count int, isSearch bool, query string) tea.Cmd {
+func loadPosts(cfg *client.Config, count int, query string) tea.Cmd {
 	return func() tea.Msg {
 		var posts []*client.Post
 		var err error
-		if isSearch {
+		if query != "" {
 			posts, err = cfg.SearchPosts(context.Background(), query, count)
 		} else {
 			posts, err = cfg.ListPosts(context.Background(), count)
@@ -87,24 +83,11 @@ func loadPosts(cfg *client.Config, count int, isSearch bool, query string) tea.C
 	}
 }
 
-func newPostListModel(cfg *client.Config, count int, title string, isSearch bool) postListModel {
+func newPostListModel(cfg *client.Config, count int, title string, startLoading bool) postListModel {
 	// Initialize spinner
 	sp := spinner.New()
 	sp.Spinner = spinner.Dot
 	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
-
-	// Initialize text input for search
-	ti := textinput.New()
-	ti.Placeholder = "Search journal entries..."
-	ti.CharLimit = 200
-	ti.Width = 50
-	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
-	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
-	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
-	if isSearch {
-		ti.Focus()
-	}
 
 	// Create empty list initially - will be populated when data loads
 	var items []list.Item
@@ -122,26 +105,23 @@ func newPostListModel(cfg *client.Config, count int, title string, isSearch bool
 	l.Styles.Title = l.Styles.Title.Foreground(lipgloss.Color("170")).Bold(true)
 
 	return postListModel{
-		list:        l,
-		spinner:     sp,
-		textInput:   ti,
-		loading:     !isSearch,
-		cfg:         cfg,
-		count:       count,
-		title:       title,
-		isSearch:    isSearch,
-		showResults: false,
+		list:    l,
+		spinner: sp,
+		loading: startLoading,
+		cfg:     cfg,
+		count:   count,
+		title:   title,
 	}
 }
 
 func (m postListModel) Init() tea.Cmd {
-	if m.isSearch {
-		return textinput.Blink
+	if !m.loading {
+		return nil
 	}
-	// Start loading posts asynchronously for list mode
+	// Start loading posts asynchronously
 	return tea.Batch(
 		m.spinner.Tick,
-		loadPosts(m.cfg, m.count, false, ""),
+		loadPosts(m.cfg, m.count, m.query),
 	)
 }
 
@@ -167,13 +147,12 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
 			m.list.SetItems(items)
 			m.list.SetHeight(int(height))
-			if m.isSearch {
+			if m.query != "" {
 				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.posts))
 			} else {
 				m.list.Title = m.title
 			}
 		}
-		m.textInput.Blur()
 
 	case spinner.TickMsg:
 		if m.loading {
@@ -184,7 +163,6 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.list.SetWidth(msg.Width)
-		m.textInput.Width = msg.Width - 4
 		return m, nil
 
 	case tea.KeyMsg:
@@ -194,20 +172,7 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			if m.isSearch && !m.showResults {
-				// User pressed enter on search query - perform search
-				query := strings.TrimSpace(m.textInput.Value())
-				m.query = query
-				m.loading = true
-				m.loadErr = nil
-				m.posts = nil
-				m.showResults = true
-				m.list.SetItems([]list.Item{})
-				return m, tea.Batch(
-					m.spinner.Tick,
-					loadPosts(m.cfg, m.count, true, query),
-				)
-			} else if m.list.SelectedItem() != nil {
+			if m.list.SelectedItem() != nil {
 				// User selected an item
 				item := m.list.SelectedItem().(listItem)
 				m.selected = item.post
@@ -216,13 +181,6 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Quit
 		}
-	}
-
-	// Update text input in search mode when not showing results
-	if m.isSearch && !m.showResults {
-		var cmd tea.Cmd
-		m.textInput, cmd = m.textInput.Update(msg)
-		return m, cmd
 	}
 
 	// Only update list if we have loaded posts
@@ -242,34 +200,24 @@ func (m postListModel) View() string {
 
 	var s strings.Builder
 
-	if m.isSearch && !m.showResults {
-		// Show search prompt
-		s.WriteString("\n  ")
-		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render("Search journal entries:"))
-		s.WriteString("\n\n  ")
-		s.WriteString(m.textInput.View())
-		s.WriteString("\n")
-	} else {
-		// Show loading/results
-		if m.loading {
-			var loadingText string
-			if m.isSearch {
-				loadingText = fmt.Sprintf("%s Searching...", m.spinner.View())
-			} else {
-				loadingText = fmt.Sprintf("%s Loading journal entries...", m.spinner.View())
-			}
-			s.WriteString("\n  ")
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
-			s.WriteString("\n")
-		} else if m.loadErr != nil {
-			s.WriteString("\n  ")
-			s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error: " + m.loadErr.Error()))
-			s.WriteString("\n")
-		} else if len(m.posts) > 0 {
-			s.WriteString(m.list.View())
+	if m.loading {
+		var loadingText string
+		if m.query != "" {
+			loadingText = fmt.Sprintf("%s Searching...", m.spinner.View())
 		} else {
-			s.WriteString("\n  No entries found.\n")
+			loadingText = fmt.Sprintf("%s Loading journal entries...", m.spinner.View())
 		}
+		s.WriteString("\n  ")
+		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
+		s.WriteString("\n")
+	} else if m.loadErr != nil {
+		s.WriteString("\n  ")
+		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error: " + m.loadErr.Error()))
+		s.WriteString("\n")
+	} else if len(m.posts) > 0 {
+		s.WriteString(m.list.View())
+	} else {
+		s.WriteString("\n  No entries found.\n")
 	}
 
 	return docStyle.Render(s.String())
