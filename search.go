@@ -89,32 +89,9 @@ func (m searchModel) Init() tea.Cmd {
 }
 
 func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
 	case searchCompleteMsg:
-		m.loading = false
-		if msg.err != nil {
-			m.loadErr = msg.err
-			return m, nil
-		}
-		m.filtered = msg.posts
-
-		// Update list with results
-		if len(m.filtered) > 0 {
-			var items []list.Item
-			for _, p := range m.filtered {
-				items = append(items, listItem{post: p})
-			}
-
-			buffer := 6
-			maxSize := 10
-			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
-			m.list.SetItems(items)
-			m.list.SetHeight(int(height))
-			m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
-		}
-		m.textInput.Blur()
+		return m.handleSearchCompleteMsg(msg)
 
 	case spinner.TickMsg:
 		if m.loading {
@@ -129,52 +106,85 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "q", "ctrl+c":
-			m.quitting = true
-			return m, tea.Quit
+		return m.handleKeyMsg(msg)
+	}
 
-		case "enter":
-			if !m.showResults {
-				// User pressed enter on search query - perform search and show results
-				query := strings.TrimSpace(m.textInput.Value())
-				m.query = query
-				m.loading = true
-				m.loadErr = nil
-				m.filtered = nil // Clear previous results
-				m.showResults = true
+	return m, nil
+}
 
-				// Clear the list
-				m.list.SetItems([]list.Item{})
+func (m searchModel) handleSearchCompleteMsg(msg searchCompleteMsg) (tea.Model, tea.Cmd) {
+	m.loading = false
+	if msg.err != nil {
+		m.loadErr = msg.err
+		return m, nil
+	}
+	m.filtered = msg.posts
 
-				// Start async search
-				return m, tea.Batch(
-					m.spinner.Tick,
-					performSearch(m.cfg, query),
-				)
-			} else {
-				// User pressed enter on a list item - select it
-				if m.list.SelectedItem() != nil {
-					item := m.list.SelectedItem().(listItem)
-					m.selected = item.post
-					m.quitting = true
-					return m, tea.Quit
-				}
-			}
+	// Update list with results
+	if len(m.filtered) > 0 {
+		var items []list.Item
+		for _, p := range m.filtered {
+			items = append(items, listItem{post: p})
 		}
 
+		buffer := 6
+		maxSize := 10
+		height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
+		m.list.SetItems(items)
+		m.list.SetHeight(int(height))
+		m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.filtered))
+	}
+	m.textInput.Blur()
+	return m, nil
+}
+
+func (m searchModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch keypress := msg.String(); keypress {
+	case "q", "ctrl+c":
+		m.quitting = true
+		return m, tea.Quit
+
+	case "enter":
 		if !m.showResults {
-			// Still in search input phase
-			var cmd tea.Cmd
-			m.textInput, cmd = m.textInput.Update(msg)
-			cmds = append(cmds, cmd)
+			// User pressed enter on search query - perform search and show results
+			query := strings.TrimSpace(m.textInput.Value())
+			m.query = query
+			m.loading = true
+			m.loadErr = nil
+			m.filtered = nil // Clear previous results
+			m.showResults = true
+
+			// Clear the list
+			m.list.SetItems([]list.Item{})
+
+			// Start async search
+			return m, tea.Batch(
+				m.spinner.Tick,
+				performSearch(m.cfg, query),
+			)
 		} else {
-			// In results list phase - only update list if we have results
-			if !m.loading && len(m.filtered) > 0 {
-				var cmd tea.Cmd
-				m.list, cmd = m.list.Update(msg)
-				cmds = append(cmds, cmd)
+			// User pressed enter on a list item - select it
+			if m.list.SelectedItem() != nil {
+				item := m.list.SelectedItem().(listItem)
+				m.selected = item.post
+				m.quitting = true
+				return m, tea.Quit
 			}
+		}
+	}
+
+	var cmds []tea.Cmd
+	if !m.showResults {
+		// Still in search input phase
+		var cmd tea.Cmd
+		m.textInput, cmd = m.textInput.Update(msg)
+		cmds = append(cmds, cmd)
+	} else {
+		// In results list phase - only update list if we have results
+		if !m.loading && len(m.filtered) > 0 {
+			var cmd tea.Cmd
+			m.list, cmd = m.list.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 	}
 
