@@ -57,10 +57,10 @@ var (
 	}
 
 	deleteCmd = &cobra.Command{
-		Use:     "delete ID",
+		Use:     "delete",
 		Aliases: []string{"d"},
 		Short:   "Delete a journal entry.",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.NoArgs,
 		RunE:    deletePost,
 	}
 
@@ -175,16 +175,46 @@ func timeSinceLastPost(cmd *cobra.Command, args []string) error {
 }
 
 func deletePost(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("delete takes only one argument")
+	// Show list of posts to select from
+	model := newPostListModel(cfg, 25, "Select entry to delete", true)
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	finalModel, err := p.Run()
+	if err != nil {
+		return err
+	}
+
+	// Check if a post was selected
+	if finalModel.(postListModel).selected == nil {
+		return nil // User quit without selecting
+	}
+
+	selectedPost := finalModel.(postListModel).selected
+
+	// Prompt for confirmation
+	var confirm bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title(fmt.Sprintf("Delete entry from %s?", selectedPost.CreatedAt.Format("2006-01-02 15:04"))).
+				Description(selectedPost.Text).
+				Value(&confirm),
+		),
+	)
+
+	if err := confirmForm.Run(); err != nil {
+		return err
+	}
+
+	if !confirm {
+		return nil // User chose not to delete
 	}
 
 	// Delete with spinner
 	var deleteErr error
-	err := spinner.New().
+	err = spinner.New().
 		Title("Deleting entry...").
 		Action(func() {
-			deleteErr = cfg.DeletePost(cmd.Context(), args[0])
+			deleteErr = cfg.DeletePost(cmd.Context(), selectedPost.ID)
 		}).
 		Run()
 
