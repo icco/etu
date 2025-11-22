@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -189,7 +188,8 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	// Wait for both results
 	tagRes := <-tagChan
 	if tagRes.err != nil {
-		log.Printf("could not generate tags: %s", tagRes.err)
+		// Log error but continue - tags are optional
+		tagRes.tags = []string{}
 	}
 
 	dbRes := <-dbChan
