@@ -18,9 +18,7 @@ var (
 func getOpenAIClient(key string) *openai.Client {
 	clientOnce.Do(func() {
 		apiKey = key
-		if apiKey != "" {
-			openAIClient = openai.NewClient(apiKey)
-		}
+		openAIClient = openai.NewClient(apiKey)
 	})
 	return openAIClient
 }
@@ -59,7 +57,6 @@ func GenerateTags(ctx context.Context, text string, apiKey string) ([]string, er
 			tags = append(tags, strings.TrimSpace(tag))
 		}
 	}
-	// log.Printf("tags: %+v", tags)
 
 	return tags, nil
 }
