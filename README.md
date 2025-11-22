@@ -23,9 +23,15 @@ Build Dependencies:
 Build
 
 1. git clone code
-1. 
+1. `task build`
+1. `./etu`
 
 ## Usage
+
+Before running you need to set `` and ``.
+
+- To get an OpenAI key go to
+- To get a Notion key go to
 
 ```
 $ etu
