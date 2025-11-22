@@ -189,8 +189,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	// Wait for both results
 	tagRes := <-tagChan
 	if tagRes.err != nil {
-		// Log error but continue - tags are optional
-		log.Printf("could not generate tags for entry (%d chars): %s", len(text), tagRes.err)
+		log.Printf("could not generate tags for entry: %s", tagRes.err)
 		tagRes.tags = []string{}
 	}
 
