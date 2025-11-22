@@ -32,10 +32,10 @@ Build
 
 ## Usage
 
-Before running you need to set `NOTION_KEY` and `OPENAI_API_KEY`.
+Before running you need to set `NOTION_KEY`. Optionally, you can set `OPENAI_API_KEY` to enable automatic tag generation.
 
-- To get an OpenAI key go to https://platform.openai.com/api-keys
 - To get a Notion key go to https://www.notion.so/profile/integrations
+- To get an OpenAI key (optional) go to https://platform.openai.com/api-keys
 
 ```
 $ etu
