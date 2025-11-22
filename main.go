@@ -169,7 +169,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	model := newListModel(cfg, 1)
+	model := newPostListModel(cfg, 1, "Interstitial Notes", false)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	model := newListModel(cfg, 25)
+	model := newPostListModel(cfg, 25, "Interstitial Notes", false)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
