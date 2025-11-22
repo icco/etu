@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -139,7 +140,20 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return cfg.SaveEntry(cmd.Context(), text)
+	// Save entry with spinner
+	var saveErr error
+	err = spinner.New().
+		Title("Saving entry...").
+		Action(func() {
+			saveErr = cfg.SaveEntry(cmd.Context(), text)
+		}).
+		Run()
+
+	if err != nil {
+		return err
+	}
+
+	return saveErr
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
@@ -165,11 +179,24 @@ func deletePost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return cfg.DeletePost(cmd.Context(), args[0])
+	// Delete with spinner
+	var deleteErr error
+	err := spinner.New().
+		Title("Deleting entry...").
+		Action(func() {
+			deleteErr = cfg.DeletePost(cmd.Context(), args[0])
+		}).
+		Run()
+
+	if err != nil {
+		return err
+	}
+
+	return deleteErr
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	model := newListModel(cfg, 1)
+	model := newPostListModel(cfg, 1, "Interstitial Notes", true)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
@@ -177,7 +204,7 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 }
 
 func listPosts(cmd *cobra.Command, args []string) error {
-	model := newListModel(cfg, 25)
+	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
