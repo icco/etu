@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -31,23 +32,32 @@ type Post struct {
 
 // Config holds the configuration for the client.
 type Config struct {
-	key        string
-	rootPage   string
-	cachedDbID notionapi.DatabaseID // Cache database ID to avoid repeated API calls
-	client     *notionapi.Client    // Cached Notion client
-	clientOnce sync.Once            // Ensures client is initialized only once
+	NotionKey    string
+	OpenAIAPIKey string
+	rootPage     string
+	cachedDbID   notionapi.DatabaseID // Cache database ID to avoid repeated API calls
+	client       *notionapi.Client    // Cached Notion client
+	clientOnce   sync.Once            // Ensures client is initialized only once
 }
 
-// New creates a new client configuration.
-func New(key string) (*Config, error) {
-	if key == "" {
-		return nil, fmt.Errorf("key cannot be empty")
+// LoadConfig loads configuration from environment variables.
+func LoadConfig() *Config {
+	return &Config{
+		NotionKey:    os.Getenv("NOTION_KEY"),
+		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		rootPage:     "Journal",
+	}
+}
+
+// Validate checks that all required configuration values are present.
+func (c *Config) Validate() error {
+	if c.NotionKey == "" {
+		return fmt.Errorf("NOTION_KEY is required")
 	}
 
-	return &Config{
-		key:      key,
-		rootPage: "Journal",
-	}, nil
+	// OpenAIAPIKey is optional - if not set, tags won't be generated
+
+	return nil
 }
 
 // GetClient returns a cached Notion client.
@@ -55,7 +65,7 @@ func (c *Config) GetClient() *notionapi.Client {
 	c.clientOnce.Do(func() {
 		// TODO: figure out timeouts
 		c.client = notionapi.NewClient(
-			notionapi.Token(c.key),
+			notionapi.Token(c.NotionKey),
 			notionapi.WithVersion("2022-06-28"),
 			notionapi.WithRetry(2),
 		)
@@ -166,7 +176,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 
 	// Generate tags in parallel
 	go func() {
-		tags, err := ai.GenerateTags(ctx, text)
+		tags, err := ai.GenerateTags(ctx, text, c.OpenAIAPIKey)
 		tagChan <- tagResult{tags: tags, err: err}
 	}()
 
@@ -179,7 +189,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	// Wait for both results
 	tagRes := <-tagChan
 	if tagRes.err != nil {
-		return tagRes.err
+		log.Printf("could not generate tags: %s", tagRes.err)
 	}
 
 	dbRes := <-dbChan

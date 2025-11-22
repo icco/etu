@@ -35,17 +35,8 @@ var (
 				curr = curr.Parent()
 			}
 
-			if os.Getenv("NOTION_KEY") == "" {
-				return fmt.Errorf("NOTION_KEY is required")
-			}
-
-			if os.Getenv("OPENAI_API_KEY") == "" {
-				return fmt.Errorf("OPENAI_API_KEY is required")
-			}
-
-			var err error
-			cfg, err = client.New(os.Getenv("NOTION_KEY"))
-			if err != nil {
+			cfg = client.LoadConfig()
+			if err := cfg.Validate(); err != nil {
 				return err
 			}
 

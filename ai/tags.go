@@ -3,7 +3,6 @@ package ai
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -13,18 +12,24 @@ import (
 var (
 	openAIClient *openai.Client
 	clientOnce   sync.Once
+	apiKey       string
 )
 
-func getOpenAIClient() *openai.Client {
+func getOpenAIClient(key string) *openai.Client {
 	clientOnce.Do(func() {
-		openAIClient = openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+		apiKey = key
+		openAIClient = openai.NewClient(apiKey)
 	})
 	return openAIClient
 }
 
 // GenerateTags generates a list of tags for a given text using OpenAI.
-func GenerateTags(ctx context.Context, text string) ([]string, error) {
-	client := getOpenAIClient()
+func GenerateTags(ctx context.Context, text string, apiKey string) ([]string, error) {
+	if apiKey == "" {
+		return nil, fmt.Errorf("no OpenAI key configured")
+	}
+
+	client := getOpenAIClient(apiKey)
 
 	messages := []openai.ChatCompletionMessage{
 		{
@@ -51,7 +56,6 @@ func GenerateTags(ctx context.Context, text string) ([]string, error) {
 			tags = append(tags, strings.TrimSpace(tag))
 		}
 	}
-	// log.Printf("tags: %+v", tags)
 
 	return tags, nil
 }
