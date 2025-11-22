@@ -24,7 +24,6 @@ func getOpenAIClient(key string) *openai.Client {
 }
 
 // GenerateTags generates a list of tags for a given text using OpenAI.
-// If apiKey is empty, returns empty tags without error.
 func GenerateTags(ctx context.Context, text string, apiKey string) ([]string, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("no OpenAI key configured")
