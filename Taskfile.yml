@@ -31,3 +31,11 @@ tasks:
             git push -u
           fi
         ignore_error: true
+
+  completions:
+    desc: Generate shell completions
+    deps: [build]
+    cmds:
+      - ./etu completion zsh > completions/_etu
+      - ./etu completion bash > completions/etu.bash
+      - ./etu completion fish > completions/etu.fish
