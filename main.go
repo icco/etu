@@ -226,7 +226,34 @@ func deletePost(cmd *cobra.Command, args []string) error {
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	model := newPostListModel(cfg, 1, "Interstitial Notes", true)
+	// Fetch most recent post (preview first)
+	posts, err := cfg.ListPosts(cmd.Context(), 1)
+	if err != nil {
+		return err
+	}
+	if len(posts) == 0 {
+		return fmt.Errorf("no posts found")
+	}
+	post := posts[0]
+
+	// Detect if stdout is a terminal (interactive) or being piped.
+	stdoutStat, _ := os.Stdout.Stat()
+	interactive := (stdoutStat.Mode() & os.ModeCharDevice) != 0
+
+	if !interactive {
+		// Non-interactive: output full content for piping.
+		full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
+		if fullErr == nil && strings.TrimSpace(full) != "" {
+			fmt.Print(full)
+			return nil
+		}
+		// Fallback to preview text if full fetch fails.
+		fmt.Print(post.Text)
+		return nil
+	}
+
+	// Interactive: show existing TUI list (single item) for consistency.
+	model := newPostListModel(cfg, 1, "Most Recent Entry", true)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
