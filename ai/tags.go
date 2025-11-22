@@ -29,7 +29,7 @@ func getOpenAIClient(key string) *openai.Client {
 // If apiKey is empty, returns empty tags without error.
 func GenerateTags(ctx context.Context, text string, apiKey string) ([]string, error) {
 	if apiKey == "" {
-		return []string{}, nil
+		return nil, fmt.Errorf("no OpenAI key configured")
 	}
 
 	client := getOpenAIClient(apiKey)
