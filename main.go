@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -110,16 +111,17 @@ func createPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var content []byte
+	var text string
+
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		// stdin is a pipe or redirected input
-		content, err = io.ReadAll(os.Stdin)
+		content, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to read from stdin: %w", err)
 		}
+		text = string(content)
 	} else {
 		// stdin is a terminal, use interactive TUI
-		var text string
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
@@ -140,10 +142,13 @@ func createPost(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		content = []byte(text)
+		text = strings.TrimSpace(text)
+		if text == "" {
+			return fmt.Errorf("journal entry cannot be empty")
+		}
 	}
 
-	return cfg.SaveEntry(cmd.Context(), string(content))
+	return cfg.SaveEntry(cmd.Context(), text)
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
