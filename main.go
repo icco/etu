@@ -5,8 +5,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -109,25 +111,44 @@ func createPost(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var content []byte
+	var text string
+
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		// stdin is a pipe or redirected input
-		content, err = io.ReadAll(os.Stdin)
+		content, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to read from stdin: %w", err)
 		}
+		text = string(content)
 	} else {
 		// stdin is a terminal, use interactive TUI
-		model := createModel()
-		p := tea.NewProgram(model)
-		_, err := p.Run()
-		if err != nil {
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewText().
+					Value(&text).
+					Placeholder("Write your journal entry here...").
+					Validate(func(value string) error {
+						if len(value) == 0 {
+							return fmt.Errorf("journal entry cannot be empty")
+						}
+						return nil
+					}).
+					WithHeight(15).
+					WithWidth(100),
+			),
+		)
+
+		if err := form.Run(); err != nil {
 			return err
 		}
-		content = model.Data
+
+		text = strings.TrimSpace(text)
+		if text == "" {
+			return fmt.Errorf("journal entry cannot be empty")
+		}
 	}
 
-	return cfg.SaveEntry(cmd.Context(), string(content))
+	return cfg.SaveEntry(cmd.Context(), text)
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {

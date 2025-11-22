@@ -4,7 +4,34 @@ Etu is a simple journaling tool that uses Notion as a database.
 
 It should be noted the main goal of Etu is to write interstitial journals. See https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef for more on this topic.
 
+## Installation
+
+### Homebrew
+
+```shell
+brew tap icco/tap
+brew install etu
+```
+
+### Local Build
+
+Build Dependencies:
+
+- Go 1.25 or later
+- https://taskfile.dev/
+
+Build
+
+1. git clone code
+1. `task build`
+1. `./etu`
+
 ## Usage
+
+Before running you need to set `NOTION_KEY` and `OPENAI_API_KEY`.
+
+- To get an OpenAI key go to https://platform.openai.com/api-keys
+- To get a Notion key go to https://www.notion.so/profile/integrations
 
 ```
 $ etu
@@ -45,3 +72,7 @@ Other projects that inspired me:
 ## History
 
 I've rewritten this aproximately seven times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool. First with Charm as a DB, then with SQLite, then with Notion.
+
+## Future
+
+I've been thinking about making the AI and the backend pluggable. If you have ideas on how to do that, open a ticket and ping @icco.
