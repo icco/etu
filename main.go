@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -140,24 +141,19 @@ func createPost(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save entry with spinner
-	resultChan := make(chan interface{}, 1)
+	var saveErr error
+	err = spinner.New().
+		Title("Saving entry...").
+		Action(func() {
+			saveErr = cfg.SaveEntry(cmd.Context(), text)
+		}).
+		Run()
 
-	go func() {
-		err := cfg.SaveEntry(cmd.Context(), text)
-		resultChan <- err
-	}()
-
-	model := newSpinnerModel("Saving entry...", resultChan)
-	p := tea.NewProgram(model)
-	if _, err := p.Run(); err != nil {
+	if err != nil {
 		return err
 	}
 
-	result := <-resultChan
-	if result != nil {
-		return result.(error)
-	}
-	return nil
+	return saveErr
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
@@ -184,24 +180,19 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	}
 
 	// Delete with spinner
-	resultChan := make(chan interface{}, 1)
+	var deleteErr error
+	err := spinner.New().
+		Title("Deleting entry...").
+		Action(func() {
+			deleteErr = cfg.DeletePost(cmd.Context(), args[0])
+		}).
+		Run()
 
-	go func() {
-		err := cfg.DeletePost(cmd.Context(), args[0])
-		resultChan <- err
-	}()
-
-	model := newSpinnerModel("Deleting entry...", resultChan)
-	p := tea.NewProgram(model)
-	if _, err := p.Run(); err != nil {
+	if err != nil {
 		return err
 	}
 
-	result := <-resultChan
-	if result != nil {
-		return result.(error)
-	}
-	return nil
+	return deleteErr
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {

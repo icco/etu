@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/spf13/cobra"
 )
 
@@ -48,26 +49,21 @@ func searchPosts(cmd *cobra.Command, args []string) error {
 		selectedPost := finalModel.(postListModel).selected
 
 		// Fetch with spinner
-		type fetchResult struct {
-			text string
-			err  error
-		}
-		resultChan := make(chan interface{}, 1)
+		var fullText string
+		var fetchErr error
+		err := spinner.New().
+			Title("Loading full content...").
+			Action(func() {
+				fullText, fetchErr = cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
+			}).
+			Run()
 
-		go func() {
-			fullText, err := cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
-			resultChan <- fetchResult{text: fullText, err: err}
-		}()
-
-		spinnerModel := newSpinnerModel("Loading full content...", resultChan)
-		p := tea.NewProgram(spinnerModel)
-		if _, err := p.Run(); err != nil {
+		if err != nil {
 			return err
 		}
 
-		result := (<-resultChan).(fetchResult)
-		if result.err == nil {
-			fmt.Println(result.text)
+		if fetchErr == nil {
+			fmt.Println(fullText)
 		} else {
 			// Fallback to preview text
 			fmt.Println(selectedPost.Text)
