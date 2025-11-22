@@ -285,9 +285,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	return c.processPages(ctx, client, resp.Results)
 }
 
-// SearchPosts uses Notion's native Search API to find matching pages,
-// then fetches content only for those matches. This is much faster than
-// fetching all pages and searching them locally.
+// SearchPosts uses Notion's native Search API to find matching pages.
 func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) ([]*Post, error) {
 	dbID, err := c.getDatabaseID(ctx)
 	if err != nil {
@@ -302,7 +300,6 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	}
 
 	// Use Notion's Search API to find matching pages
-	// Search within the database by filtering for pages in this database
 	searchResp, err := client.Search.Do(ctx, &notionapi.SearchRequest{
 		Query: query,
 		Filter: notionapi.SearchFilter{
@@ -326,72 +323,8 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 		}
 	}
 
-	// If no results from search API, fall back to database query with text filter
-	if len(matchingPages) == 0 {
-		return c.searchViaDatabaseQuery(ctx, dbID, query, maxResults)
-	}
-
 	// Fetch content only for matching pages
 	return c.processPages(ctx, client, matchingPages)
-}
-
-// searchViaDatabaseQuery is a fallback that queries the database directly
-// when Search API doesn't return results (e.g., for very specific queries)
-func (c *Config) searchViaDatabaseQuery(ctx context.Context, dbID notionapi.DatabaseID, query string, maxResults int) ([]*Post, error) {
-	client := c.GetClient()
-	var results []*Post
-	var cursor notionapi.Cursor
-
-	// Search incrementally - fetch pages and search them
-	for len(results) < maxResults {
-		req := &notionapi.DatabaseQueryRequest{
-			Sorts: []notionapi.SortObject{
-				{Property: "Created At", Direction: notionapi.SortOrderDESC},
-			},
-			PageSize: 100, // Max page size
-		}
-		if cursor != "" {
-			req.StartCursor = cursor
-		}
-
-		resp, err := client.Database.Query(ctx, dbID, req)
-		if err != nil {
-			return nil, err
-		}
-
-		posts, err := c.processPages(ctx, client, resp.Results)
-		if err != nil {
-			return nil, err
-		}
-
-		// Search this batch
-		for _, post := range posts {
-			if c.matchesQuery(post, query) {
-				results = append(results, post)
-				if len(results) >= maxResults {
-					return results, nil
-				}
-			}
-		}
-
-		// Check if there are more pages
-		if !resp.HasMore {
-			break
-		}
-		cursor = resp.NextCursor
-	}
-
-	return results, nil
-}
-
-// matchesQuery performs a simple string match check
-func (c *Config) matchesQuery(post *Post, query string) bool {
-	queryLower := strings.ToLower(query)
-	textLower := strings.ToLower(post.Text)
-	tagsLower := strings.ToLower(strings.Join(post.Tags, " "))
-
-	// Check if query appears in text or tags
-	return strings.Contains(textLower, queryLower) || strings.Contains(tagsLower, queryLower)
 }
 
 // processPages processes pages into Posts, fetching only a preview of content for performance
