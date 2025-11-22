@@ -19,8 +19,7 @@ var (
 	// CommitSHA is the git commit SHA of the build.
 	CommitSHA = ""
 
-	appConfig *Config
-	cfg       *client.Config
+	cfg *client.Config
 
 	rootCmd = &cobra.Command{
 		Use:   "etu",
@@ -36,14 +35,8 @@ var (
 				curr = curr.Parent()
 			}
 
-			appConfig = LoadConfig()
-			if err := appConfig.Validate(); err != nil {
-				return err
-			}
-
-			var err error
-			cfg, err = client.New(appConfig.NotionKey)
-			if err != nil {
+			cfg = client.LoadConfig()
+			if err := cfg.Validate(); err != nil {
 				return err
 			}
 

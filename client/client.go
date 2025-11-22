@@ -31,23 +31,34 @@ type Post struct {
 
 // Config holds the configuration for the client.
 type Config struct {
-	key        string
-	rootPage   string
-	cachedDbID notionapi.DatabaseID // Cache database ID to avoid repeated API calls
-	client     *notionapi.Client    // Cached Notion client
-	clientOnce sync.Once            // Ensures client is initialized only once
+	NotionKey    string
+	OpenAIAPIKey string
+	rootPage     string
+	cachedDbID   notionapi.DatabaseID // Cache database ID to avoid repeated API calls
+	client       *notionapi.Client    // Cached Notion client
+	clientOnce   sync.Once            // Ensures client is initialized only once
 }
 
-// New creates a new client configuration.
-func New(key string) (*Config, error) {
-	if key == "" {
-		return nil, fmt.Errorf("key cannot be empty")
+// LoadConfig loads configuration from environment variables.
+func LoadConfig() *Config {
+	return &Config{
+		NotionKey:    os.Getenv("NOTION_KEY"),
+		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		rootPage:     "Journal",
+	}
+}
+
+// Validate checks that all required configuration values are present.
+func (c *Config) Validate() error {
+	if c.NotionKey == "" {
+		return fmt.Errorf("NOTION_KEY is required")
 	}
 
-	return &Config{
-		key:      key,
-		rootPage: "Journal",
-	}, nil
+	if c.OpenAIAPIKey == "" {
+		return fmt.Errorf("OPENAI_API_KEY is required")
+	}
+
+	return nil
 }
 
 // GetClient returns a cached Notion client.
@@ -55,7 +66,7 @@ func (c *Config) GetClient() *notionapi.Client {
 	c.clientOnce.Do(func() {
 		// TODO: figure out timeouts
 		c.client = notionapi.NewClient(
-			notionapi.Token(c.key),
+			notionapi.Token(c.NotionKey),
 			notionapi.WithVersion("2022-06-28"),
 			notionapi.WithRetry(2),
 		)
