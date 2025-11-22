@@ -30,8 +30,8 @@ Build
 
 Before running you need to set `NOTION_KEY` and `OPENAI_API_KEY`.
 
-- To get an OpenAI key go to
-- To get a Notion key go to
+- To get an OpenAI key go to https://platform.openai.com/api-keys
+- To get a Notion key go to https://www.notion.so/profile/integrations
 
 ```
 $ etu
@@ -72,3 +72,7 @@ Other projects that inspired me:
 ## History
 
 I've rewritten this aproximately seven times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool. First with Charm as a DB, then with SQLite, then with Notion.
+
+## Future
+
+I've been thinking about making the AI and the backend pluggable. If you have ideas on how to do that, open a ticket and ping @icco.
