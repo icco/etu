@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    desc: Build the binary
+    vars:
+      GIT_COMMIT:
+        sh: git rev-list -1 HEAD
+    cmds:
+      - go build -ldflags "-X main.CommitSHA={{.GIT_COMMIT}}" -o etu .
+
+  lint:
+    desc: Lint the code
+    cmds:
+      - go vet ./...
+
+  update:
+    desc: Update dependencies
+    cmds:
+      - git pull
+      - go get -u ./...
+      - go mod tidy
+      - cmd: |
+          if ! git diff --quiet HEAD go.*; then
+            git add go.mod go.sum
+            git commit -m 'chore: go update'
+            git push -u
+          fi
+        ignore_error: true

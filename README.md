@@ -15,7 +15,15 @@ brew install etu
 
 ### Local Build
 
+Build Dependencies:
 
+- Go 1.25 or later
+- https://taskfile.dev/
+
+Build
+
+1. git clone code
+1. 
 
 ## Usage
 
