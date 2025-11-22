@@ -7,6 +7,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -118,13 +119,22 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		// stdin is a terminal, use interactive TUI
-		model := createModel()
-		p := tea.NewProgram(model)
-		_, err := p.Run()
+		var text string
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewText().
+					Title("What are you working on?").
+					Value(&text).
+					Placeholder("Write your journal entry here..."),
+			),
+		)
+
+		err := form.Run()
 		if err != nil {
 			return err
 		}
-		content = model.Data
+
+		content = []byte(text)
 	}
 
 	return cfg.SaveEntry(cmd.Context(), string(content))
