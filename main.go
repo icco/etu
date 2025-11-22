@@ -19,7 +19,8 @@ var (
 	// CommitSHA is the git commit SHA of the build.
 	CommitSHA = ""
 
-	cfg *client.Config
+	appConfig *Config
+	cfg       *client.Config
 
 	rootCmd = &cobra.Command{
 		Use:   "etu",
@@ -35,16 +36,13 @@ var (
 				curr = curr.Parent()
 			}
 
-			if os.Getenv("NOTION_KEY") == "" {
-				return fmt.Errorf("NOTION_KEY is required")
-			}
-
-			if os.Getenv("OPENAI_API_KEY") == "" {
-				return fmt.Errorf("OPENAI_API_KEY is required")
+			appConfig = LoadConfig()
+			if err := appConfig.Validate(); err != nil {
+				return err
 			}
 
 			var err error
-			cfg, err = client.New(os.Getenv("NOTION_KEY"))
+			cfg, err = client.New(appConfig.NotionKey)
 			if err != nil {
 				return err
 			}
