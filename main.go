@@ -123,14 +123,20 @@ func createPost(cmd *cobra.Command, args []string) error {
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
-					Title("What are you working on?").
 					Value(&text).
-					Placeholder("Write your journal entry here..."),
+					Placeholder("Write your journal entry here...").
+					Validate(func(value string) error {
+						if len(value) == 0 {
+							return fmt.Errorf("journal entry cannot be empty")
+						}
+						return nil
+					}).
+					WithHeight(20).
+					WithWidth(120),
 			),
 		)
 
-		err := form.Run()
-		if err != nil {
+		if err := form.Run(); err != nil {
 			return err
 		}
 

@@ -28,7 +28,7 @@ Build
 
 ## Usage
 
-Before running you need to set `` and ``.
+Before running you need to set `NOTION_KEY` and `OPENAI_API_KEY`.
 
 - To get an OpenAI key go to
 - To get a Notion key go to
