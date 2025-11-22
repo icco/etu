@@ -254,9 +254,16 @@ func ToBlocks(text string) []notionapi.Block {
 	return blocks
 }
 
-// DeletePost deletes a journal entry.
-func (c *Config) DeletePost(ctx context.Context, key string) error {
-	return fmt.Errorf("not implemented")
+// DeletePost deletes a journal entry by archiving it in Notion.
+func (c *Config) DeletePost(ctx context.Context, pageID string) error {
+	client := c.GetClient()
+
+	// Archive the page (Notion's way of "deleting")
+	_, err := client.Page.Update(ctx, notionapi.PageID(pageID), &notionapi.PageUpdateRequest{
+		Archived: true,
+	})
+
+	return err
 }
 
 // GetPost retrieves a journal entry by its key.

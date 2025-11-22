@@ -214,7 +214,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	err = spinner.New().
 		Title("Deleting entry...").
 		Action(func() {
-			deleteErr = cfg.DeletePost(cmd.Context(), selectedPost.ID)
+			deleteErr = cfg.DeletePost(cmd.Context(), selectedPost.PageID)
 		}).
 		Run()
 
