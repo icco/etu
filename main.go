@@ -131,8 +131,8 @@ func createPost(cmd *cobra.Command, args []string) error {
 						}
 						return nil
 					}).
-					WithHeight(20).
-					WithWidth(120),
+					WithHeight(15).
+					WithWidth(100),
 			),
 		)
 
