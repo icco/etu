@@ -51,6 +51,62 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 	fmt.Fprint(w, fn(str))
 }
 
+// spinnerModel is a simple model that shows a spinner while waiting for a network operation
+type spinnerModel struct {
+	spinner    spinner.Model
+	message    string
+	resultChan chan interface{}
+	done       bool
+}
+
+func newSpinnerModel(message string, resultChan chan interface{}) spinnerModel {
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+
+	return spinnerModel{
+		spinner:    sp,
+		message:    message,
+		resultChan: resultChan,
+		done:       false,
+	}
+}
+
+func (m spinnerModel) Init() tea.Cmd {
+	return tea.Batch(
+		m.spinner.Tick,
+		func() tea.Msg {
+			<-m.resultChan
+			return tea.Quit()
+		},
+	)
+}
+
+func (m spinnerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+	case tea.QuitMsg:
+		m.done = true
+		return m, tea.Quit
+	}
+
+	return m, nil
+}
+
+func (m spinnerModel) View() string {
+	if m.done {
+		return ""
+	}
+	return fmt.Sprintf("\n  %s %s\n", m.spinner.View(), m.message)
+}
+
 type postListModel struct {
 	list     list.Model
 	spinner  spinner.Model

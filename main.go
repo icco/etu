@@ -139,7 +139,25 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return cfg.SaveEntry(cmd.Context(), text)
+	// Save entry with spinner
+	resultChan := make(chan interface{}, 1)
+
+	go func() {
+		err := cfg.SaveEntry(cmd.Context(), text)
+		resultChan <- err
+	}()
+
+	model := newSpinnerModel("Saving entry...", resultChan)
+	p := tea.NewProgram(model)
+	if _, err := p.Run(); err != nil {
+		return err
+	}
+
+	result := <-resultChan
+	if result != nil {
+		return result.(error)
+	}
+	return nil
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
@@ -165,7 +183,25 @@ func deletePost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete takes only one argument")
 	}
 
-	return cfg.DeletePost(cmd.Context(), args[0])
+	// Delete with spinner
+	resultChan := make(chan interface{}, 1)
+
+	go func() {
+		err := cfg.DeletePost(cmd.Context(), args[0])
+		resultChan <- err
+	}()
+
+	model := newSpinnerModel("Deleting entry...", resultChan)
+	p := tea.NewProgram(model)
+	if _, err := p.Run(); err != nil {
+		return err
+	}
+
+	result := <-resultChan
+	if result != nil {
+		return result.(error)
+	}
+	return nil
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {

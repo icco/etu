@@ -46,10 +46,28 @@ func searchPosts(cmd *cobra.Command, args []string) error {
 	// If a post was selected, fetch and print full content
 	if finalModel.(postListModel).selected != nil {
 		selectedPost := finalModel.(postListModel).selected
-		// Always fetch full content since we only fetch previews for list
-		fullText, err := cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
-		if err == nil {
-			fmt.Println(fullText)
+
+		// Fetch with spinner
+		type fetchResult struct {
+			text string
+			err  error
+		}
+		resultChan := make(chan interface{}, 1)
+
+		go func() {
+			fullText, err := cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
+			resultChan <- fetchResult{text: fullText, err: err}
+		}()
+
+		spinnerModel := newSpinnerModel("Loading full content...", resultChan)
+		p := tea.NewProgram(spinnerModel)
+		if _, err := p.Run(); err != nil {
+			return err
+		}
+
+		result := (<-resultChan).(fetchResult)
+		if result.err == nil {
+			fmt.Println(result.text)
 		} else {
 			// Fallback to preview text
 			fmt.Println(selectedPost.Text)
