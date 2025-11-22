@@ -54,9 +54,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("NOTION_KEY is required")
 	}
 
-	if c.OpenAIAPIKey == "" {
-		return fmt.Errorf("OPENAI_API_KEY is required")
-	}
+	// OpenAIAPIKey is optional - if not set, tags won't be generated
 
 	return nil
 }
@@ -177,7 +175,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 
 	// Generate tags in parallel
 	go func() {
-		tags, err := ai.GenerateTags(ctx, text)
+		tags, err := ai.GenerateTags(ctx, text, c.OpenAIAPIKey)
 		tagChan <- tagResult{tags: tags, err: err}
 	}()
 
