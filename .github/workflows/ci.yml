@@ -15,7 +15,7 @@ jobs:
         go-version:
           - "1.25"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -43,7 +43,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Go
         uses: actions/setup-go@v5
       - name: Cache Go modules
