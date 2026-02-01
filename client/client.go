@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -35,8 +36,13 @@ type Config struct {
 // Env ETU_API_KEY and ETU_GRPC_TARGET override file values. If no config file exists and
 // no API key is set, a config file is created with the correct structure and an empty key.
 func LoadConfig() *Config {
-	_ = ensureConfigFileExists()
-	apiKey, grpcTarget, _ := loadConfigFromFile()
+	if err := ensureConfigFileExists(); err != nil {
+		log.Printf("etu: could not ensure config file: %v", err)
+	}
+	apiKey, grpcTarget, err := loadConfigFromFile()
+	if err != nil {
+		log.Printf("etu: reading config: %v", err)
+	}
 	if apiKey == "" {
 		apiKey = os.Getenv("ETU_API_KEY")
 	}
@@ -55,11 +61,11 @@ func LoadConfig() *Config {
 // Validate checks that the API key is present.
 func (c *Config) Validate() error {
 	if c.ApiKey == "" {
-		dir, _ := ConfigDir()
-		if dir != "" {
-			return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to %s/config.json (see https://github.com/icco/etu-backend)", dir)
+		configPath := "~/.config/etu/config.json"
+		if dir, err := ConfigDir(); err == nil && dir != "" {
+			configPath = dir + "/config.json"
 		}
-		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to ~/.config/etu/config.json (see https://github.com/icco/etu-backend)")
+		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to %s (see https://github.com/icco/etu-backend)", configPath)
 	}
 	return nil
 }
@@ -79,7 +85,10 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 
 // TimeSinceLastPost returns the time since the last post was created.
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	cache, _ := c.cacheFromFile()
+	cache, err := c.cacheFromFile()
+	if err != nil {
+		log.Printf("etu: reading timesince cache: %v", err)
+	}
 	if cache != nil {
 		if time.Since(cache.Saved) < 5*time.Minute {
 			return cache.Duration, nil
@@ -88,7 +97,11 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 	if err := c.UpdateCache(ctx); err != nil {
 		return 0, fmt.Errorf("updating cache %w", err)
 	}
-	if cache, _ := c.cacheFromFile(); cache != nil {
+	cache, err = c.cacheFromFile()
+	if err != nil {
+		log.Printf("etu: reading timesince cache: %v", err)
+	}
+	if cache != nil {
 		return cache.Duration, nil
 	}
 	return 0, fmt.Errorf("cache still not found")
@@ -195,7 +208,9 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths []string
 	created := resp.GetNote()
 	if created != nil && created.GetCreatedAt() != nil {
 		dur := time.Since(created.GetCreatedAt().AsTime())
-		_ = c.cacheToFile(dur)
+		if err := c.cacheToFile(dur); err != nil {
+			log.Printf("etu: updating timesince cache: %v", err)
+		}
 	}
 	return nil
 }

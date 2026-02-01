@@ -149,7 +149,10 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	imagePaths, _ := cmd.Flags().GetStringSlice("image")
+	imagePaths, err := cmd.Flags().GetStringSlice("image")
+	if err != nil {
+		imagePaths = nil
+	}
 	// Parse TUI image paths (from drag & drop or paste): one path per line, trim spaces
 	if imagePathsInput != "" {
 		for _, line := range strings.Split(imagePathsInput, "\n") {
@@ -263,8 +266,8 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 	post := posts[0]
 
 	// Detect if stdout is a terminal (interactive) or being piped.
-	stdoutStat, _ := os.Stdout.Stat()
-	interactive := (stdoutStat.Mode() & os.ModeCharDevice) != 0
+	stdoutStat, err := os.Stdout.Stat()
+	interactive := err == nil && (stdoutStat.Mode()&os.ModeCharDevice) != 0
 
 	if !interactive {
 		// Non-interactive: output full content for piping.
