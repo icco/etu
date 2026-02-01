@@ -42,6 +42,7 @@ type Config struct {
 	cachedDbID   notionapi.DatabaseID // Cache database ID to avoid repeated API calls
 	client       *notionapi.Client    // Cached Notion client
 	clientOnce   sync.Once            // Ensures client is initialized only once
+	grpc         *grpcClients         // gRPC connection and clients (when ApiKey set)
 }
 
 // LoadConfig loads configuration from ~/.config/etu/config.json and environment variables.
