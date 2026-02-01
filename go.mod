@@ -1,6 +1,6 @@
 module github.com/icco/etu
 
-go 1.25
+go 1.24
 
 require (
 	github.com/charmbracelet/bubbles v0.21.1-0.20250623103423-23b8fd6302d7
