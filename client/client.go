@@ -104,11 +104,7 @@ type cacheData struct {
 }
 
 func (c *Config) cachePath() (string, error) {
-	dir, err := configDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "timesince.cache"), nil
+	return CachePath("timesince.cache")
 }
 
 func (c *Config) cacheToFile(dur time.Duration) (err error) {
