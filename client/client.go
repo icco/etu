@@ -47,9 +47,10 @@ func LoadConfig() *Config {
 	if cf.GRPCTarget == "" {
 		cf.GRPCTarget = os.Getenv("ETU_GRPC_TARGET")
 	}
+	// Trim whitespace so pasted keys or env vars with trailing newlines don't break validation.
 	return &Config{
-		ApiKey:     cf.APIKey,
-		GRPCTarget: cf.GRPCTarget,
+		ApiKey:     strings.TrimSpace(cf.APIKey),
+		GRPCTarget: strings.TrimSpace(cf.GRPCTarget),
 	}
 }
 
