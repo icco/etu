@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20251215014908-6f7d32faaff3
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/icco/etu-backend v0.0.0-20260201045707-47af5358160b
+	github.com/icco/etu-backend v0.0.0-20260201222504-8a0d51155d1c
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/grpc v1.78.0
 )
