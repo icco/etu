@@ -178,6 +178,35 @@ func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
 	return out, nil
 }
 
+// LoadAudioUploads reads audio files from paths and returns proto AudioUpload messages.
+// MIME type is detected from content (or file extension as fallback).
+func LoadAudioUploads(paths []string) ([]*proto.AudioUpload, error) {
+	if len(paths) == 0 {
+		return nil, nil
+	}
+	out := make([]*proto.AudioUpload, 0, len(paths))
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return nil, fmt.Errorf("read audio %s: %w", p, err)
+		}
+		mimeType := http.DetectContentType(data)
+		if mimeType == "application/octet-stream" {
+			if ext := filepath.Ext(p); ext != "" {
+				mimeType = mime.TypeByExtension(ext)
+			}
+		}
+		if mimeType == "" {
+			mimeType = "application/octet-stream"
+		}
+		out = append(out, &proto.AudioUpload{
+			Data:     data,
+			MimeType: mimeType,
+		})
+	}
+	return out, nil
+}
+
 // SaveEntry saves a new journal entry via the backend (tags are generated on the backend).
 // imagePaths and audioPaths are optional paths to image and audio files to attach to the note.
 func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPaths []string) error {
@@ -193,15 +222,15 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 	if err != nil {
 		return err
 	}
-	audioUploads, err := LoadImageUploads(audioPaths) // same structure: data + mime_type
+	audios, err := LoadAudioUploads(audioPaths)
 	if err != nil {
 		return err
 	}
-	allUploads := append(images, audioUploads...)
 	resp, err := g.notesClient.CreateNote(ctx, &proto.CreateNoteRequest{
 		UserId:  userID,
 		Content: text,
-		Images:  allUploads,
+		Images:  images,
+		Audios:  audios,
 	})
 	if err != nil {
 		return err
