@@ -51,7 +51,7 @@ var (
 	createCmd = &cobra.Command{
 		Use:     "create",
 		Aliases: []string{"c", "new"},
-		Short:   "Create a new journal entry (optionally attach images with -i).",
+		Short:   "Create a new journal entry (attach images with -i, audio with -a, or in TUI).",
 		Args:    cobra.NoArgs,
 		RunE:    createPost,
 	}
