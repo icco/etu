@@ -19,16 +19,11 @@ brew install etu
 
 ### Local Build
 
-Build Dependencies:
+**Dependencies:** Go 1.25 or later, [Task](https://taskfile.dev/) (optional).
 
-- Go 1.25 or later
-- https://taskfile.dev/
-
-Build
-
-1. git clone code
-1. `task build`
-1. `./etu`
+1. `git clone` the repo
+2. `task build` (or `go build -o etu .`)
+3. Run `./etu`
 
 ## Usage
 
@@ -46,7 +41,7 @@ Example config file:
 }
 ```
 
-Config and "time since last post" cache live under `~/.config/etu/`.
+Config and the "time since last post" cache live under `~/.config/etu/`. Tag generation and storage are handled by the backend; see [etu-backend](https://github.com/icco/etu-backend) for setup.
 
 ```
 $ etu
@@ -74,7 +69,7 @@ Use "etu [command] --help" for more information about a command.
 
 ## Inspiration
 
-Etu is [the personifcation of time](https://en.wikipedia.org/wiki/Time_and_fate_deities) according to the [Lakota](https://en.wikipedia.org/wiki/Lakota_people).
+Etu is [the personification of time](https://en.wikipedia.org/wiki/Time_and_fate_deities) according to the [Lakota](https://en.wikipedia.org/wiki/Lakota_people).
 
 Etu is inspired heavily by the work of @neauoire at [wiki.xxiivv.com](https://wiki.xxiivv.com/#about), [Time Travelers](https://github.com/merveilles/Time-Travelers), and the screenshots in the [inspiration](https://github.com/icco/etu/tree/main/inspiration) folder.
 
