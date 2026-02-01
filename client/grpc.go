@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,8 +41,12 @@ type apiKeyCreds struct {
 }
 
 func (a apiKeyCreds) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
+	key := a.apiKey
+	if !strings.HasPrefix(key, "etu_") {
+		key = "etu_" + key
+	}
 	return map[string]string{
-		"authorization": "etu_" + a.apiKey,
+		"authorization": key,
 	}, nil
 }
 

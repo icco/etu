@@ -10,95 +10,83 @@ import (
 const defaultGRPCTarget = "grpc.etu.natwelch.com:443"
 
 // configFile represents the persisted config file format.
-type configFile struct {
+type ConfigFile struct {
 	APIKey     string `json:"api_key"`
 	GRPCTarget string `json:"grpc_target"`
 }
 
-// configDir returns the etu config directory (~/.config/etu on Unix).
-func configDir() (string, error) {
+// ConfigDir returns the etu config directory (e.g. ~/.config/etu on Unix).
+// Creates the directory if it does not exist. Use this for config and cache files.
+func ConfigDir() (string, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		return "", fmt.Errorf("user config dir: %w", err)
+		return "", err
 	}
-	return filepath.Join(dir, "etu"), nil
+	fullDir := filepath.Join(dir, "etu")
+	if err := os.MkdirAll(fullDir, 0700); err != nil {
+		return "", fmt.Errorf("create config dir: %w", err)
+	}
+	return fullDir, nil
 }
 
-// configPath returns the path to the config file.
-func configPath() (string, error) {
-	dir, err := configDir()
+// ConfigPath returns the path to the config file (~/.config/etu/config.json).
+func ConfigPath() (string, error) {
+	dir, err := ConfigDir()
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(dir, "config.json"), nil
 }
 
-// ensureConfigFileExists creates ~/.config/etu/config.json with empty api_key and default
-// grpc_target if the file does not exist and ETU_API_KEY is not set. Call before loading.
-func ensureConfigFileExists() error {
-	path, err := configPath()
+// CachePath returns the path for a cache file under the config directory.
+// Example: CachePath("timesince.cache") => ~/.config/etu/timesince.cache
+func CachePath(filename string) (string, error) {
+	dir, err := ConfigDir()
 	if err != nil {
-		return err
+		return "", err
 	}
-	if _, err := os.Stat(path); err == nil {
-		return nil // file exists
-	}
-	if !os.IsNotExist(err) {
-		return err
-	}
-	if os.Getenv("ETU_API_KEY") != "" {
-		return nil // key in env, no need to create file yet
-	}
-	return SaveConfig("", defaultGRPCTarget)
+	return filepath.Join(dir, filename), nil
 }
 
 // loadConfigFromFile reads api_key and grpc_target from ~/.config/etu/config.json.
 // Missing file or invalid JSON returns nil error and zero values; caller can use env or defaults.
-func loadConfigFromFile() (apiKey, grpcTarget string, err error) {
-	path, err := configPath()
+func loadConfigFromFile() (*ConfigFile, error) {
+	path, err := ConfigPath()
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", "", nil
+			return SaveConfig("", "")
 		}
-		return "", "", fmt.Errorf("read config: %w", err)
+		return nil, err
 	}
-	var cf configFile
+	var cf ConfigFile
 	if err := json.Unmarshal(data, &cf); err != nil {
-		return "", "", fmt.Errorf("parse config: %w", err)
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
-	return cf.APIKey, cf.GRPCTarget, nil
+	return &cf, nil
 }
 
 // SaveConfig writes api_key and grpc_target to ~/.config/etu/config.json.
 // Creates the config directory if it does not exist.
-func SaveConfig(apiKey, grpcTarget string) error {
+func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 	if grpcTarget == "" {
 		grpcTarget = defaultGRPCTarget
 	}
-	dir, err := configDir()
+	path, err := ConfigPath()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("create config dir: %w", err)
-	}
-	path, err := configPath()
+	cf := &ConfigFile{APIKey: apiKey, GRPCTarget: grpcTarget}
+	data, err := json.Marshal(cf)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	cf := configFile{APIKey: apiKey, GRPCTarget: grpcTarget}
-	data, err := json.MarshalIndent(cf, "", "  ")
-	if err != nil {
-		return err
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return nil, fmt.Errorf("could not write config file: %w", err)
 	}
-	return os.WriteFile(path, data, 0600)
+	return cf, nil
 }
 
-// ConfigDir returns the application config directory for use in error messages or docs.
-func ConfigDir() (string, error) {
-	return configDir()
-}

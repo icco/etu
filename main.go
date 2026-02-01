@@ -28,7 +28,7 @@ var (
 		Short: "Etu. A personal command line journal.",
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Skip config initialization for these commands
+			// Skip API key validation for these commands (they don't need the backend)
 			curr := cmd
 			for curr != nil {
 				if curr.Name() == "completion" || curr.Name() == "help" || curr.Name() == "__complete" {
@@ -37,7 +37,6 @@ var (
 				curr = curr.Parent()
 			}
 
-			cfg = client.LoadConfig()
 			if err := cfg.Validate(); err != nil {
 				return err
 			}
@@ -321,6 +320,11 @@ func init() {
 }
 
 func main() {
+	// Load config (file + ETU_API_KEY / ETU_GRPC_TARGET env) and persist so we don't have to mess with env later.
+	cfg = client.LoadConfig()
+	if _, err := client.SaveConfig(cfg.ApiKey, cfg.GRPCTarget); err != nil {
+		log.Fatal(err)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
