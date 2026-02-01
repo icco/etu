@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/icco/etu.svg)](https://pkg.go.dev/github.com/icco/etu)
 
 
-Etu is a simple journaling tool that uses Notion as a database.
+Etu is a simple journaling tool that talks to the [etu-backend](https://github.com/icco/etu-backend) API over gRPC.
 
 It should be noted the main goal of Etu is to write interstitial journals. See https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef for more on this topic.
 
@@ -32,10 +32,21 @@ Build
 
 ## Usage
 
-Before running you need to set `NOTION_KEY`. Optionally, you can set `OPENAI_API_KEY` to enable automatic tag generation.
+Before running you need an API key for the etu-backend. You can:
 
-- To get a Notion key go to https://www.notion.so/profile/integrations
-- To get an OpenAI key (optional) go to https://platform.openai.com/api-keys
+1. Put your API key in `~/.config/etu/config.json` with keys `api_key` and optionally `grpc_target` (default: `grpc.etu.natwelch.com:443`), or
+2. Set the `ETU_API_KEY` environment variable (and optionally `ETU_GRPC_TARGET`).
+
+Example config file:
+
+```json
+{
+  "api_key": "your-64-char-hex-api-key",
+  "grpc_target": "grpc.etu.natwelch.com:443"
+}
+```
+
+Optionally, set `OPENAI_API_KEY` to enable client-side automatic tag generation when creating entries.
 
 ```
 $ etu
