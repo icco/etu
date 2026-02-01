@@ -89,4 +89,3 @@ func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 	}
 	return cf, nil
 }
-
