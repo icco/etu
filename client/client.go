@@ -120,7 +120,7 @@ func (c *Config) cachePath() (string, error) {
 	return filepath.Join(dir, "timesince.cache"), nil
 }
 
-func (c *Config) cacheToFile(dur time.Duration) error {
+func (c *Config) cacheToFile(dur time.Duration) (err error) {
 	path, err := c.cachePath()
 	if err != nil {
 		return err
@@ -132,11 +132,15 @@ func (c *Config) cacheToFile(dur time.Duration) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 	return gob.NewEncoder(f).Encode(cacheData{Saved: time.Now(), Duration: dur})
 }
 
-func (c *Config) cacheFromFile() (*cacheData, error) {
+func (c *Config) cacheFromFile() (data *cacheData, err error) {
 	path, err := c.cachePath()
 	if err != nil {
 		return nil, err
@@ -145,8 +149,12 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	data := &cacheData{}
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
+	data = &cacheData{}
 	if err := gob.NewDecoder(f).Decode(data); err != nil {
 		return nil, err
 	}
