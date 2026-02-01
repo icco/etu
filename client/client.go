@@ -32,8 +32,10 @@ type Config struct {
 }
 
 // LoadConfig loads configuration from ~/.config/etu/config.json and environment variables.
-// Env ETU_API_KEY and ETU_GRPC_TARGET override file values.
+// Env ETU_API_KEY and ETU_GRPC_TARGET override file values. If no config file exists and
+// no API key is set, a config file is created with the correct structure and an empty key.
 func LoadConfig() *Config {
+	_ = ensureConfigFileExists()
 	apiKey, grpcTarget, _ := loadConfigFromFile()
 	if apiKey == "" {
 		apiKey = os.Getenv("ETU_API_KEY")

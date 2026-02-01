@@ -33,6 +33,25 @@ func configPath() (string, error) {
 	return filepath.Join(dir, "config.json"), nil
 }
 
+// ensureConfigFileExists creates ~/.config/etu/config.json with empty api_key and default
+// grpc_target if the file does not exist and ETU_API_KEY is not set. Call before loading.
+func ensureConfigFileExists() error {
+	path, err := configPath()
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(path); err == nil {
+		return nil // file exists
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+	if os.Getenv("ETU_API_KEY") != "" {
+		return nil // key in env, no need to create file yet
+	}
+	return SaveConfig("", defaultGRPCTarget)
+}
+
 // loadConfigFromFile reads api_key and grpc_target from ~/.config/etu/config.json.
 // Missing file or invalid JSON returns nil error and zero values; caller can use env or defaults.
 func loadConfigFromFile() (apiKey, grpcTarget string, err error) {
