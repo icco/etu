@@ -36,7 +36,7 @@ type Config struct {
 // Env ETU_API_KEY and ETU_GRPC_TARGET override file values. If no config file exists and
 // no API key is set, a config file is created with the correct structure and an empty key.
 func LoadConfig() *Config {
-	if err := EnsureConfigFileExists(); err != nil {
+	if _, err := EnsureConfigFileExists(); err != nil {
 		log.Printf("etu: could not ensure config file: %v", err)
 	}
 	apiKey, grpcTarget, err := loadConfigFromFile()

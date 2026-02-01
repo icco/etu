@@ -323,9 +323,16 @@ func init() {
 }
 
 func main() {
-	// Create config file at OS config dir (UserConfigDir/etu/config.json) if missing, before any command runs
-	if err := client.EnsureConfigFileExists(); err != nil {
-		log.Printf("etu: could not ensure config file: %v", err)
+	// Create config file at OS config dir (~/.config/etu/config.json on Unix) if missing, before any command runs
+	created, err := client.EnsureConfigFileExists()
+	if err != nil {
+		if created != "" {
+			log.Fatalf("etu: could not create config file at %s: %v", created, err)
+		}
+		log.Fatalf("etu: could not create config file: %v", err)
+	}
+	if created != "" {
+		_, _ = fmt.Fprintf(os.Stderr, "Created config at %s — add your api_key to get started.\n", created)
 	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
