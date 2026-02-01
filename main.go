@@ -28,9 +28,6 @@ var (
 		Short: "Etu. A personal command line journal.",
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Always load config so ~/.config/etu/config.json is created if missing
-			cfg = client.LoadConfig()
-
 			// Skip API key validation for these commands (they don't need the backend)
 			curr := cmd
 			for curr != nil {
@@ -323,6 +320,11 @@ func init() {
 }
 
 func main() {
+	// Load config (file + ETU_API_KEY / ETU_GRPC_TARGET env) and persist so we don't have to mess with env later.
+	cfg = client.LoadConfig()
+	if _, err := client.SaveConfig(cfg.ApiKey, cfg.GRPCTarget); err != nil {
+		log.Fatal(err)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
