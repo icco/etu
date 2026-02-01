@@ -34,29 +34,48 @@ type Post struct {
 type Config struct {
 	NotionKey    string
 	OpenAIAPIKey string
+	// ApiKey is the etu-backend API key (from ~/.config/etu or ETU_API_KEY).
+	ApiKey string
+	// GRPCTarget is the etu-backend gRPC address (default grpc.etu.natwelch.com:443).
+	GRPCTarget   string
 	rootPage     string
 	cachedDbID   notionapi.DatabaseID // Cache database ID to avoid repeated API calls
 	client       *notionapi.Client    // Cached Notion client
 	clientOnce   sync.Once            // Ensures client is initialized only once
 }
 
-// LoadConfig loads configuration from environment variables.
+// LoadConfig loads configuration from ~/.config/etu/config.json and environment variables.
+// Env ETU_API_KEY and ETU_GRPC_TARGET override file values.
 func LoadConfig() *Config {
+	apiKey, grpcTarget, _ := loadConfigFromFile()
+	if apiKey == "" {
+		apiKey = os.Getenv("ETU_API_KEY")
+	}
+	if grpcTarget == "" {
+		grpcTarget = os.Getenv("ETU_GRPC_TARGET")
+	}
+	if grpcTarget == "" {
+		grpcTarget = defaultGRPCTarget
+	}
 	return &Config{
 		NotionKey:    os.Getenv("NOTION_KEY"),
 		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		ApiKey:       apiKey,
+		GRPCTarget:   grpcTarget,
 		rootPage:     "Journal",
 	}
 }
 
 // Validate checks that all required configuration values are present.
+// Requires either NOTION_KEY (Notion backend) or ApiKey (gRPC backend).
 func (c *Config) Validate() error {
-	if c.NotionKey == "" {
-		return fmt.Errorf("NOTION_KEY is required")
+	if c.NotionKey == "" && c.ApiKey == "" {
+		dir, _ := ConfigDir()
+		if dir != "" {
+			return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to %s/config.json (see https://github.com/icco/etu-backend)", dir)
+		}
+		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to ~/.config/etu/config.json (see https://github.com/icco/etu-backend)")
 	}
-
-	// OpenAIAPIKey is optional - if not set, tags won't be generated
-
 	return nil
 }
 
