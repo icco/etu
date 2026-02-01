@@ -51,7 +51,7 @@ var (
 	createCmd = &cobra.Command{
 		Use:     "create",
 		Aliases: []string{"c", "new"},
-		Short:   "Create a new journal entry. If no date provided, current time will be used.",
+		Short:   "Create a new journal entry (optionally attach images with -i).",
 		Args:    cobra.NoArgs,
 		RunE:    createPost,
 	}
@@ -140,12 +140,14 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	imagePaths, _ := cmd.Flags().GetStringSlice("image")
+
 	// Save entry with spinner
 	var saveErr error
 	err = spinner.New().
 		Title("Saving entry...").
 		Action(func() {
-			saveErr = cfg.SaveEntry(cmd.Context(), text)
+			saveErr = cfg.SaveEntry(cmd.Context(), text, imagePaths)
 		}).
 		Run()
 
@@ -278,6 +280,8 @@ func init() {
 	}
 	rootCmd.Version = Version
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+
+	createCmd.Flags().StringSliceP("image", "i", nil, "path to image file to attach (can be repeated)")
 
 	rootCmd.AddCommand(
 		createCmd,

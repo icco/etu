@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -136,8 +138,38 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 	return data, nil
 }
 
+// LoadImageUploads reads image files from paths and returns proto ImageUpload messages.
+// MIME type is detected from content (or file extension as fallback).
+func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
+	if len(paths) == 0 {
+		return nil, nil
+	}
+	out := make([]*proto.ImageUpload, 0, len(paths))
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return nil, fmt.Errorf("read image %s: %w", p, err)
+		}
+		mimeType := http.DetectContentType(data)
+		if mimeType == "application/octet-stream" {
+			if ext := filepath.Ext(p); ext != "" {
+				mimeType = mime.TypeByExtension(ext)
+			}
+		}
+		if mimeType == "" {
+			mimeType = "application/octet-stream"
+		}
+		out = append(out, &proto.ImageUpload{
+			Data:     data,
+			MimeType: mimeType,
+		})
+	}
+	return out, nil
+}
+
 // SaveEntry saves a new journal entry via the backend (tags are generated on the backend).
-func (c *Config) SaveEntry(ctx context.Context, text string) error {
+// imagePaths are optional paths to image files to attach to the note.
+func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths []string) error {
 	userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return err
@@ -146,9 +178,14 @@ func (c *Config) SaveEntry(ctx context.Context, text string) error {
 	if err != nil {
 		return err
 	}
+	images, err := LoadImageUploads(imagePaths)
+	if err != nil {
+		return err
+	}
 	resp, err := g.notesClient.CreateNote(ctx, &proto.CreateNoteRequest{
 		UserId:  userID,
 		Content: text,
+		Images:  images,
 	})
 	if err != nil {
 		return err

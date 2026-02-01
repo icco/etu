@@ -52,7 +52,7 @@ Usage:
   etu [command]
 
 Available Commands:
-  create      Create a new journal entry. If no date provided, current time will be used.
+  create      Create a new journal entry (use -i/--image to attach image files).
   delete      Delete a journal entry.
   help        Help about any command
   last        Output a string of time since last post.
