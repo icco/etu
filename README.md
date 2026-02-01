@@ -46,7 +46,7 @@ Example config file:
 }
 ```
 
-Optionally, set `OPENAI_API_KEY` to enable client-side automatic tag generation when creating entries.
+Config and "time since last post" cache live under `~/.config/etu/`.
 
 ```
 $ etu
@@ -86,8 +86,4 @@ Other projects that inspired me:
 
 ## History
 
-I've rewritten this aproximately seven times. Originally I made this to be a location based blogging app. Then it turned into a time tracking app. Then into a wiki. Then another time tracking app. Then a journaling tool. First with Charm as a DB, then with SQLite, then with Notion.
-
-## Future
-
-I've been thinking about making the AI and the backend pluggable. If you have ideas on how to do that, open a ticket and ping @icco.
+I've rewritten this approximately seven times. Originally a location-based blogging app, then time tracking, wiki, journaling. Backends: Charm, SQLite, Notion, and now the [etu-backend](https://github.com/icco/etu-backend) gRPC API.

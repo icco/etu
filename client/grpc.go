@@ -5,11 +5,34 @@ import (
 	"crypto/tls"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/icco/etu-backend/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+// noteToPost converts a proto Note to a client Post for TUI/CLI use.
+func noteToPost(n *proto.Note) *Post {
+	if n == nil {
+		return nil
+	}
+	var createdAt, updatedAt time.Time
+	if t := n.GetCreatedAt(); t != nil {
+		createdAt = t.AsTime()
+	}
+	if t := n.GetUpdatedAt(); t != nil {
+		updatedAt = t.AsTime()
+	}
+	return &Post{
+		ID:         n.GetId(),
+		PageID:     n.GetId(),
+		Tags:       n.GetTags(),
+		Text:       n.GetContent(),
+		CreatedAt:  createdAt,
+		ModifiedAt: updatedAt,
+	}
+}
 
 // apiKeyCreds attaches the etu API key to every gRPC request.
 type apiKeyCreds struct {

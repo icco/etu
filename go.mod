@@ -8,10 +8,9 @@ require (
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20251215014908-6f7d32faaff3
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/google/uuid v1.6.0
-	github.com/jomei/notionapi v1.13.3
-	github.com/sashabaranov/go-openai v1.41.2
+	github.com/icco/etu-backend v0.0.0-20260201042035-54d6e4e8fa61
 	github.com/spf13/cobra v1.10.2
+	google.golang.org/grpc v1.78.0
 )
 
 require (
@@ -28,7 +27,6 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/icco/etu-backend v0.0.0-20260201042035-54d6e4e8fa61 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -46,6 +44,5 @@ require (
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
