@@ -36,36 +36,27 @@ type Config struct {
 // Env ETU_API_KEY and ETU_GRPC_TARGET override file values. If no config file exists and
 // no API key is set, a config file is created with the correct structure and an empty key.
 func LoadConfig() *Config {
-	if _, err := EnsureConfigFileExists(); err != nil {
-		log.Printf("etu: could not ensure config file: %v", err)
-	}
-	apiKey, grpcTarget, err := loadConfigFromFile()
+	cf, err := loadConfigFromFile()
 	if err != nil {
 		log.Printf("etu: reading config: %v", err)
 	}
-	if apiKey == "" {
-		apiKey = os.Getenv("ETU_API_KEY")
+
+	if cf.APIKey == "" {
+		cf.APIKey = os.Getenv("ETU_API_KEY")
 	}
-	if grpcTarget == "" {
-		grpcTarget = os.Getenv("ETU_GRPC_TARGET")
-	}
-	if grpcTarget == "" {
-		grpcTarget = defaultGRPCTarget
+	if cf.GRPCTarget == "" {
+		cf.GRPCTarget = os.Getenv("ETU_GRPC_TARGET")
 	}
 	return &Config{
-		ApiKey:     apiKey,
-		GRPCTarget: grpcTarget,
+		ApiKey:     cf.APIKey,
+		GRPCTarget: cf.GRPCTarget,
 	}
 }
 
 // Validate checks that the API key is present.
 func (c *Config) Validate() error {
 	if c.ApiKey == "" {
-		configPath := "~/.config/etu/config.json"
-		if dir, err := ConfigDir(); err == nil && dir != "" {
-			configPath = dir + "/config.json"
-		}
-		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to %s (see https://github.com/icco/etu-backend)", configPath)
+		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to config file")
 	}
 	return nil
 }
