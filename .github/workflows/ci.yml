@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         go-version:
-          - "1.24"
+          - "1.25"
     steps:
       - uses: actions/checkout@v6
       - name: Set up Go
@@ -49,7 +49,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - name: Run go fmt
         run: go fmt ./...
       - name: Commit formatting changes
