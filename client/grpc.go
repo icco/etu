@@ -51,14 +51,14 @@ func (a apiKeyCreds) RequireTransportSecurity() bool {
 
 // grpcClients holds the gRPC connection and service clients (lazy-init).
 type grpcClients struct {
-	conn         *grpc.ClientConn
-	notesClient  proto.NotesServiceClient
+	conn          *grpc.ClientConn
+	notesClient   proto.NotesServiceClient
 	apiKeysClient proto.ApiKeysServiceClient
-	userID       string
-	connOnce     sync.Once
-	userIDOnce   sync.Once
-	connErr      error
-	userIDErr    error
+	userID        string
+	connOnce      sync.Once
+	userIDOnce    sync.Once
+	connErr       error
+	userIDErr     error
 }
 
 func (c *Config) getGRPCClients() (*grpcClients, error) {
