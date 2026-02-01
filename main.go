@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -104,6 +105,7 @@ func createPost(cmd *cobra.Command, args []string) error {
 	}
 
 	var text string
+	var imagePathsInput string
 
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		// stdin is a pipe or redirected input
@@ -113,19 +115,26 @@ func createPost(cmd *cobra.Command, args []string) error {
 		}
 		text = string(content)
 	} else {
-		// stdin is a terminal, use interactive TUI
+		// stdin is a terminal, use interactive TUI (supports drag & drop of images)
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
 					Value(&text).
 					Placeholder("Write your journal entry here...").
 					Validate(func(value string) error {
-						if len(value) == 0 {
+						if len(strings.TrimSpace(value)) == 0 {
 							return fmt.Errorf("journal entry cannot be empty")
 						}
 						return nil
 					}).
-					WithHeight(15).
+					WithHeight(12).
+					WithWidth(100),
+				huh.NewText().
+					Value(&imagePathsInput).
+					Title("Images").
+					Description("Drag & drop image files here, or paste paths (one per line). Leave empty for no images.").
+					Placeholder("/path/to/image.jpg").
+					WithHeight(3).
 					WithWidth(100),
 			),
 		)
@@ -141,6 +150,21 @@ func createPost(cmd *cobra.Command, args []string) error {
 	}
 
 	imagePaths, _ := cmd.Flags().GetStringSlice("image")
+	// Parse TUI image paths (from drag & drop or paste): one path per line, trim spaces
+	if imagePathsInput != "" {
+		for _, line := range strings.Split(imagePathsInput, "\n") {
+			p := strings.TrimSpace(line)
+			if p == "" {
+				continue
+			}
+			// Strip quotes terminals sometimes add around paths with spaces
+			p = strings.Trim(p, `"'`)
+			if abs, err := filepath.Abs(p); err == nil {
+				p = abs
+			}
+			imagePaths = append(imagePaths, p)
+		}
+	}
 
 	// Save entry with spinner
 	var saveErr error
