@@ -32,14 +32,20 @@ Before running you need an API key for the etu-backend. You can:
 1. Put your API key in `~/.config/etu/config.json` with keys `api_key` and optionally `grpc_target` (default: `grpc.etu.natwelch.com:443`), or
 2. Set the `ETU_API_KEY` environment variable (and optionally `ETU_GRPC_TARGET`).
 
-Example config file:
+Copy the example and add your key:
 
-```json
-{
-  "api_key": "your-64-char-hex-api-key",
-  "grpc_target": "grpc.etu.natwelch.com:443"
-}
+```bash
+mkdir -p ~/.config/etu
+cp config.json.example ~/.config/etu/config.json
+# then edit ~/.config/etu/config.json and set api_key to your key
 ```
+
+Expected `config.json` structure (see `config.json.example`):
+
+| Key           | Required | Description |
+|---------------|----------|-------------|
+| `api_key`     | yes      | Your etu-backend API key (get from [etu-backend](https://github.com/icco/etu-backend)) |
+| `grpc_target` | no       | gRPC server address (default: `grpc.etu.natwelch.com:443`) |
 
 Config and the "time since last post" cache live under `~/.config/etu/`. Tag generation and storage are handled by the backend; see [etu-backend](https://github.com/icco/etu-backend) for setup.
 

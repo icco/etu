@@ -28,7 +28,10 @@ var (
 		Short: "Etu. A personal command line journal.",
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Skip config initialization for these commands
+			// Always load config so ~/.config/etu/config.json is created if missing
+			cfg = client.LoadConfig()
+
+			// Skip API key validation for these commands (they don't need the backend)
 			curr := cmd
 			for curr != nil {
 				if curr.Name() == "completion" || curr.Name() == "help" || curr.Name() == "__complete" {
@@ -37,7 +40,6 @@ var (
 				curr = curr.Parent()
 			}
 
-			cfg = client.LoadConfig()
 			if err := cfg.Validate(); err != nil {
 				return err
 			}
