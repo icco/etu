@@ -323,6 +323,10 @@ func init() {
 }
 
 func main() {
+	// Create config file at OS config dir (UserConfigDir/etu/config.json) if missing, before any command runs
+	if err := client.EnsureConfigFileExists(); err != nil {
+		log.Printf("etu: could not ensure config file: %v", err)
+	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}

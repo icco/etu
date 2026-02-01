@@ -33,9 +33,10 @@ func configPath() (string, error) {
 	return filepath.Join(dir, "config.json"), nil
 }
 
-// ensureConfigFileExists creates ~/.config/etu/config.json with empty api_key and default
-// grpc_target if the file does not exist. Call before loading so users always have a config to edit.
-func ensureConfigFileExists() error {
+// EnsureConfigFileExists creates the config file at the path from os.UserConfigDir()/etu/config.json
+// (e.g. ~/.config/etu on Linux, ~/Library/Application Support/etu on macOS) with empty api_key
+// and default grpc_target if the file does not exist. Call at startup so users always have a config to edit.
+func EnsureConfigFileExists() error {
 	path, err := configPath()
 	if err != nil {
 		return err
