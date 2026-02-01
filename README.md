@@ -52,7 +52,7 @@ Usage:
   etu [command]
 
 Available Commands:
-  create      Create a new journal entry (attach images via drag & drop in TUI or -i/--image).
+  create      Create a new journal entry (attach images/audio via drag & drop in TUI or -i/--image, -a/--audio).
   delete      Delete a journal entry.
   help        Help about any command
   last        Output a string of time since last post.

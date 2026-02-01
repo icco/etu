@@ -179,8 +179,8 @@ func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
 }
 
 // SaveEntry saves a new journal entry via the backend (tags are generated on the backend).
-// imagePaths are optional paths to image files to attach to the note.
-func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths []string) error {
+// imagePaths and audioPaths are optional paths to image and audio files to attach to the note.
+func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPaths []string) error {
 	userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return err
@@ -193,10 +193,15 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths []string
 	if err != nil {
 		return err
 	}
+	audioUploads, err := LoadImageUploads(audioPaths) // same structure: data + mime_type
+	if err != nil {
+		return err
+	}
+	allUploads := append(images, audioUploads...)
 	resp, err := g.notesClient.CreateNote(ctx, &proto.CreateNoteRequest{
 		UserId:  userID,
 		Content: text,
-		Images:  images,
+		Images:  allUploads,
 	})
 	if err != nil {
 		return err

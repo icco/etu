@@ -51,7 +51,7 @@ var (
 	createCmd = &cobra.Command{
 		Use:     "create",
 		Aliases: []string{"c", "new"},
-		Short:   "Create a new journal entry (optionally attach images with -i).",
+		Short:   "Create a new journal entry (attach images with -i, audio with -a, or in TUI).",
 		Args:    cobra.NoArgs,
 		RunE:    createPost,
 	}
@@ -105,6 +105,7 @@ func createPost(cmd *cobra.Command, args []string) error {
 
 	var text string
 	var imagePathsInput string
+	var audioPathsInput string
 
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		// stdin is a pipe or redirected input
@@ -135,6 +136,13 @@ func createPost(cmd *cobra.Command, args []string) error {
 					Placeholder("/path/to/image.jpg").
 					WithHeight(3).
 					WithWidth(100),
+				huh.NewText().
+					Value(&audioPathsInput).
+					Title("Audio").
+					Description("Drag & drop audio files here, or paste paths (one per line). Leave empty for no audio.").
+					Placeholder("/path/to/recording.mp3").
+					WithHeight(3).
+					WithWidth(100),
 			),
 		)
 
@@ -152,6 +160,10 @@ func createPost(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		imagePaths = nil
 	}
+	audioPaths, err := cmd.Flags().GetStringSlice("audio")
+	if err != nil {
+		audioPaths = nil
+	}
 	// Parse TUI image paths (from drag & drop or paste): one path per line, trim spaces
 	if imagePathsInput != "" {
 		for _, line := range strings.Split(imagePathsInput, "\n") {
@@ -167,13 +179,27 @@ func createPost(cmd *cobra.Command, args []string) error {
 			imagePaths = append(imagePaths, p)
 		}
 	}
+	// Parse TUI audio paths (from drag & drop or paste): one path per line, trim spaces
+	if audioPathsInput != "" {
+		for _, line := range strings.Split(audioPathsInput, "\n") {
+			p := strings.TrimSpace(line)
+			if p == "" {
+				continue
+			}
+			p = strings.Trim(p, `"'`)
+			if abs, err := filepath.Abs(p); err == nil {
+				p = abs
+			}
+			audioPaths = append(audioPaths, p)
+		}
+	}
 
 	// Save entry with spinner
 	var saveErr error
 	err = spinner.New().
 		Title("Saving entry...").
 		Action(func() {
-			saveErr = cfg.SaveEntry(cmd.Context(), text, imagePaths)
+			saveErr = cfg.SaveEntry(cmd.Context(), text, imagePaths, audioPaths)
 		}).
 		Run()
 
@@ -308,6 +334,7 @@ func init() {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
 	createCmd.Flags().StringSliceP("image", "i", nil, "path to image file to attach (can be repeated)")
+	createCmd.Flags().StringSliceP("audio", "a", nil, "path to audio file to attach (can be repeated)")
 
 	rootCmd.AddCommand(
 		createCmd,
