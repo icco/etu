@@ -122,7 +122,11 @@ func displayImageInline(url string) {
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return
