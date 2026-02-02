@@ -28,7 +28,7 @@ func noteToPost(n *proto.Note) *Post {
 		Text:      n.GetContent(),
 		CreatedAt: createdAt,
 		Images:    n.GetImages(),
-		Audios:   n.GetAudios(),
+		Audios:    n.GetAudios(),
 	}
 }
 
