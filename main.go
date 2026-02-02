@@ -94,6 +94,14 @@ var (
 		Args:    cobra.NoArgs,
 		RunE:    searchPosts,
 	}
+
+	randomCmd = &cobra.Command{
+		Use:     "random",
+		Aliases: []string{"r"},
+		Short:   "Show a random journal entry.",
+		Args:    cobra.NoArgs,
+		RunE:    randomPost,
+	}
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
@@ -322,6 +330,49 @@ func listPosts(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func randomPost(cmd *cobra.Command, args []string) error {
+	// Fetch random post from backend
+	posts, err := cfg.GetRandomPosts(cmd.Context(), 1)
+	if err != nil {
+		return err
+	}
+	if len(posts) == 0 {
+		return fmt.Errorf("no posts found")
+	}
+
+	post := posts[0]
+
+	// Detect if stdout is a terminal (interactive) or being piped.
+	stdoutStat, err := os.Stdout.Stat()
+	interactive := err == nil && (stdoutStat.Mode()&os.ModeCharDevice) != 0
+
+	if !interactive {
+		// Non-interactive: output full content for piping.
+		full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
+		if fullErr == nil && strings.TrimSpace(full) != "" {
+			fmt.Print(full)
+			return nil
+		}
+		fmt.Print(post.Text)
+		return nil
+	}
+
+	// Interactive: show full content with metadata
+	full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
+	if fullErr != nil {
+		full = post.Text
+	}
+
+	fmt.Printf("Date: %s\n", post.CreatedAt.Format("2006-01-02 15:04"))
+	if len(post.Tags) > 0 {
+		fmt.Printf("Tags: %s\n", strings.Join(post.Tags, ", "))
+	}
+	fmt.Println()
+	fmt.Println(full)
+
+	return nil
+}
+
 func init() {
 	if len(CommitSHA) >= 7 {
 		vt := rootCmd.VersionTemplate()
@@ -341,6 +392,7 @@ func init() {
 		deleteCmd,
 		listCmd,
 		mostRecentCmd,
+		randomCmd,
 		timeSinceCmd,
 		searchCmd,
 	)

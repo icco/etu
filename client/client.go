@@ -309,6 +309,30 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	return posts, nil
 }
 
+// GetRandomPosts fetches random journal entries from the backend.
+func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.notesClient.GetRandomNotes(ctx, &proto.GetRandomNotesRequest{
+		UserId: userID,
+		Count:  int32(count),
+	})
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]*Post, 0, len(resp.GetNotes()))
+	for _, n := range resp.GetNotes() {
+		posts = append(posts, noteToPost(n))
+	}
+	return posts, nil
+}
+
 // GetPostFullContent fetches the full content of a post by ID.
 func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
 	userID, err := c.ensureUserID(ctx)
