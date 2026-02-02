@@ -77,12 +77,12 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 		fmt.Println()
 		fmt.Println(headerStyle.Render("Images:"))
 		for i, img := range post.Images {
-			fmt.Printf("  %d. %s\n", i+1, img.URL)
-			if img.ExtractedText != "" {
-				fmt.Println(labelStyle.Render("     Text: ") + truncate(img.ExtractedText, 80))
+			fmt.Printf("  %d. %s\n", i+1, img.GetUrl())
+			if img.GetExtractedText() != "" {
+				fmt.Println(labelStyle.Render("     Text: ") + truncate(img.GetExtractedText(), 80))
 			}
 			// Try to display image inline if terminal supports it
-			displayImageInline(img.URL)
+			displayImageInline(img.GetUrl())
 		}
 	}
 
@@ -91,9 +91,9 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 		fmt.Println()
 		fmt.Println(headerStyle.Render("Audio:"))
 		for i, aud := range post.Audios {
-			fmt.Printf("  %d. %s\n", i+1, aud.URL)
-			if aud.TranscribedText != "" {
-				fmt.Println(labelStyle.Render("     Transcription: ") + truncate(aud.TranscribedText, 80))
+			fmt.Printf("  %d. %s\n", i+1, aud.GetUrl())
+			if aud.GetTranscribedText() != "" {
+				fmt.Println(labelStyle.Render("     Transcription: ") + truncate(aud.GetTranscribedText(), 80))
 			}
 		}
 	}

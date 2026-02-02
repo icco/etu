@@ -15,30 +15,14 @@ import (
 	"github.com/icco/etu-backend/proto"
 )
 
-// PostImage represents an image attached to a journal entry.
-type PostImage struct {
-	ID            string
-	URL           string
-	ExtractedText string
-	MimeType      string
-}
-
-// PostAudio represents an audio file attached to a journal entry.
-type PostAudio struct {
-	ID              string
-	URL             string
-	TranscribedText string
-	MimeType        string
-}
-
 // Post represents a journal entry (display model for TUI/CLI).
 type Post struct {
 	PageID    string // Note ID for fetching full content
 	Tags      []string
 	Text      string
 	CreatedAt time.Time
-	Images    []PostImage
-	Audios    []PostAudio
+	Images    []*proto.NoteImage
+	Audios    []*proto.NoteAudio
 }
 
 // Config holds the configuration for the client.
