@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/huh/spinner"
 	"github.com/spf13/cobra"
 )
 
@@ -44,30 +42,9 @@ func searchPosts(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// If a post was selected, fetch and print full content
+	// If a post was selected, display it with media
 	if finalModel.(postListModel).selected != nil {
-		selectedPost := finalModel.(postListModel).selected
-
-		// Fetch with spinner
-		var fullText string
-		var fetchErr error
-		err := spinner.New().
-			Title("Loading full content...").
-			Action(func() {
-				fullText, fetchErr = cfg.GetPostFullContent(cmd.Context(), selectedPost.PageID)
-			}).
-			Run()
-
-		if err != nil {
-			return err
-		}
-
-		if fetchErr == nil {
-			fmt.Println(fullText)
-		} else {
-			// Fallback to preview text
-			fmt.Println(selectedPost.Text)
-		}
+		return displayPost(cmd, finalModel.(postListModel).selected)
 	}
 
 	return nil

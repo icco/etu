@@ -324,8 +324,15 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 
 func listPosts(cmd *cobra.Command, args []string) error {
 	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
-	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	finalModel, err := p.Run()
+	if err != nil {
 		return err
+	}
+
+	// If a post was selected, display it with media
+	if finalModel.(postListModel).selected != nil {
+		return displayPost(cmd, finalModel.(postListModel).selected)
 	}
 	return nil
 }
@@ -357,20 +364,8 @@ func randomPost(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Interactive: show full content with metadata
-	full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
-	if fullErr != nil {
-		full = post.Text
-	}
-
-	fmt.Printf("Date: %s\n", post.CreatedAt.Format("2006-01-02 15:04"))
-	if len(post.Tags) > 0 {
-		fmt.Printf("Tags: %s\n", strings.Join(post.Tags, ", "))
-	}
-	fmt.Println()
-	fmt.Println(full)
-
-	return nil
+	// Interactive: show full content with metadata and media
+	return displayPost(cmd, post)
 }
 
 func init() {
@@ -393,6 +388,7 @@ func init() {
 		listCmd,
 		mostRecentCmd,
 		randomCmd,
+		showCmd,
 		timeSinceCmd,
 		searchCmd,
 	)

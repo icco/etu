@@ -22,11 +22,31 @@ func noteToPost(n *proto.Note) *Post {
 	if t := n.GetCreatedAt(); t != nil {
 		createdAt = t.AsTime()
 	}
+	var images []PostImage
+	for _, img := range n.GetImages() {
+		images = append(images, PostImage{
+			ID:            img.GetId(),
+			URL:           img.GetUrl(),
+			ExtractedText: img.GetExtractedText(),
+			MimeType:      img.GetMimeType(),
+		})
+	}
+	var audios []PostAudio
+	for _, aud := range n.GetAudios() {
+		audios = append(audios, PostAudio{
+			ID:              aud.GetId(),
+			URL:             aud.GetUrl(),
+			TranscribedText: aud.GetTranscribedText(),
+			MimeType:        aud.GetMimeType(),
+		})
+	}
 	return &Post{
 		PageID:    n.GetId(),
 		Tags:      n.GetTags(),
 		Text:      n.GetContent(),
 		CreatedAt: createdAt,
+		Images:    images,
+		Audios:    audios,
 	}
 }
 
