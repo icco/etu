@@ -18,20 +18,15 @@ func noteToPost(n *proto.Note) *Post {
 	if n == nil {
 		return nil
 	}
-	var createdAt, updatedAt time.Time
+	var createdAt time.Time
 	if t := n.GetCreatedAt(); t != nil {
 		createdAt = t.AsTime()
 	}
-	if t := n.GetUpdatedAt(); t != nil {
-		updatedAt = t.AsTime()
-	}
 	return &Post{
-		ID:         n.GetId(),
-		PageID:     n.GetId(),
-		Tags:       n.GetTags(),
-		Text:       n.GetContent(),
-		CreatedAt:  createdAt,
-		ModifiedAt: updatedAt,
+		PageID:    n.GetId(),
+		Tags:      n.GetTags(),
+		Text:      n.GetContent(),
+		CreatedAt: createdAt,
 	}
 }
 

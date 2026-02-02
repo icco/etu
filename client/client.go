@@ -17,12 +17,10 @@ import (
 
 // Post represents a journal entry (display model for TUI/CLI).
 type Post struct {
-	ID         string
-	PageID     string // Note ID for fetching full content
-	Tags       []string
-	Text       string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
+	PageID    string // Note ID for fetching full content
+	Tags      []string
+	Text      string
+	CreatedAt time.Time
 }
 
 // Config holds the configuration for the client.

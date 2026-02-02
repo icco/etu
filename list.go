@@ -40,7 +40,13 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 		return
 	}
 
-	str := fmt.Sprintf("> %s - %s", i.Title(), i.Description())
+	var str string
+	if len(i.post.Tags) > 0 {
+		tags := "[" + strings.Join(i.post.Tags, ", ") + "]"
+		str = fmt.Sprintf("> %s %s - %s", i.Title(), tags, i.Description())
+	} else {
+		str = fmt.Sprintf("> %s - %s", i.Title(), i.Description())
+	}
 
 	fn := itemStyle.Render
 	if index == m.Index() {
