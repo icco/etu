@@ -25,10 +25,10 @@ type PostImage struct {
 
 // PostAudio represents an audio file attached to a journal entry.
 type PostAudio struct {
-	ID             string
-	URL            string
+	ID              string
+	URL             string
 	TranscribedText string
-	MimeType       string
+	MimeType        string
 }
 
 // Post represents a journal entry (display model for TUI/CLI).
