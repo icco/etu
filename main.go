@@ -94,6 +94,14 @@ var (
 		Args:    cobra.NoArgs,
 		RunE:    searchPosts,
 	}
+
+	randomCmd = &cobra.Command{
+		Use:     "random",
+		Aliases: []string{"r"},
+		Short:   "Show a random journal entry.",
+		Args:    cobra.NoArgs,
+		RunE:    randomPost,
+	}
 )
 
 func createPost(cmd *cobra.Command, args []string) error {
@@ -316,10 +324,48 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 
 func listPosts(cmd *cobra.Command, args []string) error {
 	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
-	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	finalModel, err := p.Run()
+	if err != nil {
 		return err
 	}
+
+	// If a post was selected, display it with media
+	if finalModel.(postListModel).selected != nil {
+		return displayPost(cmd, finalModel.(postListModel).selected)
+	}
 	return nil
+}
+
+func randomPost(cmd *cobra.Command, args []string) error {
+	// Fetch random post from backend
+	posts, err := cfg.GetRandomPosts(cmd.Context(), 1)
+	if err != nil {
+		return err
+	}
+	if len(posts) == 0 {
+		return fmt.Errorf("no posts found")
+	}
+
+	post := posts[0]
+
+	// Detect if stdout is a terminal (interactive) or being piped.
+	stdoutStat, err := os.Stdout.Stat()
+	interactive := err == nil && (stdoutStat.Mode()&os.ModeCharDevice) != 0
+
+	if !interactive {
+		// Non-interactive: output full content for piping.
+		full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
+		if fullErr == nil && strings.TrimSpace(full) != "" {
+			fmt.Print(full)
+			return nil
+		}
+		fmt.Print(post.Text)
+		return nil
+	}
+
+	// Interactive: show full content with metadata and media
+	return displayPost(cmd, post)
 }
 
 func init() {
@@ -341,6 +387,8 @@ func init() {
 		deleteCmd,
 		listCmd,
 		mostRecentCmd,
+		randomCmd,
+		showCmd,
 		timeSinceCmd,
 		searchCmd,
 	)

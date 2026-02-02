@@ -17,12 +17,12 @@ import (
 
 // Post represents a journal entry (display model for TUI/CLI).
 type Post struct {
-	ID         string
-	PageID     string // Note ID for fetching full content
-	Tags       []string
-	Text       string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
+	PageID    string // Note ID for fetching full content
+	Tags      []string
+	Text      string
+	CreatedAt time.Time
+	Images    []*proto.NoteImage
+	Audios    []*proto.NoteAudio
 }
 
 // Config holds the configuration for the client.
@@ -300,6 +300,30 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 		UserId: userID,
 		Search: query,
 		Limit:  int32(maxResults),
+	})
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]*Post, 0, len(resp.GetNotes()))
+	for _, n := range resp.GetNotes() {
+		posts = append(posts, noteToPost(n))
+	}
+	return posts, nil
+}
+
+// GetRandomPosts fetches random journal entries from the backend.
+func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.notesClient.GetRandomNotes(ctx, &proto.GetRandomNotesRequest{
+		UserId: userID,
+		Count:  int32(count),
 	})
 	if err != nil {
 		return nil, err
