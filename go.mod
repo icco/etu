@@ -6,9 +6,9 @@ require (
 	github.com/charmbracelet/bubbles v0.21.1
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/huh v0.8.0
-	github.com/charmbracelet/huh/spinner v0.0.0-20260202112050-cf338358ac5c
+	github.com/charmbracelet/huh/spinner v0.0.0-20260209112015-5c5971ef3aeb
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/icco/etu-backend v0.0.0-20260206132131-6f00a8ad286d
+	github.com/icco/etu-backend v0.0.0-20260209042630-f0d70166abc3
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/grpc v1.78.0
 )
