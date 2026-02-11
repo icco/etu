@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfigDir(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	dir, err := ConfigDir()
 	if err != nil {
@@ -26,7 +26,7 @@ func TestConfigDir(t *testing.T) {
 }
 
 func TestConfigDirIdempotent(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	dir1, err := ConfigDir()
 	if err != nil {
@@ -42,7 +42,7 @@ func TestConfigDirIdempotent(t *testing.T) {
 }
 
 func TestConfigPath(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	path, err := ConfigPath()
 	if err != nil {
@@ -54,7 +54,7 @@ func TestConfigPath(t *testing.T) {
 }
 
 func TestCachePath(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	path, err := CachePath("timesince.cache")
 	if err != nil {
@@ -66,7 +66,7 @@ func TestCachePath(t *testing.T) {
 }
 
 func TestSaveAndLoadConfig(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cf, err := SaveConfig("test-api-key", "localhost:50051")
 	if err != nil {
@@ -92,7 +92,7 @@ func TestSaveAndLoadConfig(t *testing.T) {
 }
 
 func TestSaveConfigDefaultTarget(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cf, err := SaveConfig("key", "")
 	if err != nil {
@@ -104,7 +104,7 @@ func TestSaveConfigDefaultTarget(t *testing.T) {
 }
 
 func TestLoadConfigCreatesFile(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cf, err := loadConfigFromFile()
 	if err != nil {
@@ -124,7 +124,7 @@ func TestLoadConfigCreatesFile(t *testing.T) {
 }
 
 func TestLoadConfigFromEnv(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	t.Setenv("ETU_API_KEY", "env-key")
 
 	cfg := LoadConfig()
@@ -139,7 +139,7 @@ func TestLoadConfigFromEnv(t *testing.T) {
 }
 
 func TestLoadConfigTrimsWhitespace(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	t.Setenv("ETU_API_KEY", "  my-key\n")
 
 	cfg := LoadConfig()
@@ -149,7 +149,7 @@ func TestLoadConfigTrimsWhitespace(t *testing.T) {
 }
 
 func TestLoadConfigFileOverridesDefault(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	// Save a config with a custom key
 	_, err := SaveConfig("file-key", "file-target:443")

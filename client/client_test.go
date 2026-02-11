@@ -189,7 +189,7 @@ func TestLoadAudioUploads(t *testing.T) {
 }
 
 func TestCacheRoundTrip(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cfg := &Config{ApiKey: "test"}
 	dur := 5 * time.Minute
@@ -214,7 +214,7 @@ func TestCacheRoundTrip(t *testing.T) {
 }
 
 func TestCacheOverwrite(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cfg := &Config{ApiKey: "test"}
 
@@ -235,7 +235,7 @@ func TestCacheOverwrite(t *testing.T) {
 }
 
 func TestCacheFromFileMissing(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 
 	cfg := &Config{ApiKey: "test"}
 	data, err := cfg.cacheFromFile()
