@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
@@ -172,35 +174,8 @@ func createPost(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		audioPaths = nil
 	}
-	// Parse TUI image paths (from drag & drop or paste): one path per line, trim spaces
-	if imagePathsInput != "" {
-		for _, line := range strings.Split(imagePathsInput, "\n") {
-			p := strings.TrimSpace(line)
-			if p == "" {
-				continue
-			}
-			// Strip quotes terminals sometimes add around paths with spaces
-			p = strings.Trim(p, `"'`)
-			if abs, err := filepath.Abs(p); err == nil {
-				p = abs
-			}
-			imagePaths = append(imagePaths, p)
-		}
-	}
-	// Parse TUI audio paths (from drag & drop or paste): one path per line, trim spaces
-	if audioPathsInput != "" {
-		for _, line := range strings.Split(audioPathsInput, "\n") {
-			p := strings.TrimSpace(line)
-			if p == "" {
-				continue
-			}
-			p = strings.Trim(p, `"'`)
-			if abs, err := filepath.Abs(p); err == nil {
-				p = abs
-			}
-			audioPaths = append(audioPaths, p)
-		}
-	}
+	imagePaths = append(imagePaths, parsePaths(imagePathsInput)...)
+	audioPaths = append(audioPaths, parsePaths(audioPathsInput)...)
 
 	// Save entry with spinner
 	var saveErr error
@@ -219,20 +194,13 @@ func createPost(cmd *cobra.Command, args []string) error {
 }
 
 func timeSinceLastPost(cmd *cobra.Command, args []string) error {
-	ret := "???"
 	dur, err := cfg.TimeSinceLastPost(cmd.Context())
-	if err == nil {
-
-		switch {
-		case dur.Hours() > 24:
-			ret = fmt.Sprintf("%0.1fd", dur.Hours()/24)
-		default:
-			ret = fmt.Sprintf("%0.1fh", dur.Hours())
-		}
+	if err != nil {
+		fmt.Print("???")
+		return nil
 	}
 
-	fmt.Print(ret)
-
+	fmt.Print(formatDuration(dur))
 	return nil
 }
 
@@ -288,7 +256,6 @@ func deletePost(cmd *cobra.Command, args []string) error {
 }
 
 func mostRecentPost(cmd *cobra.Command, args []string) error {
-	// Fetch most recent post (preview first)
 	posts, err := cfg.ListPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
@@ -296,25 +263,12 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 	if len(posts) == 0 {
 		return fmt.Errorf("no posts found")
 	}
-	post := posts[0]
 
-	// Detect if stdout is a terminal (interactive) or being piped.
-	stdoutStat, err := os.Stdout.Stat()
-	interactive := err == nil && (stdoutStat.Mode()&os.ModeCharDevice) != 0
-
-	if !interactive {
-		// Non-interactive: output full content for piping.
-		full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
-		if fullErr == nil && strings.TrimSpace(full) != "" {
-			fmt.Print(full)
-			return nil
-		}
-		// Fallback to preview text if full fetch fails.
-		fmt.Print(post.Text)
+	if !isInteractive() {
+		printPostPlain(cmd.Context(), cfg, posts[0])
 		return nil
 	}
 
-	// Interactive: show existing TUI list (single item) for consistency.
 	model := newPostListModel(cfg, 1, "Most Recent Entry", true)
 	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
 		return err
@@ -338,7 +292,6 @@ func listPosts(cmd *cobra.Command, args []string) error {
 }
 
 func randomPost(cmd *cobra.Command, args []string) error {
-	// Fetch random post from backend
 	posts, err := cfg.GetRandomPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
@@ -347,25 +300,57 @@ func randomPost(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no posts found")
 	}
 
-	post := posts[0]
-
-	// Detect if stdout is a terminal (interactive) or being piped.
-	stdoutStat, err := os.Stdout.Stat()
-	interactive := err == nil && (stdoutStat.Mode()&os.ModeCharDevice) != 0
-
-	if !interactive {
-		// Non-interactive: output full content for piping.
-		full, fullErr := cfg.GetPostFullContent(cmd.Context(), post.PageID)
-		if fullErr == nil && strings.TrimSpace(full) != "" {
-			fmt.Print(full)
-			return nil
-		}
-		fmt.Print(post.Text)
+	if !isInteractive() {
+		printPostPlain(cmd.Context(), cfg, posts[0])
 		return nil
 	}
 
-	// Interactive: show full content with metadata and media
-	return displayPost(cmd, post)
+	return displayPost(cmd, posts[0])
+}
+
+// parsePaths splits newline-separated file paths, trims whitespace and quotes,
+// and resolves them to absolute paths.
+func parsePaths(input string) []string {
+	if input == "" {
+		return nil
+	}
+	var paths []string
+	for _, line := range strings.Split(input, "\n") {
+		p := strings.TrimSpace(line)
+		if p == "" {
+			continue
+		}
+		p = strings.Trim(p, `"'`)
+		if abs, err := filepath.Abs(p); err == nil {
+			p = abs
+		}
+		paths = append(paths, p)
+	}
+	return paths
+}
+
+// formatDuration formats a duration as days or hours.
+func formatDuration(dur time.Duration) string {
+	if dur.Hours() > 24 {
+		return fmt.Sprintf("%0.1fd", dur.Hours()/24)
+	}
+	return fmt.Sprintf("%0.1fh", dur.Hours())
+}
+
+// isInteractive reports whether stdout is a terminal.
+func isInteractive() bool {
+	stat, err := os.Stdout.Stat()
+	return err == nil && (stat.Mode()&os.ModeCharDevice) != 0
+}
+
+// printPostPlain outputs the full content of a post for non-interactive use.
+func printPostPlain(ctx context.Context, c *client.Config, post *client.Post) {
+	full, err := c.GetPostFullContent(ctx, post.PageID)
+	if err == nil && strings.TrimSpace(full) != "" {
+		fmt.Print(full)
+		return
+	}
+	fmt.Print(post.Text)
 }
 
 func init() {

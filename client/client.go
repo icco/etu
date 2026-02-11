@@ -149,6 +149,19 @@ func (c *Config) cacheFromFile() (data *cacheData, err error) {
 	return data, nil
 }
 
+// detectMIME returns the MIME type of data, falling back to the file extension.
+func detectMIME(data []byte, path string) string {
+	mimeType := http.DetectContentType(data)
+	if mimeType == "application/octet-stream" {
+		if ext := filepath.Ext(path); ext != "" {
+			if byExt := mime.TypeByExtension(ext); byExt != "" {
+				mimeType = byExt
+			}
+		}
+	}
+	return mimeType
+}
+
 // LoadImageUploads reads image files from paths and returns proto ImageUpload messages.
 // MIME type is detected from content (or file extension as fallback).
 func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
@@ -161,18 +174,9 @@ func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read image %s: %w", p, err)
 		}
-		mimeType := http.DetectContentType(data)
-		if mimeType == "application/octet-stream" {
-			if ext := filepath.Ext(p); ext != "" {
-				mimeType = mime.TypeByExtension(ext)
-			}
-		}
-		if mimeType == "" {
-			mimeType = "application/octet-stream"
-		}
 		out = append(out, &proto.ImageUpload{
 			Data:     data,
-			MimeType: mimeType,
+			MimeType: detectMIME(data, p),
 		})
 	}
 	return out, nil
@@ -190,18 +194,9 @@ func LoadAudioUploads(paths []string) ([]*proto.AudioUpload, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read audio %s: %w", p, err)
 		}
-		mimeType := http.DetectContentType(data)
-		if mimeType == "application/octet-stream" {
-			if ext := filepath.Ext(p); ext != "" {
-				mimeType = mime.TypeByExtension(ext)
-			}
-		}
-		if mimeType == "" {
-			mimeType = "application/octet-stream"
-		}
 		out = append(out, &proto.AudioUpload{
 			Data:     data,
-			MimeType: mimeType,
+			MimeType: detectMIME(data, p),
 		})
 	}
 	return out, nil
@@ -279,11 +274,7 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	posts := make([]*Post, 0, len(resp.GetNotes()))
-	for _, n := range resp.GetNotes() {
-		posts = append(posts, noteToPost(n))
-	}
-	return posts, nil
+	return notesToPosts(resp.GetNotes()), nil
 }
 
 // SearchPosts searches journal entries via the backend.
@@ -304,11 +295,7 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	if err != nil {
 		return nil, err
 	}
-	posts := make([]*Post, 0, len(resp.GetNotes()))
-	for _, n := range resp.GetNotes() {
-		posts = append(posts, noteToPost(n))
-	}
-	return posts, nil
+	return notesToPosts(resp.GetNotes()), nil
 }
 
 // GetRandomPosts fetches random journal entries from the backend.
@@ -328,11 +315,7 @@ func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error)
 	if err != nil {
 		return nil, err
 	}
-	posts := make([]*Post, 0, len(resp.GetNotes()))
-	for _, n := range resp.GetNotes() {
-		posts = append(posts, noteToPost(n))
-	}
-	return posts, nil
+	return notesToPosts(resp.GetNotes()), nil
 }
 
 // GetPostFullContent fetches the full content of a post by ID.

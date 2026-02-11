@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -13,6 +12,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/icco/etu/client"
+)
+
+const (
+	listBuffer  = 6
+	listMaxSize = 10
 )
 
 var (
@@ -48,14 +52,12 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 		str = fmt.Sprintf("> %s - %s", i.Title(), i.Description())
 	}
 
-	fn := itemStyle.Render
+	style := itemStyle
 	if index == m.Index() {
-		fn = func(s ...string) string {
-			return selectedItemStyle.Render(s...)
-		}
+		style = selectedItemStyle
 	}
 
-	if _, err := fmt.Fprint(w, fn(str)); err != nil {
+	if _, err := fmt.Fprint(w, style.Render(str)); err != nil {
 		log.Printf("list render: %v", err)
 	}
 }
@@ -100,11 +102,7 @@ func newPostListModel(cfg *client.Config, count int, title string, startLoading 
 
 	// Create empty list initially - will be populated when data loads
 	var items []list.Item
-	buffer := 6
-	maxSize := 10
-	height := math.Min(float64(maxSize+buffer), float64(buffer))
-
-	l := list.New(items, itemDelegate{}, 0, int(height))
+	l := list.New(items, itemDelegate{}, 0, listBuffer)
 	l.Title = title
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -151,11 +149,8 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				items = append(items, listItem{post: p})
 			}
 
-			buffer := 6
-			maxSize := 10
-			height := math.Min(float64(maxSize+buffer), float64(len(items)+buffer))
 			m.list.SetItems(items)
-			m.list.SetHeight(int(height))
+			m.list.SetHeight(min(listMaxSize+listBuffer, len(items)+listBuffer))
 			if m.query != "" {
 				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.posts))
 			} else {
