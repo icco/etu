@@ -3,12 +3,12 @@ module github.com/icco/etu
 go 1.25
 
 require (
-	github.com/charmbracelet/bubbles v0.21.1
+	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20260209112015-5c5971ef3aeb
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/icco/etu-backend v0.0.0-20260209042630-f0d70166abc3
+	github.com/icco/etu-backend v0.0.0-20260210175647-e1a3ac5a7fc9
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/grpc v1.78.0
 )
@@ -39,9 +39,9 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.33.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect
+	golang.org/x/text v0.34.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
