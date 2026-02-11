@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -150,7 +151,7 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			m.list.SetItems(items)
-			m.list.SetHeight(min(listMaxSize+listBuffer, len(items)+listBuffer))
+			m.list.SetHeight(int(math.Min(float64(listMaxSize+listBuffer), float64(len(items)+listBuffer))))
 			if m.query != "" {
 				m.list.Title = fmt.Sprintf("Search Results (%d)", len(m.posts))
 			} else {
