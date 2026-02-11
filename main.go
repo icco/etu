@@ -331,6 +331,9 @@ func parsePaths(input string) []string {
 
 // formatDuration formats a duration as days or hours.
 func formatDuration(dur time.Duration) string {
+	if dur <= 0 {
+		return "0.0h"
+	}
 	if dur.Hours() > 24 {
 		return fmt.Sprintf("%0.1fd", dur.Hours()/24)
 	}

@@ -75,6 +75,8 @@ func TestFormatDuration(t *testing.T) {
 		dur  time.Duration
 		want string
 	}{
+		{"zero", 0, "0.0h"},
+		{"negative", -5 * time.Minute, "0.0h"},
 		{"minutes", 30 * time.Minute, "0.5h"},
 		{"hours", 3 * time.Hour, "3.0h"},
 		{"day boundary", 24 * time.Hour, "24.0h"},
