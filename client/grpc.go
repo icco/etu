@@ -13,6 +13,17 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// notesToPosts converts a slice of proto Notes to client Posts.
+func notesToPosts(notes []*proto.Note) []*Post {
+	posts := make([]*Post, 0, len(notes))
+	for _, n := range notes {
+		if p := noteToPost(n); p != nil {
+			posts = append(posts, p)
+		}
+	}
+	return posts
+}
+
 // noteToPost converts a proto Note to a client Post for TUI/CLI use.
 func noteToPost(n *proto.Note) *Post {
 	if n == nil {
