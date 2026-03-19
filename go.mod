@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/icco/etu-backend v0.0.0-20260309031753-5a91d6cbdca5
 	github.com/spf13/cobra v1.10.2
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
