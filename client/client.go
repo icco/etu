@@ -135,6 +135,9 @@ func (c *Config) cacheFromFile() (data *cacheData, err error) {
 	}
 	f, err := os.Open(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer func() {

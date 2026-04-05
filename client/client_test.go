@@ -239,8 +239,8 @@ func TestCacheFromFileMissing(t *testing.T) {
 
 	cfg := &Config{ApiKey: "test"}
 	data, err := cfg.cacheFromFile()
-	if err == nil {
-		t.Error("expected error for missing cache file")
+	if err != nil {
+		t.Errorf("expected no error for missing cache file, got: %v", err)
 	}
 	if data != nil {
 		t.Error("expected nil data for missing cache file")
