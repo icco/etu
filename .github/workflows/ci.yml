@@ -10,16 +10,13 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version:
-          - "1.25"
     steps:
       - uses: actions/checkout@v6
       - name: Set up Go
+        id: setup-go
         uses: actions/setup-go@v6
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version-file: go.mod
       - name: Cache Go modules
         uses: actions/cache@v5
         with:
@@ -38,9 +35,9 @@ jobs:
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Run staticcheck
-        run: staticcheck -go ${{ matrix.go-version }} ./...
-  lint:
-    name: Lint
+        run: staticcheck -go ${{ steps.setup-go.outputs.go-version }} ./...
+  fmt:
+    name: Format
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -49,7 +46,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version-file: go.mod
       - name: Run go fmt
         run: go fmt ./...
       - name: Commit formatting changes
@@ -59,10 +56,6 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -m "style: apply go fmt"
           git push || true
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.8.0
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -71,7 +64,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version-file: go.mod
       - name: Cache Go modules
         uses: actions/cache@v5
         with:
