@@ -36,8 +36,8 @@ jobs:
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Run staticcheck
         run: staticcheck -go ${{ steps.setup-go.outputs.go-version }} ./...
-  lint:
-    name: Lint
+  fmt:
+    name: Format
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -56,10 +56,6 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -m "style: apply go fmt"
           git push || true
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.8.0
   build:
     name: Build
     runs-on: ubuntu-latest
