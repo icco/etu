@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const defaultGRPCTarget = "grpc.etu.natwelch.com:443"
+const defaultGRPCTarget = "grpc.etu.timeclimbers.com:443"
 
 // configFile represents the persisted config file format.
 type ConfigFile struct {
