@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/icco/etu.svg)](https://pkg.go.dev/github.com/icco/etu)
 
 
-Etu is a simple journaling tool that talks to the [etu-backend](https://github.com/icco/etu-backend) API over gRPC (default: `grpc.etu.natwelch.com`).
+Etu is a simple journaling tool that talks to the [etu-backend](https://github.com/icco/etu-backend) API over gRPC (default: `grpc.etu.timeclimbers.com`).
 
 It should be noted the main goal of Etu is to write interstitial journals. See https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef for more on this topic.
 
@@ -29,7 +29,7 @@ brew install etu
 
 Before running you need an API key for the etu-backend. You can:
 
-1. Put your API key in `~/.config/etu/config.json` with keys `api_key` and optionally `grpc_target` (default: `grpc.etu.natwelch.com:443`), or
+1. Put your API key in `~/.config/etu/config.json` with keys `api_key` and optionally `grpc_target` (default: `grpc.etu.timeclimbers.com:443`), or
 2. Set the `ETU_API_KEY` environment variable (and optionally `ETU_GRPC_TARGET`).
 
 Example config file:
@@ -37,7 +37,7 @@ Example config file:
 ```json
 {
   "api_key": "your-64-char-hex-api-key",
-  "grpc_target": "grpc.etu.natwelch.com:443"
+  "grpc_target": "grpc.etu.timeclimbers.com:443"
 }
 ```
 
