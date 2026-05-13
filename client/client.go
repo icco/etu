@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"mime"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,7 +60,27 @@ func (c *Config) Validate() error {
 	if c.ApiKey == "" {
 		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to config file")
 	}
+	c.warnIfTargetUnresolvable()
 	return nil
+}
+
+// warnIfTargetUnresolvable prints a stderr warning when GRPCTarget's host doesn't resolve.
+// Catches stale grpc_target values after a default change (e.g. PR #97 moved natwelch.com → timeclimbers.com).
+func (c *Config) warnIfTargetUnresolvable() {
+	if c.GRPCTarget == "" {
+		return
+	}
+	host, _, err := net.SplitHostPort(c.GRPCTarget)
+	if err != nil {
+		host = c.GRPCTarget
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if addrs, err := net.DefaultResolver.LookupHost(ctx, host); err == nil && len(addrs) > 0 {
+		return
+	}
+	path, _ := ConfigPath()
+	fmt.Fprintf(os.Stderr, "etu: warning: grpc_target %q does not resolve (default is %s). Update %s, set ETU_GRPC_TARGET, or clear the value to fall back to the default.\n", c.GRPCTarget, defaultGRPCTarget, path)
 }
 
 // UpdateCache updates the cache with the latest post.
