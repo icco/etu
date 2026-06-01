@@ -128,8 +128,8 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	t.Setenv("ETU_API_KEY", "env-key")
 
 	cfg := LoadConfig()
-	if cfg.ApiKey != "env-key" {
-		t.Errorf("ApiKey = %q, want %q", cfg.ApiKey, "env-key")
+	if cfg.APIKey != "env-key" {
+		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "env-key")
 	}
 	// GRPCTarget defaults from the config file (SaveConfig sets it),
 	// so ETU_GRPC_TARGET env only applies when the file has an empty target.
@@ -143,8 +143,8 @@ func TestLoadConfigTrimsWhitespace(t *testing.T) {
 	t.Setenv("ETU_API_KEY", "  my-key\n")
 
 	cfg := LoadConfig()
-	if cfg.ApiKey != "my-key" {
-		t.Errorf("ApiKey = %q, want %q", cfg.ApiKey, "my-key")
+	if cfg.APIKey != "my-key" {
+		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "my-key")
 	}
 }
 
@@ -162,8 +162,8 @@ func TestLoadConfigFileOverridesDefault(t *testing.T) {
 	t.Setenv("ETU_GRPC_TARGET", "")
 
 	cfg := LoadConfig()
-	if cfg.ApiKey != "file-key" {
-		t.Errorf("ApiKey = %q, want %q", cfg.ApiKey, "file-key")
+	if cfg.APIKey != "file-key" {
+		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "file-key")
 	}
 	if cfg.GRPCTarget != "file-target:443" {
 		t.Errorf("GRPCTarget = %q, want %q", cfg.GRPCTarget, "file-target:443")

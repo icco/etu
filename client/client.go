@@ -1,3 +1,5 @@
+// Package client provides the etu journal backend client: configuration,
+// caching, and gRPC calls used by the CLI and TUI.
 package client
 
 import (
@@ -5,6 +7,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
+	"math"
 	"mime"
 	"net"
 	"net/http"
@@ -28,7 +31,7 @@ type Post struct {
 
 // Config holds the configuration for the client.
 type Config struct {
-	ApiKey     string
+	APIKey     string
 	GRPCTarget string
 	grpc       *grpcClients
 }
@@ -50,14 +53,14 @@ func LoadConfig() *Config {
 	}
 	// Trim whitespace so pasted keys or env vars with trailing newlines don't break validation.
 	return &Config{
-		ApiKey:     strings.TrimSpace(cf.APIKey),
+		APIKey:     strings.TrimSpace(cf.APIKey),
 		GRPCTarget: strings.TrimSpace(cf.GRPCTarget),
 	}
 }
 
 // Validate checks that the API key is present.
 func (c *Config) Validate() error {
-	if c.ApiKey == "" {
+	if c.APIKey == "" {
 		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to config file")
 	}
 	c.warnIfTargetUnresolvable()
@@ -137,7 +140,8 @@ func (c *Config) cacheToFile(dur time.Duration) (err error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
-	f, err := os.Create(path)
+	// path is built from CachePath() (fixed config dir under user home), not external input.
+	f, err := os.Create(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
 	if err != nil {
 		return err
 	}
@@ -154,7 +158,8 @@ func (c *Config) cacheFromFile() (data *cacheData, err error) {
 	if err != nil {
 		return nil, err
 	}
-	f, err := os.Open(path)
+	// path is built from CachePath() (fixed config dir under user home), not external input.
+	f, err := os.Open(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -171,6 +176,14 @@ func (c *Config) cacheFromFile() (data *cacheData, err error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// toInt32 narrows an int to int32, returning an error if it would overflow.
+func toInt32(n int) (int32, error) {
+	if n < math.MinInt32 || n > math.MaxInt32 {
+		return 0, fmt.Errorf("value %d out of int32 range", n)
+	}
+	return int32(n), nil
 }
 
 // detectMIME returns the MIME type of data, falling back to the file extension.
@@ -194,7 +207,8 @@ func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
 	}
 	out := make([]*proto.ImageUpload, 0, len(paths))
 	for _, p := range paths {
-		data, err := os.ReadFile(p)
+		// Paths come from CLI flags supplied by the user; reading them is the intent.
+		data, err := os.ReadFile(p) //nolint:gosec // G304: user-supplied CLI input
 		if err != nil {
 			return nil, fmt.Errorf("read image %s: %w", p, err)
 		}
@@ -214,7 +228,8 @@ func LoadAudioUploads(paths []string) ([]*proto.AudioUpload, error) {
 	}
 	out := make([]*proto.AudioUpload, 0, len(paths))
 	for _, p := range paths {
-		data, err := os.ReadFile(p)
+		// Paths come from CLI flags supplied by the user; reading them is the intent.
+		data, err := os.ReadFile(p) //nolint:gosec // G304: user-supplied CLI input
 		if err != nil {
 			return nil, fmt.Errorf("read audio %s: %w", p, err)
 		}
@@ -291,9 +306,13 @@ func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
 	if err != nil {
 		return nil, err
 	}
+	limit, err := toInt32(count)
+	if err != nil {
+		return nil, fmt.Errorf("count: %w", err)
+	}
 	resp, err := g.notesClient.ListNotes(ctx, &proto.ListNotesRequest{
 		UserId: userID,
-		Limit:  int32(count),
+		Limit:  limit,
 	})
 	if err != nil {
 		return nil, err
@@ -311,10 +330,14 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 	if err != nil {
 		return nil, err
 	}
+	limit, err := toInt32(maxResults)
+	if err != nil {
+		return nil, fmt.Errorf("maxResults: %w", err)
+	}
 	resp, err := g.notesClient.ListNotes(ctx, &proto.ListNotesRequest{
 		UserId: userID,
 		Search: query,
-		Limit:  int32(maxResults),
+		Limit:  limit,
 	})
 	if err != nil {
 		return nil, err
@@ -332,9 +355,13 @@ func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error)
 	if err != nil {
 		return nil, err
 	}
+	c32, err := toInt32(count)
+	if err != nil {
+		return nil, fmt.Errorf("count: %w", err)
+	}
 	resp, err := g.notesClient.GetRandomNotes(ctx, &proto.GetRandomNotesRequest{
 		UserId: userID,
-		Count:  int32(count),
+		Count:  c32,
 	})
 	if err != nil {
 		return nil, err

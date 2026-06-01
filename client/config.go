@@ -9,7 +9,7 @@ import (
 
 const defaultGRPCTarget = "grpc.etu.timeclimbers.com:443"
 
-// configFile represents the persisted config file format.
+// ConfigFile represents the persisted config file format.
 type ConfigFile struct {
 	APIKey     string `json:"api_key"`
 	GRPCTarget string `json:"grpc_target"`
@@ -55,7 +55,8 @@ func loadConfigFromFile() (*ConfigFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
+	// path is from ConfigPath() (fixed config dir under user home), not external input.
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
 	if err != nil {
 		if os.IsNotExist(err) {
 			return SaveConfig("", "")
@@ -80,7 +81,8 @@ func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 		return nil, err
 	}
 	cf := &ConfigFile{APIKey: apiKey, GRPCTarget: grpcTarget}
-	data, err := json.Marshal(cf)
+	// Persisting the API key to the user's local config is intentional.
+	data, err := json.Marshal(cf) //nolint:gosec // G117: api_key persistence is the purpose of this file
 	if err != nil {
 		return nil, err
 	}

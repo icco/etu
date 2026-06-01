@@ -75,7 +75,7 @@ type grpcClients struct {
 }
 
 func (c *Config) getGRPCClients() (*grpcClients, error) {
-	if c.ApiKey == "" {
+	if c.APIKey == "" {
 		return nil, fmt.Errorf("API key not set")
 	}
 	// Lazy-init is done in ensureGRPCConn; we need a shared struct. Store on Config.
@@ -86,7 +86,7 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 		creds := credentials.NewTLS(&tls.Config{})
 		opts := []grpc.DialOption{
 			grpc.WithTransportCredentials(creds),
-			grpc.WithPerRPCCredentials(apiKeyCreds{apiKey: c.ApiKey}),
+			grpc.WithPerRPCCredentials(apiKeyCreds{apiKey: c.APIKey}),
 		}
 		c.grpc.conn, c.grpc.connErr = grpc.NewClient(c.GRPCTarget, opts...)
 		if c.grpc.connErr != nil {
@@ -109,7 +109,7 @@ func (c *Config) ensureUserID(ctx context.Context) (string, error) {
 	}
 	g.userIDOnce.Do(func() {
 		resp, err := g.apiKeysClient.VerifyApiKey(ctx, &proto.VerifyApiKeyRequest{
-			RawKey: c.ApiKey,
+			RawKey: c.APIKey,
 		})
 		if err != nil {
 			g.userIDErr = err
