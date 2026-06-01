@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh/spinner"
@@ -22,7 +24,7 @@ var showCmd = &cobra.Command{
 	RunE:  showPost,
 }
 
-func showPost(cmd *cobra.Command, args []string) error {
+func showPost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
 	model := newPostListModel(cfg, 25, "Select entry to view", true)
 	p := tea.NewProgram(model, tea.WithAltScreen())
@@ -82,7 +84,7 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 				fmt.Println(labelStyle.Render("     Text: ") + truncate(img.GetExtractedText(), 80))
 			}
 			// Try to display image inline if terminal supports it
-			displayImageInline(img.GetUrl())
+			displayImageInline(cmd.Context(), img.GetUrl())
 		}
 	}
 
@@ -102,29 +104,36 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 	return nil
 }
 
-func truncate(s string, max int) string {
+func truncate(s string, maxLen int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
-	if len(s) <= max {
+	if len(s) <= maxLen {
 		return s
 	}
-	return s[:max-3] + "..."
+	return s[:maxLen-3] + "..."
 }
 
-// displayImageInline attempts to display an image inline using iTerm2's protocol
-func displayImageInline(url string) {
+// displayImageInline attempts to display an image inline using iTerm2's protocol.
+func displayImageInline(ctx context.Context, url string) {
 	// Check if we're in iTerm2
 	if os.Getenv("TERM_PROGRAM") != "iTerm.app" {
 		return
 	}
 
-	// Fetch the image
-	resp, err := http.Get(url)
+	reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	// URL comes from our trusted backend (signed media URL); fire-and-forget terminal eye-candy.
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, url, http.NoBody) //nolint:gosec // G107: trusted backend-issued URL
+	if err != nil {
+		return
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to close response body: %v\n", err)
+		if cerr := resp.Body.Close(); cerr != nil {
+			fmt.Fprintf(os.Stderr, "failed to close response body: %v\n", cerr)
 		}
 	}()
 

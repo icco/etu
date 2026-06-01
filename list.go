@@ -1,3 +1,4 @@
+// Package main implements the etu CLI: a personal command-line journal.
 package main
 
 import (
@@ -205,7 +206,8 @@ func (m postListModel) View() string {
 
 	var s strings.Builder
 
-	if m.loading {
+	switch {
+	case m.loading:
 		var loadingText string
 		if m.query != "" {
 			loadingText = fmt.Sprintf("%s Searching...", m.spinner.View())
@@ -215,13 +217,13 @@ func (m postListModel) View() string {
 		s.WriteString("\n  ")
 		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
 		s.WriteString("\n")
-	} else if m.loadErr != nil {
+	case m.loadErr != nil:
 		s.WriteString("\n  ")
 		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error: " + m.loadErr.Error()))
 		s.WriteString("\n")
-	} else if len(m.posts) > 0 {
+	case len(m.posts) > 0:
 		s.WriteString(m.list.View())
-	} else {
+	default:
 		s.WriteString("\n  No entries found.\n")
 	}
 

@@ -29,7 +29,7 @@ var (
 		Use:   "etu",
 		Short: "Etu. A personal command line journal.",
 		Args:  cobra.NoArgs,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// Skip API key validation for these commands (they don't need the backend)
 			curr := cmd
 			for curr != nil {
@@ -45,7 +45,7 @@ var (
 
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Help()
 		},
 	}
@@ -106,7 +106,7 @@ var (
 	}
 )
 
-func createPost(cmd *cobra.Command, args []string) error {
+func createPost(cmd *cobra.Command, _ []string) error {
 	// Check if stdin has data (piped input)
 	stat, err := os.Stdin.Stat()
 	if err != nil {
@@ -193,18 +193,19 @@ func createPost(cmd *cobra.Command, args []string) error {
 	return saveErr
 }
 
-func timeSinceLastPost(cmd *cobra.Command, args []string) error {
+func timeSinceLastPost(cmd *cobra.Command, _ []string) error {
 	dur, err := cfg.TimeSinceLastPost(cmd.Context())
 	if err != nil {
+		// Intentional: print a "???" sentinel so shell prompts don't break.
 		fmt.Print("???")
-		return nil
+		return nil //nolint:nilerr // sentinel output is the desired behavior here
 	}
 
 	fmt.Print(formatDuration(dur))
 	return nil
 }
 
-func deletePost(cmd *cobra.Command, args []string) error {
+func deletePost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
 	model := newPostListModel(cfg, 25, "Select entry to delete", true)
 	p := tea.NewProgram(model, tea.WithAltScreen())
@@ -255,7 +256,7 @@ func deletePost(cmd *cobra.Command, args []string) error {
 	return deleteErr
 }
 
-func mostRecentPost(cmd *cobra.Command, args []string) error {
+func mostRecentPost(cmd *cobra.Command, _ []string) error {
 	posts, err := cfg.ListPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
@@ -276,7 +277,7 @@ func mostRecentPost(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func listPosts(cmd *cobra.Command, args []string) error {
+func listPosts(cmd *cobra.Command, _ []string) error {
 	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
 	p := tea.NewProgram(model, tea.WithAltScreen())
 	finalModel, err := p.Run()
@@ -291,7 +292,7 @@ func listPosts(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func randomPost(cmd *cobra.Command, args []string) error {
+func randomPost(cmd *cobra.Command, _ []string) error {
 	posts, err := cfg.GetRandomPosts(cmd.Context(), 1)
 	if err != nil {
 		return err
@@ -385,7 +386,7 @@ func init() {
 func main() {
 	// Load config (file + ETU_API_KEY / ETU_GRPC_TARGET env) and persist so we don't have to mess with env later.
 	cfg = client.LoadConfig()
-	if _, err := client.SaveConfig(cfg.ApiKey, cfg.GRPCTarget); err != nil {
+	if _, err := client.SaveConfig(cfg.APIKey, cfg.GRPCTarget); err != nil {
 		log.Fatal(err)
 	}
 	if err := rootCmd.Execute(); err != nil {

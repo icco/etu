@@ -19,7 +19,7 @@ func TestValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{ApiKey: tt.apiKey}
+			c := &Config{APIKey: tt.apiKey}
 			err := c.Validate()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
@@ -103,7 +103,7 @@ func TestLoadImageUploads(t *testing.T) {
 		path := filepath.Join(dir, "test.png")
 		// PNG magic bytes
 		data := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
-		if err := os.WriteFile(path, data, 0644); err != nil {
+		if err := os.WriteFile(path, data, 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -127,7 +127,7 @@ func TestLoadImageUploads(t *testing.T) {
 		paths := make([]string, 3)
 		for i := range paths {
 			p := filepath.Join(dir, filepath.Base(t.Name())+string(rune('a'+i))+".jpg")
-			if err := os.WriteFile(p, []byte{0xFF, 0xD8, 0xFF}, 0644); err != nil {
+			if err := os.WriteFile(p, []byte{0xFF, 0xD8, 0xFF}, 0600); err != nil {
 				t.Fatal(err)
 			}
 			paths[i] = p
@@ -164,7 +164,7 @@ func TestLoadAudioUploads(t *testing.T) {
 	t.Run("valid file", func(t *testing.T) {
 		dir := t.TempDir()
 		path := filepath.Join(dir, "test.wav")
-		if err := os.WriteFile(path, []byte("fake audio data"), 0644); err != nil {
+		if err := os.WriteFile(path, []byte("fake audio data"), 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -191,7 +191,7 @@ func TestLoadAudioUploads(t *testing.T) {
 func TestCacheRoundTrip(t *testing.T) {
 	setTestHome(t)
 
-	cfg := &Config{ApiKey: "test"}
+	cfg := &Config{APIKey: "test"}
 	dur := 5 * time.Minute
 
 	if err := cfg.cacheToFile(dur); err != nil {
@@ -216,7 +216,7 @@ func TestCacheRoundTrip(t *testing.T) {
 func TestCacheOverwrite(t *testing.T) {
 	setTestHome(t)
 
-	cfg := &Config{ApiKey: "test"}
+	cfg := &Config{APIKey: "test"}
 
 	if err := cfg.cacheToFile(1 * time.Minute); err != nil {
 		t.Fatal(err)
@@ -237,7 +237,7 @@ func TestCacheOverwrite(t *testing.T) {
 func TestCacheFromFileMissing(t *testing.T) {
 	setTestHome(t)
 
-	cfg := &Config{ApiKey: "test"}
+	cfg := &Config{APIKey: "test"}
 	data, err := cfg.cacheFromFile()
 	if err != nil {
 		t.Errorf("expected no error for missing cache file, got: %v", err)
