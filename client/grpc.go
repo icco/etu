@@ -80,6 +80,7 @@ type grpcClients struct {
 	notesClient   proto.NotesServiceClient
 	apiKeysClient proto.ApiKeysServiceClient
 	tagsClient    proto.TagsServiceClient
+	statsClient   proto.StatsServiceClient
 	userID        string
 	connOnce      sync.Once
 	userIDOnce    sync.Once
@@ -108,6 +109,7 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 		c.grpc.notesClient = proto.NewNotesServiceClient(c.grpc.conn)
 		c.grpc.apiKeysClient = proto.NewApiKeysServiceClient(c.grpc.conn)
 		c.grpc.tagsClient = proto.NewTagsServiceClient(c.grpc.conn)
+		c.grpc.statsClient = proto.NewStatsServiceClient(c.grpc.conn)
 	})
 	if c.grpc.connErr != nil {
 		return nil, c.grpc.connErr

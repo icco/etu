@@ -394,6 +394,41 @@ func (c *Config) ListTags(ctx context.Context) ([]Tag, error) {
 	return protoTagsToTags(resp.GetTags()), nil
 }
 
+// Stats holds aggregate journal metrics from the backend.
+type Stats struct {
+	TotalBlips   int64
+	UniqueTags   int64
+	WordsWritten int64
+}
+
+// GetStats fetches aggregate stats. When global is true, community-wide stats
+// are returned; otherwise stats are scoped to the current user.
+func (c *Config) GetStats(ctx context.Context, global bool) (Stats, error) {
+	var userID string
+	if !global {
+		var err error
+		userID, err = c.ensureUserID(ctx)
+		if err != nil {
+			return Stats{}, err
+		}
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return Stats{}, err
+	}
+	resp, err := g.statsClient.GetStats(ctx, &proto.GetStatsRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return Stats{}, fmt.Errorf("get stats: %w", err)
+	}
+	return Stats{
+		TotalBlips:   resp.GetTotalBlips(),
+		UniqueTags:   resp.GetUniqueTags(),
+		WordsWritten: resp.GetWordsWritten(),
+	}, nil
+}
+
 // GetPostFullContent fetches the full content of a post by ID.
 func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
 	userID, err := c.ensureUserID(ctx)
