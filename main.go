@@ -378,6 +378,7 @@ func init() {
 		mostRecentCmd,
 		randomCmd,
 		showCmd,
+		tagsCmd,
 		timeSinceCmd,
 		searchCmd,
 	)
