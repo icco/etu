@@ -54,10 +54,13 @@ Usage:
 Available Commands:
   create      Create a new journal entry (attach images/audio via drag & drop in TUI or -i/--image, -a/--audio).
   delete      Delete a journal entry.
+  edit        Edit a journal entry.
   help        Help about any command
   last        Output a string of time since last post.
   list        List journal entries, with an optional starting datetime.
   search      Search journal entries using fuzzy search.
+  stats       Show journal stats (blips, tags, words written).
+  tags        List all tags with usage counts.
   timesince   Output a string of time since last post.
 
 Flags:

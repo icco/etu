@@ -279,6 +279,29 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 	return nil
 }
 
+// UpdatePost updates the content of an existing journal entry by ID.
+// Tags are left untouched (the backend keeps the existing tag list).
+func (c *Config) UpdatePost(ctx context.Context, pageID, content string) (*Post, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.notesClient.UpdateNote(ctx, &proto.UpdateNoteRequest{
+		UserId:     userID,
+		Id:         pageID,
+		Content:    &content,
+		UpdateTags: false,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("update note: %w", err)
+	}
+	return noteToPost(resp.GetNote()), nil
+}
+
 // DeletePost deletes a journal entry by ID.
 func (c *Config) DeletePost(ctx context.Context, pageID string) error {
 	userID, err := c.ensureUserID(ctx)
@@ -367,6 +390,66 @@ func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error)
 		return nil, err
 	}
 	return notesToPosts(resp.GetNotes()), nil
+}
+
+// Tag represents a journal tag and how many entries use it.
+type Tag struct {
+	Name  string
+	Count int32
+}
+
+// ListTags lists all tags for the current user.
+func (c *Config) ListTags(ctx context.Context) ([]Tag, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.tagsClient.ListTags(ctx, &proto.ListTagsRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	return protoTagsToTags(resp.GetTags()), nil
+}
+
+// Stats holds aggregate journal metrics from the backend.
+type Stats struct {
+	TotalBlips   int64
+	UniqueTags   int64
+	WordsWritten int64
+}
+
+// GetStats fetches aggregate stats. When global is true, community-wide stats
+// are returned; otherwise stats are scoped to the current user.
+func (c *Config) GetStats(ctx context.Context, global bool) (Stats, error) {
+	var userID string
+	if !global {
+		var err error
+		userID, err = c.ensureUserID(ctx)
+		if err != nil {
+			return Stats{}, err
+		}
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return Stats{}, err
+	}
+	resp, err := g.statsClient.GetStats(ctx, &proto.GetStatsRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return Stats{}, fmt.Errorf("get stats: %w", err)
+	}
+	return Stats{
+		TotalBlips:   resp.GetTotalBlips(),
+		UniqueTags:   resp.GetUniqueTags(),
+		WordsWritten: resp.GetWordsWritten(),
+	}, nil
 }
 
 // GetPostFullContent fetches the full content of a post by ID.
