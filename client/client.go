@@ -279,6 +279,29 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 	return nil
 }
 
+// UpdatePost updates the content of an existing journal entry by ID.
+// Tags are left untouched (the backend keeps the existing tag list).
+func (c *Config) UpdatePost(ctx context.Context, pageID, content string) (*Post, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.notesClient.UpdateNote(ctx, &proto.UpdateNoteRequest{
+		UserId:     userID,
+		Id:         pageID,
+		Content:    &content,
+		UpdateTags: false,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("update note: %w", err)
+	}
+	return noteToPost(resp.GetNote()), nil
+}
+
 // DeletePost deletes a journal entry by ID.
 func (c *Config) DeletePost(ctx context.Context, pageID string) error {
 	userID, err := c.ensureUserID(ctx)

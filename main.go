@@ -375,6 +375,7 @@ func init() {
 	rootCmd.AddCommand(
 		createCmd,
 		deleteCmd,
+		editCmd,
 		listCmd,
 		mostRecentCmd,
 		randomCmd,
