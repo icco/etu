@@ -21,8 +21,13 @@ func showStats(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	global, err := cmd.Flags().GetBool("global")
+	if err != nil {
+		return err
+	}
+
 	var community *client.Stats
-	if global, err := cmd.Flags().GetBool("global"); err == nil && global {
+	if global {
 		stats, err := cfg.GetStats(cmd.Context(), true)
 		if err != nil {
 			return err
