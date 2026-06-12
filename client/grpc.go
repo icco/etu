@@ -43,6 +43,18 @@ func noteToPost(n *proto.Note) *Post {
 	}
 }
 
+// protoTagsToTags converts a slice of proto Tags to client Tags.
+func protoTagsToTags(tags []*proto.Tag) []Tag {
+	out := make([]Tag, 0, len(tags))
+	for _, t := range tags {
+		if t == nil {
+			continue
+		}
+		out = append(out, Tag{Name: t.GetName(), Count: t.GetCount()})
+	}
+	return out
+}
+
 // apiKeyCreds attaches the etu API key to every gRPC request.
 type apiKeyCreds struct {
 	apiKey string
@@ -67,6 +79,7 @@ type grpcClients struct {
 	conn          *grpc.ClientConn
 	notesClient   proto.NotesServiceClient
 	apiKeysClient proto.ApiKeysServiceClient
+	tagsClient    proto.TagsServiceClient
 	userID        string
 	connOnce      sync.Once
 	userIDOnce    sync.Once
@@ -94,6 +107,7 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 		}
 		c.grpc.notesClient = proto.NewNotesServiceClient(c.grpc.conn)
 		c.grpc.apiKeysClient = proto.NewApiKeysServiceClient(c.grpc.conn)
+		c.grpc.tagsClient = proto.NewTagsServiceClient(c.grpc.conn)
 	})
 	if c.grpc.connErr != nil {
 		return nil, c.grpc.connErr

@@ -138,6 +138,47 @@ func TestNotesToPosts(t *testing.T) {
 	})
 }
 
+func TestProtoTagsToTags(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []*proto.Tag
+		want []Tag
+	}{
+		{"nil slice", nil, []Tag{}},
+		{"empty slice", []*proto.Tag{}, []Tag{}},
+		{
+			"multiple tags",
+			[]*proto.Tag{
+				{Id: "1", Name: "work", Count: 5},
+				{Id: "2", Name: "life", Count: 2},
+			},
+			[]Tag{{Name: "work", Count: 5}, {Name: "life", Count: 2}},
+		},
+		{
+			"filters nil tags",
+			[]*proto.Tag{
+				{Id: "1", Name: "work", Count: 5},
+				nil,
+			},
+			[]Tag{{Name: "work", Count: 5}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := protoTagsToTags(tt.in)
+			if len(got) != len(tt.want) {
+				t.Fatalf("expected %d tags, got %d", len(tt.want), len(got))
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("tag %d = %+v, want %+v", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestGetGRPCClientsNoKey(t *testing.T) {
 	c := &Config{}
 	_, err := c.getGRPCClients()

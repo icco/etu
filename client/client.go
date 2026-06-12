@@ -369,6 +369,31 @@ func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error)
 	return notesToPosts(resp.GetNotes()), nil
 }
 
+// Tag represents a journal tag and how many entries use it.
+type Tag struct {
+	Name  string
+	Count int32
+}
+
+// ListTags lists all tags for the current user.
+func (c *Config) ListTags(ctx context.Context) ([]Tag, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	g, err := c.getGRPCClients()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := g.tagsClient.ListTags(ctx, &proto.ListTagsRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list tags: %w", err)
+	}
+	return protoTagsToTags(resp.GetTags()), nil
+}
+
 // GetPostFullContent fetches the full content of a post by ID.
 func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
 	userID, err := c.ensureUserID(ctx)
