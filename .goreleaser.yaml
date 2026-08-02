@@ -42,10 +42,10 @@ changelog:
   sort: asc
   groups:
     - title: Features
-      regexp: '^feat:'
+      regexp: '^feat(\(.+\))?!?:'
       order: 0
     - title: Bug Fixes
-      regexp: '^fix:'
+      regexp: '^fix(\(.+\))?!?:'
       order: 1
     - title: Other Changes
       order: 999
