@@ -11,7 +11,7 @@ require (
 	github.com/icco/etu-backend v0.0.0-20260510144554-c1a0f5c9c93b
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/grpc v1.83.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
