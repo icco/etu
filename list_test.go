@@ -5,12 +5,17 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/icco/etu/client"
 )
 
 func TestPostListModel(t *testing.T) {
 	m := newPostListModel(nil, 5, "Entries", false)
 	var mod tea.Model = m
+	mod, _ = mod.Update(tea.BackgroundColorMsg{Color: lipgloss.Color("#ffffff")})
+	if got := mod.(postListModel).st.text.GetForeground(); got != lipgloss.Color("#1B1F26") {
+		t.Fatalf("light terminal did not flip the palette: got %v", got)
+	}
 	mod, _ = mod.Update(tea.WindowSizeMsg{Width: 100, Height: 40})
 	mod, _ = mod.Update(postsLoadedMsg{posts: []*client.Post{
 		{Text: "hello world"},

@@ -61,8 +61,10 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 	}
 
 	// Display header
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#F5A97F"))
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#A7B0C0"))
+	// Printed outside bubbletea, so ask the terminal for its background here.
+	st := newStyles(lipgloss.HasDarkBackground(os.Stdin, os.Stdout))
+	headerStyle := st.marker
+	labelStyle := st.desc
 
 	fmt.Println()
 	fmt.Println(headerStyle.Render("Date: ") + post.CreatedAt.Format("2006-01-02 15:04"))

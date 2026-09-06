@@ -162,7 +162,7 @@ func createPost(cmd *cobra.Command, _ []string) error {
 			),
 		)
 
-		if err := form.Run(); err != nil {
+		if err := form.WithTheme(etuTheme).Run(); err != nil {
 			return err
 		}
 
@@ -238,7 +238,7 @@ func deletePost(cmd *cobra.Command, _ []string) error {
 		),
 	)
 
-	if err := confirmForm.Run(); err != nil {
+	if err := confirmForm.WithTheme(etuTheme).Run(); err != nil {
 		return err
 	}
 

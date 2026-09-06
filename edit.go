@@ -68,7 +68,7 @@ func editPost(cmd *cobra.Command, _ []string) error {
 		),
 	)
 
-	if err := form.Run(); err != nil {
+	if err := form.WithTheme(etuTheme).Run(); err != nil {
 		return err
 	}
 
