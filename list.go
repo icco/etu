@@ -9,10 +9,12 @@ import (
 	"math"
 	"strings"
 
+	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/icco/etu/client"
 )
 
@@ -22,9 +24,14 @@ const (
 )
 
 var (
-	docStyle          = lipgloss.NewStyle().Margin(1, 2)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	docStyle     = lipgloss.NewStyle().Margin(1, 2)
+	markerStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Bold(true)
+	dateStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	tagStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("109"))
+	textStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
+	selTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255")).Bold(true)
+	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+	errStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
 )
 
 type listItem struct {
@@ -46,22 +53,30 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 		return
 	}
 
-	var str string
-	if len(i.post.Tags) > 0 {
-		tags := "[" + strings.Join(i.post.Tags, ", ") + "]"
-		str = fmt.Sprintf("> %s %s - %s", i.Title(), tags, i.Description())
-	} else {
-		str = fmt.Sprintf("> %s - %s", i.Title(), i.Description())
-	}
-
-	style := itemStyle
+	marker, body := "  ", textStyle
 	if index == m.Index() {
-		style = selectedItemStyle
+		marker, body = markerStyle.Render("\u276f "), selTextStyle
 	}
 
-	if _, err := fmt.Fprint(w, style.Render(str)); err != nil {
+	line := marker + dateStyle.Render(i.Title())
+	if len(i.post.Tags) > 0 {
+		line += " " + tagStyle.Render("["+strings.Join(i.post.Tags, ", ")+"]")
+	}
+	line += "  " + body.Render(oneLine(i.Description()))
+
+	// The list allots each item a single row, so truncate to its width.
+	if width := m.Width(); width > 0 {
+		line = ansi.Truncate(line, width, "\u2026")
+	}
+
+	if _, err := fmt.Fprint(w, line); err != nil {
 		log.Printf("list render: %v", err)
 	}
+}
+
+// oneLine collapses an entry's whitespace so a multi-line entry stays on its row.
+func oneLine(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 type postListModel struct {
@@ -100,7 +115,7 @@ func newPostListModel(cfg *client.Config, count int, title string, startLoading 
 	// Initialize spinner
 	sp := spinner.New()
 	sp.Spinner = spinner.Dot
-	sp.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
+	sp.Style = spinnerStyle
 
 	// Create empty list initially - will be populated when data loads
 	var items []list.Item
@@ -110,8 +125,13 @@ func newPostListModel(cfg *client.Config, count int, title string, startLoading 
 	l.SetFilteringEnabled(false)
 	l.SetShowTitle(true)
 	l.SetShowHelp(true)
+	// bubbles v2 binds the list's quit key to "v" and labels it "select".
+	l.KeyMap.Quit = key.NewBinding(key.WithKeys("q", "esc"), key.WithHelp("q", "quit"))
+	l.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select"))}
+	}
 	l.Styles.PaginationStyle = list.DefaultStyles(true).PaginationStyle.PaddingLeft(4)
-	l.Styles.Title = l.Styles.Title.Foreground(lipgloss.Color("170")).Bold(true)
+	l.Styles.Title = l.Styles.Title.Bold(true)
 
 	return postListModel{
 		list:    l,
@@ -168,7 +188,8 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.list.SetWidth(msg.Width)
+		frame, _ := docStyle.GetFrameSize()
+		m.list.SetWidth(msg.Width - frame)
 		return m, nil
 
 	case tea.KeyPressMsg:
@@ -217,11 +238,11 @@ func (m postListModel) View() tea.View {
 			loadingText = fmt.Sprintf("%s Loading journal entries...", m.spinner.View())
 		}
 		s.WriteString("\n  ")
-		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Render(loadingText))
+		s.WriteString(spinnerStyle.Render(loadingText))
 		s.WriteString("\n")
 	case m.loadErr != nil:
 		s.WriteString("\n  ")
-		s.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("Error: " + m.loadErr.Error()))
+		s.WriteString(errStyle.Render("Error: " + m.loadErr.Error()))
 		s.WriteString("\n")
 	case len(m.posts) > 0:
 		s.WriteString(m.list.View())
