@@ -125,13 +125,9 @@ func createPost(cmd *cobra.Command, _ []string) error {
 		}
 		text = string(content)
 	} else {
-		// stdin is a terminal, use interactive TUI (supports drag & drop of images)
-		//
-		// The entry lives in its own group, and the media fields have the
-		// external editor disabled: huh's ctrl+e result message carries no
-		// field id, so every huh.Text in the *same group* swallows the editor
-		// output. Only the selected group is updated, so one Text per editor
-		// keeps the content where it belongs.
+		// stdin is a terminal, use interactive TUI (supports drag & drop of images).
+		// huh's editor result message has no field id, so every huh.Text in a group
+		// swallows it: entry gets its own group, media fields get no editor.
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
