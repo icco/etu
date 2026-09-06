@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/huh/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/huh/v2"
+	"charm.land/huh/v2/spinner"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -214,7 +214,7 @@ func timeSinceLastPost(cmd *cobra.Command, _ []string) error {
 func deletePost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
 	model := newPostListModel(cfg, 25, "Select entry to delete", true)
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
 		return err
@@ -277,7 +277,7 @@ func mostRecentPost(cmd *cobra.Command, _ []string) error {
 	}
 
 	model := newPostListModel(cfg, 1, "Most Recent Entry", true)
-	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
+	if _, err := tea.NewProgram(model).Run(); err != nil {
 		return err
 	}
 	return nil
@@ -285,7 +285,7 @@ func mostRecentPost(cmd *cobra.Command, _ []string) error {
 
 func listPosts(cmd *cobra.Command, _ []string) error {
 	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
 		return err

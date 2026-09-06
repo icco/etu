@@ -9,10 +9,10 @@ import (
 	"math"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/icco/etu/client"
 )
 
@@ -110,7 +110,7 @@ func newPostListModel(cfg *client.Config, count int, title string, startLoading 
 	l.SetFilteringEnabled(false)
 	l.SetShowTitle(true)
 	l.SetShowHelp(true)
-	l.Styles.PaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	l.Styles.PaginationStyle = list.DefaultStyles(true).PaginationStyle.PaddingLeft(4)
 	l.Styles.Title = l.Styles.Title.Foreground(lipgloss.Color("170")).Bold(true)
 
 	return postListModel{
@@ -171,7 +171,7 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetWidth(msg.Width)
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			m.quitting = true
@@ -199,9 +199,11 @@ func (m postListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m postListModel) View() string {
+func (m postListModel) View() tea.View {
+	v := tea.NewView("")
+	v.AltScreen = true
 	if m.quitting {
-		return ""
+		return v
 	}
 
 	var s strings.Builder
@@ -227,5 +229,6 @@ func (m postListModel) View() string {
 		s.WriteString("\n  No entries found.\n")
 	}
 
-	return docStyle.Render(s.String())
+	v.SetContent(docStyle.Render(s.String()))
+	return v
 }

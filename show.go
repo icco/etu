@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh/spinner"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/huh/v2/spinner"
+	"charm.land/lipgloss/v2"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +27,7 @@ var showCmd = &cobra.Command{
 func showPost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
 	model := newPostListModel(cfg, 25, "Select entry to view", true)
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
 		return err
