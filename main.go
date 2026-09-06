@@ -126,6 +126,12 @@ func createPost(cmd *cobra.Command, _ []string) error {
 		text = string(content)
 	} else {
 		// stdin is a terminal, use interactive TUI (supports drag & drop of images)
+		//
+		// The entry lives in its own group, and the media fields have the
+		// external editor disabled: huh's ctrl+e result message carries no
+		// field id, so every huh.Text in the *same group* swallows the editor
+		// output. Only the selected group is updated, so one Text per editor
+		// keeps the content where it belongs.
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
@@ -139,11 +145,14 @@ func createPost(cmd *cobra.Command, _ []string) error {
 					}).
 					WithHeight(12).
 					WithWidth(100),
+			),
+			huh.NewGroup(
 				huh.NewText().
 					Value(&imagePathsInput).
 					Title("Images").
 					Description("Drag & drop image files here, or paste paths (one per line). Leave empty for no images.").
 					Placeholder("/path/to/image.jpg").
+					ExternalEditor(false).
 					WithHeight(3).
 					WithWidth(100),
 				huh.NewText().
@@ -151,6 +160,7 @@ func createPost(cmd *cobra.Command, _ []string) error {
 					Title("Audio").
 					Description("Drag & drop audio files here, or paste paths (one per line). Leave empty for no audio.").
 					Placeholder("/path/to/recording.mp3").
+					ExternalEditor(false).
 					WithHeight(3).
 					WithWidth(100),
 			),
