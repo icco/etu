@@ -24,14 +24,16 @@ const (
 )
 
 var (
+	// Hex, not 256-color indexes: the terminal's theme remaps indexes, which
+	// washed these out.
 	docStyle     = lipgloss.NewStyle().Margin(1, 2)
-	markerStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("170")).Bold(true)
-	dateStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
-	tagStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("109"))
-	textStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
-	selTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("255")).Bold(true)
-	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("170"))
-	errStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
+	markerStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#F5A97F")).Bold(true)
+	dateStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#A7B0C0"))
+	tagStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#8BD5CA"))
+	textStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#F2F4F8"))
+	selTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Bold(true)
+	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#F5A97F"))
+	errStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#ED8796"))
 )
 
 type listItem struct {

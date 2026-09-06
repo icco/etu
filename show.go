@@ -61,8 +61,8 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 	}
 
 	// Display header
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("170"))
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#F5A97F"))
+	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#A7B0C0"))
 
 	fmt.Println()
 	fmt.Println(headerStyle.Render("Date: ") + post.CreatedAt.Format("2006-01-02 15:04"))
