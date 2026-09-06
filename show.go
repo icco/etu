@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh/spinner"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/huh/v2/spinner"
+	"charm.land/lipgloss/v2"
 	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +27,7 @@ var showCmd = &cobra.Command{
 func showPost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
 	model := newPostListModel(cfg, 25, "Select entry to view", true)
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
 		return err
@@ -61,8 +61,10 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 	}
 
 	// Display header
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("170"))
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	// Printed outside bubbletea, so ask the terminal for its background here.
+	st := newStyles(lipgloss.HasDarkBackground(os.Stdin, os.Stdout))
+	headerStyle := st.marker
+	labelStyle := st.desc
 
 	fmt.Println()
 	fmt.Println(headerStyle.Render("Date: ") + post.CreatedAt.Format("2006-01-02 15:04"))
