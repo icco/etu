@@ -30,7 +30,7 @@ jobs:
       - name: Determine next version
         id: versioning
         if: github.event_name != 'push'
-        uses: PaulHatch/semantic-version@v6.0.3
+        uses: PaulHatch/semantic-version@v6.0.4
         with:
           tag_prefix: v
           # Patterns must be wrapped in / / to be treated as regexes. A bare string is
