@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/icco/etu/client"
+	"go.icco.me/etu/client"
 )
 
 func TestFormatStats(t *testing.T) {

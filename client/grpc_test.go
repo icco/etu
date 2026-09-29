@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/icco/etu-backend/proto"
+	"go.icco.me/etu-backend/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

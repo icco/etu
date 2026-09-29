@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/icco/etu-backend/proto"
+	"go.icco.me/etu-backend/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

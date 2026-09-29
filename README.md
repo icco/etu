@@ -1,7 +1,7 @@
 # Etu
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/icco/etu)](https://goreportcard.com/report/github.com/icco/etu)
-[![Go Reference](https://pkg.go.dev/badge/github.com/icco/etu.svg)](https://pkg.go.dev/github.com/icco/etu)
+[![Go Reference](https://pkg.go.dev/badge/go.icco.me/etu.svg)](https://pkg.go.dev/go.icco.me/etu)
 
 
 Etu is a simple journaling tool that talks to the [etu-backend](https://github.com/icco/etu-backend) API over gRPC (default: `grpc.etu.timeclimbers.com`).

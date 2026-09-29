@@ -2,7 +2,7 @@
 
 Etu is a personal command-line journaling tool (interstitial journaling). It talks gRPC to
 [etu-backend](https://github.com/icco/etu-backend), whose generated protos are imported from
-`github.com/icco/etu-backend/proto`.
+`go.icco.me/etu-backend/proto`.
 
 ## Commands
 
