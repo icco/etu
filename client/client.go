@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/icco/etu-backend/proto"
+	"go.icco.me/etu-backend/proto"
 )
 
 // Post represents a journal entry (display model for TUI/CLI).
