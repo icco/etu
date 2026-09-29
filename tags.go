@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
+	"go.icco.me/etu/client"
 )
 
 var tagsCmd = &cobra.Command{

@@ -13,8 +13,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2/spinner"
 	"charm.land/lipgloss/v2"
-	"github.com/icco/etu/client"
 	"github.com/spf13/cobra"
+	"go.icco.me/etu/client"
 )
 
 var showCmd = &cobra.Command{

@@ -6,7 +6,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/icco/etu/client"
+	"go.icco.me/etu/client"
 )
 
 func TestPostListModel(t *testing.T) {
