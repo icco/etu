@@ -373,10 +373,10 @@ func init() {
 	}
 	rootCmd.Version = Version
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+	rootCmd.SilenceErrors = true
 
 	createCmd.Flags().StringSliceP("image", "i", nil, "path to image file to attach (can be repeated)")
 	createCmd.Flags().StringSliceP("audio", "a", nil, "path to audio file to attach (can be repeated)")
-	statsCmd.Flags().Bool("global", false, "also show community-wide stats")
 
 	rootCmd.AddCommand(
 		createCmd,
@@ -400,6 +400,6 @@ func main() {
 		log.Fatal(err)
 	}
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		log.Fatal(friendlyError(err))
 	}
 }

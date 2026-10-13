@@ -10,7 +10,9 @@ import (
 
 	"go.icco.me/etu-backend/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 // notesToPosts converts a slice of proto Notes to client Posts.
@@ -132,7 +134,7 @@ func (c *Config) ensureUserID(ctx context.Context) (string, error) {
 			return
 		}
 		if !resp.GetValid() {
-			g.userIDErr = fmt.Errorf("API key invalid")
+			g.userIDErr = status.Error(codes.Unauthenticated, "API key invalid")
 			return
 		}
 		g.userID = resp.GetUserId()
