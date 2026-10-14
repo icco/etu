@@ -30,7 +30,7 @@ Binaries for Linux, macOS, and Windows are on the [releases page](https://github
 
 ## Pricing
 
-Etu has a 14-day free trial, then costs $5 per year. See [pricing](https://etu.timeclimbers.com/pricing). The CLI stops working without an active subscription.
+See [pricing](https://etu.timeclimbers.com/pricing) for current plans and trial terms. Journaling commands require subscription access; `export` remains available after a subscription expires or is canceled.
 
 ## Commands
 
@@ -67,10 +67,12 @@ Run `etu [command] --help` for flags.
 
 ## Build from source
 
+Requires Go 1.26 or later.
+
 ```shell
 git clone https://github.com/icco/etu
 cd etu
-task build
+go build -o etu .
 ```
 
 ## Inspiration
