@@ -286,3 +286,24 @@ func TestSaveAPIKeyPropagatesReadError(t *testing.T) {
 		t.Fatalf("expected original read error, got %v", err)
 	}
 }
+
+func TestSaveAPIKeyClearsTimesinceCache(t *testing.T) {
+	for _, key := range []string{"new-key", ""} {
+		t.Run(key, func(t *testing.T) {
+			setTestHome(t)
+			path, err := CachePath("timesince.cache")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte("previous account's duration"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := SaveAPIKey(key); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				t.Fatalf("expected cache to be removed, got %v", err)
+			}
+		})
+	}
+}

@@ -114,5 +114,15 @@ func SaveAPIKey(apiKey string) error {
 		cf = &ConfigFile{}
 	}
 	_, err = SaveConfig(strings.TrimSpace(apiKey), cf.GRPCTarget)
-	return err
+	if err != nil {
+		return err
+	}
+	path, err := CachePath("timesince.cache")
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("saved API key but could not clear timesince cache: %w", err)
+	}
+	return nil
 }

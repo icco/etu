@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"charm.land/huh/v2"
@@ -57,7 +58,10 @@ func login(cmd *cobra.Command, _ []string) error {
 	if err := client.SaveAPIKey(key); err != nil {
 		return err
 	}
-	fmt.Println("Logged in.")
+	fmt.Println("API key saved.")
+	if os.Getenv("ETU_API_KEY") != "" {
+		fmt.Println("ETU_API_KEY is still set; unset it to use the saved key.")
+	}
 	return nil
 }
 
@@ -65,7 +69,10 @@ func logout(_ *cobra.Command, _ []string) error {
 	if err := client.SaveAPIKey(""); err != nil {
 		return err
 	}
-	fmt.Println("Logged out.")
+	fmt.Println("Saved API key removed.")
+	if os.Getenv("ETU_API_KEY") != "" {
+		fmt.Println("ETU_API_KEY is still set; unset it to stop authenticating with that key.")
+	}
 	return nil
 }
 
