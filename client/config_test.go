@@ -103,7 +103,7 @@ func TestSaveConfigDefaultTarget(t *testing.T) {
 	}
 }
 
-func TestLoadConfigCreatesFile(t *testing.T) {
+func TestLoadConfigDoesNotCreateFile(t *testing.T) {
 	setTestHome(t)
 
 	cf, err := loadConfigFromFile()
@@ -118,8 +118,8 @@ func TestLoadConfigCreatesFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Error("config file was not created")
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("config file was created: %v", err)
 	}
 }
 
@@ -131,8 +131,6 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	if cfg.APIKey != "env-key" {
 		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "env-key")
 	}
-	// GRPCTarget defaults from the config file (SaveConfig sets it),
-	// so ETU_GRPC_TARGET env only applies when the file has an empty target.
 	if cfg.GRPCTarget != defaultGRPCTarget {
 		t.Errorf("GRPCTarget = %q, want default %q", cfg.GRPCTarget, defaultGRPCTarget)
 	}
@@ -167,5 +165,81 @@ func TestLoadConfigFileOverridesDefault(t *testing.T) {
 	}
 	if cfg.GRPCTarget != "file-target:443" {
 		t.Errorf("GRPCTarget = %q, want %q", cfg.GRPCTarget, "file-target:443")
+	}
+}
+
+func TestLoadConfigEnvOverridesFile(t *testing.T) {
+	setTestHome(t)
+	if _, err := SaveConfig("file-key", "file-target:443"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ETU_API_KEY", "env-key")
+	t.Setenv("ETU_GRPC_TARGET", "env-target:443")
+
+	cfg := LoadConfig()
+	if cfg.APIKey != "env-key" {
+		t.Errorf("APIKey = %q, want %q", cfg.APIKey, "env-key")
+	}
+	if cfg.GRPCTarget != "env-target:443" {
+		t.Errorf("GRPCTarget = %q, want %q", cfg.GRPCTarget, "env-target:443")
+	}
+}
+
+func TestLoadConfigInvalidJSON(t *testing.T) {
+	setTestHome(t)
+	t.Setenv("ETU_API_KEY", "")
+	t.Setenv("ETU_GRPC_TARGET", "")
+	path, err := ConfigPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("{not json"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := LoadConfig()
+	if cfg.APIKey != "" {
+		t.Errorf("APIKey = %q, want empty", cfg.APIKey)
+	}
+	if cfg.GRPCTarget != defaultGRPCTarget {
+		t.Errorf("GRPCTarget = %q, want %q", cfg.GRPCTarget, defaultGRPCTarget)
+	}
+}
+
+func TestSaveConfigRestrictsPermissions(t *testing.T) {
+	setTestHome(t)
+	path, err := ConfigPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("{}"), 0644); err != nil { //nolint:gosec // test setup
+		t.Fatal(err)
+	}
+	if _, err := SaveConfig("key", ""); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if perm := info.Mode().Perm(); perm != 0600 {
+		t.Errorf("perm = %o, want 600", perm)
+	}
+}
+
+func TestSaveAPIKeyKeepsTarget(t *testing.T) {
+	setTestHome(t)
+	if _, err := SaveConfig("old", "custom:443"); err != nil {
+		t.Fatal(err)
+	}
+	if err := SaveAPIKey(" new\n"); err != nil {
+		t.Fatal(err)
+	}
+	cf, err := loadConfigFromFile()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cf.APIKey != "new" || cf.GRPCTarget != "custom:443" {
+		t.Errorf("got %+v", cf)
 	}
 }
