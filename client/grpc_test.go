@@ -195,7 +195,7 @@ type verificationClient struct {
 	valid bool
 }
 
-func (v verificationClient) VerifyApiKey(_ context.Context, _ *proto.VerifyApiKeyRequest, _ ...grpc.CallOption) (*proto.VerifyApiKeyResponse, error) {
+func (v verificationClient) VerifyApiKey(_ context.Context, _ *proto.VerifyApiKeyRequest, _ ...grpc.CallOption) (*proto.VerifyApiKeyResponse, error) { //nolint:revive // Must match the generated gRPC interface.
 	userID := "alice"
 	return &proto.VerifyApiKeyResponse{Valid: v.valid, UserId: &userID}, nil
 }
