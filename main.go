@@ -387,6 +387,7 @@ func init() {
 		createCmd,
 		deleteCmd,
 		editCmd,
+		exportCmd,
 		listCmd,
 		loginCmd,
 		logoutCmd,
