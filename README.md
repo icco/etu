@@ -14,7 +14,7 @@ brew tap icco/tap
 brew install --cask etu
 ```
 
-With Go 1.26 or later:
+With Go 1.26.2 or later:
 
 ```shell
 go install go.icco.me/etu@latest
@@ -67,7 +67,7 @@ Run `etu [command] --help` for flags.
 
 ## Build from source
 
-Requires Go 1.26 or later.
+Requires Go 1.26.2 or later.
 
 ```shell
 git clone https://github.com/icco/etu
