@@ -46,9 +46,8 @@ func login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	check := *cfg
-	check.APIKey = strings.TrimSpace(key)
-	if _, err := check.ListPosts(cmd.Context(), 1); err != nil {
+	check := &client.Config{APIKey: strings.TrimSpace(key), GRPCTarget: cfg.GRPCTarget}
+	if err := check.VerifyAPIKey(cmd.Context()); err != nil {
 		if isAuthError(err) {
 			return errors.New("API key rejected, check it and try again")
 		}

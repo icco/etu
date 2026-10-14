@@ -119,6 +119,12 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 	return c.grpc, nil
 }
 
+// VerifyAPIKey checks the configured key without accessing subscription-gated data.
+func (c *Config) VerifyAPIKey(ctx context.Context) error {
+	_, err := c.ensureUserID(ctx)
+	return err
+}
+
 // ensureUserID calls VerifyApiKey and caches user_id for use in note requests.
 func (c *Config) ensureUserID(ctx context.Context) (string, error) {
 	g, err := c.getGRPCClients()
