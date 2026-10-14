@@ -83,6 +83,7 @@ type grpcClients struct {
 	apiKeysClient proto.ApiKeysServiceClient
 	tagsClient    proto.TagsServiceClient
 	statsClient   proto.StatsServiceClient
+	accountClient proto.AccountServiceClient
 	userID        string
 	connOnce      sync.Once
 	userIDOnce    sync.Once
@@ -112,11 +113,18 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 		c.grpc.apiKeysClient = proto.NewApiKeysServiceClient(c.grpc.conn)
 		c.grpc.tagsClient = proto.NewTagsServiceClient(c.grpc.conn)
 		c.grpc.statsClient = proto.NewStatsServiceClient(c.grpc.conn)
+		c.grpc.accountClient = proto.NewAccountServiceClient(c.grpc.conn)
 	})
 	if c.grpc.connErr != nil {
 		return nil, c.grpc.connErr
 	}
 	return c.grpc, nil
+}
+
+// VerifyAPIKey checks the configured key without accessing subscription-gated data.
+func (c *Config) VerifyAPIKey(ctx context.Context) error {
+	_, err := c.ensureUserID(ctx)
+	return err
 }
 
 // ensureUserID calls VerifyApiKey and caches user_id for use in note requests.
