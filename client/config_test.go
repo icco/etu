@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -241,5 +242,47 @@ func TestSaveAPIKeyKeepsTarget(t *testing.T) {
 	}
 	if cf.APIKey != "new" || cf.GRPCTarget != "custom:443" {
 		t.Errorf("got %+v", cf)
+	}
+}
+
+func TestSaveAPIKeyRepairsMalformedConfig(t *testing.T) {
+	for _, key := range []string{"new-key", ""} {
+		for _, data := range []string{`{not json`, `{"api_key":123}`} {
+			t.Run(key+"/"+data, func(t *testing.T) {
+				setTestHome(t)
+				path, err := ConfigPath()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(data), 0600); err != nil {
+					t.Fatal(err)
+				}
+				if err := SaveAPIKey(key); err != nil {
+					t.Fatal(err)
+				}
+				cf, err := loadConfigFromFile()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if cf.APIKey != key || cf.GRPCTarget != defaultGRPCTarget {
+					t.Errorf("got %+v", cf)
+				}
+			})
+		}
+	}
+}
+
+func TestSaveAPIKeyPropagatesReadError(t *testing.T) {
+	setTestHome(t)
+	path, err := ConfigPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(path, 0700); err != nil {
+		t.Fatal(err)
+	}
+	var pathErr *os.PathError
+	if err := SaveAPIKey("new-key"); !errors.As(err, &pathErr) || pathErr.Op != "read" {
+		t.Fatalf("expected original read error, got %v", err)
 	}
 }

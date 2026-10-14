@@ -2,7 +2,9 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,7 +105,13 @@ func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 func SaveAPIKey(apiKey string) error {
 	cf, err := loadConfigFromFile()
 	if err != nil {
-		return err
+		var syntaxErr *json.SyntaxError
+		var typeErr *json.UnmarshalTypeError
+		if !errors.As(err, &syntaxErr) && !errors.As(err, &typeErr) {
+			return err
+		}
+		log.Printf("etu: replacing invalid config: %v", err)
+		cf = &ConfigFile{}
 	}
 	_, err = SaveConfig(strings.TrimSpace(apiKey), cf.GRPCTarget)
 	return err
