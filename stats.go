@@ -16,42 +16,19 @@ var statsCmd = &cobra.Command{
 }
 
 func showStats(cmd *cobra.Command, _ []string) error {
-	personal, err := cfg.GetStats(cmd.Context(), false)
+	stats, err := cfg.GetStats(cmd.Context())
 	if err != nil {
 		return err
 	}
-
-	global, err := cmd.Flags().GetBool("global")
-	if err != nil {
-		return err
-	}
-
-	var community *client.Stats
-	if global {
-		stats, err := cfg.GetStats(cmd.Context(), true)
-		if err != nil {
-			return err
-		}
-		community = &stats
-	}
-
-	fmt.Print(formatStats(personal, community))
+	fmt.Print(formatStats(stats))
 	return nil
 }
 
-// formatStats renders stats as one metric per line; a non-nil community adds
-// a second "Community" block.
-func formatStats(personal client.Stats, community *client.Stats) string {
+// formatStats renders stats as one metric per line.
+func formatStats(s client.Stats) string {
 	var b strings.Builder
-	writeBlock := func(s client.Stats) {
-		fmt.Fprintf(&b, "Blips: %d\n", s.TotalBlips)
-		fmt.Fprintf(&b, "Tags: %d\n", s.UniqueTags)
-		fmt.Fprintf(&b, "Words written: %d\n", s.WordsWritten)
-	}
-	writeBlock(personal)
-	if community != nil {
-		b.WriteString("\nCommunity\n")
-		writeBlock(*community)
-	}
+	fmt.Fprintf(&b, "Blips: %d\n", s.TotalBlips)
+	fmt.Fprintf(&b, "Tags: %d\n", s.UniqueTags)
+	fmt.Fprintf(&b, "Words written: %d\n", s.WordsWritten)
 	return b.String()
 }
