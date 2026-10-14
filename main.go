@@ -33,7 +33,8 @@ var (
 			// Skip API key validation for these commands (they don't need the backend)
 			curr := cmd
 			for curr != nil {
-				if curr.Name() == "completion" || curr.Name() == "help" || curr.Name() == "__complete" {
+				switch curr.Name() {
+				case "completion", "help", "__complete", "login", "logout":
 					return nil
 				}
 				curr = curr.Parent()
@@ -202,6 +203,10 @@ func createPost(cmd *cobra.Command, _ []string) error {
 func timeSinceLastPost(cmd *cobra.Command, _ []string) error {
 	dur, err := cfg.TimeSinceLastPost(cmd.Context())
 	if err != nil {
+		if isAuthError(err) {
+			fmt.Print("auth?")
+			return nil
+		}
 		// Intentional: print a "???" sentinel so shell prompts don't break.
 		fmt.Print("???")
 		return nil //nolint:nilerr // sentinel output is the desired behavior here
@@ -383,6 +388,8 @@ func init() {
 		deleteCmd,
 		editCmd,
 		listCmd,
+		loginCmd,
+		logoutCmd,
 		mostRecentCmd,
 		randomCmd,
 		showCmd,
@@ -394,11 +401,7 @@ func init() {
 }
 
 func main() {
-	// Load config (file + ETU_API_KEY / ETU_GRPC_TARGET env) and persist so we don't have to mess with env later.
 	cfg = client.LoadConfig()
-	if _, err := client.SaveConfig(cfg.APIKey, cfg.GRPCTarget); err != nil {
-		log.Fatal(err)
-	}
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
