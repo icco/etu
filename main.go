@@ -382,6 +382,7 @@ func init() {
 		createCmd,
 		deleteCmd,
 		editCmd,
+		exportCmd,
 		listCmd,
 		mostRecentCmd,
 		randomCmd,
