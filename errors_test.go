@@ -19,7 +19,7 @@ func TestFriendlyError(t *testing.T) {
 		{"paywall", status.Error(codes.PermissionDenied, "subscription required"), subscriptionURL},
 		{"wrapped paywall", fmt.Errorf("list tags: %w", status.Error(codes.PermissionDenied, "subscription required")), subscriptionURL},
 		{"other permission denied", status.Error(codes.PermissionDenied, "nope"), "nope"},
-		{"unauthenticated", status.Error(codes.Unauthenticated, "invalid API key"), apiKeysURL},
+		{"unauthenticated", status.Error(codes.Unauthenticated, "invalid API key"), apiSettingsURL},
 		{"plain error", errors.New("boom"), "boom"},
 	}
 	for _, tt := range tests {

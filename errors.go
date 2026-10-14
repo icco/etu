@@ -10,7 +10,7 @@ import (
 
 const (
 	subscriptionURL = "https://etu.timeclimbers.com/settings/subscription"
-	apiSettingsURL      = "https://etu.timeclimbers.com/settings/api"
+	apiSettingsURL  = "https://etu.timeclimbers.com/settings/api"
 )
 
 // friendlyError turns backend auth and paywall errors into actionable messages.
