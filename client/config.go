@@ -92,11 +92,11 @@ func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := os.Chmod(path, 0600); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("could not restrict config file permissions: %w", err)
+	}
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		return nil, fmt.Errorf("could not write config file: %w", err)
-	}
-	if err := os.Chmod(path, 0600); err != nil {
-		return nil, fmt.Errorf("could not restrict config file permissions: %w", err)
 	}
 	return cf, nil
 }
