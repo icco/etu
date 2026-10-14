@@ -424,16 +424,11 @@ type Stats struct {
 	WordsWritten int64
 }
 
-// GetStats fetches aggregate stats. When global is true, community-wide stats
-// are returned; otherwise stats are scoped to the current user.
-func (c *Config) GetStats(ctx context.Context, global bool) (Stats, error) {
-	var userID string
-	if !global {
-		var err error
-		userID, err = c.ensureUserID(ctx)
-		if err != nil {
-			return Stats{}, err
-		}
+// GetStats fetches aggregate stats for the current user.
+func (c *Config) GetStats(ctx context.Context) (Stats, error) {
+	userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return Stats{}, err
 	}
 	g, err := c.getGRPCClients()
 	if err != nil {
