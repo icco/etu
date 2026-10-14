@@ -7,7 +7,7 @@ Etu is a command line client for [Etu](https://etu.timeclimbers.com), a journal 
 
 ## Install
 
-Homebrew (macOS and Linux):
+Homebrew (macOS):
 
 ```shell
 brew tap icco/tap
@@ -37,7 +37,7 @@ See [pricing](https://etu.timeclimbers.com/pricing) for current plans and trial 
 | Command | Description |
 | --- | --- |
 | `create` | Write a new entry. Attach images with `-i` and audio with `-a`. |
-| `list` | List entries, optionally from a starting datetime. |
+| `list` | List journal entries. |
 | `show` | Show an entry with its images and audio. |
 | `last` | Print the most recent entry. |
 | `random` | Show a random entry. |
@@ -54,7 +54,11 @@ Run `etu [command] --help` for flags.
 
 ## Configuration
 
-`etu login` writes `~/.config/etu/config.json`:
+`etu login` writes `config.json` in your platform's config directory:
+
+- Linux: `$XDG_CONFIG_HOME/etu/config.json`, or `~/.config/etu/config.json` when unset.
+- macOS: `~/Library/Application Support/etu/config.json`.
+- Windows: `%AppData%\etu\config.json`.
 
 ```json
 {
