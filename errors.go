@@ -10,7 +10,7 @@ import (
 
 const (
 	subscriptionURL = "https://etu.timeclimbers.com/settings/subscription"
-	apiKeysURL      = "https://etu.timeclimbers.com/settings/api"
+	apiSettingsURL      = "https://etu.timeclimbers.com/settings/api"
 )
 
 // friendlyError turns backend auth and paywall errors into actionable messages.
@@ -26,7 +26,7 @@ func friendlyError(err error) error {
 			return fmt.Errorf("an active subscription is required, manage it at %s", subscriptionURL)
 		}
 	case codes.Unauthenticated:
-		return errors.New("API key rejected (keys are revoked when your password changes), create a new one at " + apiKeysURL)
+		return errors.New("API key rejected (keys are revoked when your password changes), create a new one at " + apiSettingsURL)
 	}
 	return err
 }
