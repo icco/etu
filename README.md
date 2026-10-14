@@ -3,85 +3,76 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/icco/etu)](https://goreportcard.com/report/github.com/icco/etu)
 [![Go Reference](https://pkg.go.dev/badge/go.icco.me/etu.svg)](https://pkg.go.dev/go.icco.me/etu)
 
+Etu is a command line client for [Etu](https://etu.timeclimbers.com), a journal for [interstitial journaling](https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef): short notes ("blips") written between tasks.
 
-Etu is a simple journaling tool that talks to the [etu-backend](https://github.com/icco/etu-backend) API over gRPC (default: `grpc.etu.timeclimbers.com`).
+## Install
 
-It should be noted the main goal of Etu is to write interstitial journals. See https://betterhumans.pub/replace-your-to-do-list-with-interstitial-journaling-to-increase-productivity-4e43109d15ef for more on this topic.
-
-## Installation
-
-### Homebrew
+Homebrew (macOS and Linux):
 
 ```shell
 brew tap icco/tap
-brew install etu
+brew install --cask etu
 ```
 
-### Local Build
+With Go 1.26 or later:
 
-**Dependencies:** Go 1.25 or later, [Task](https://taskfile.dev/) (optional).
+```shell
+go install go.icco.me/etu@latest
+```
 
-1. `git clone` the repo
-2. `task build` (or `go build -o etu .`)
-3. Run `./etu`
+Binaries for Linux, macOS, and Windows are on the [releases page](https://github.com/icco/etu/releases).
 
-## Usage
+## Quickstart
 
-Before running you need an API key for the etu-backend. You can:
+1. Sign up at [etu.timeclimbers.com](https://etu.timeclimbers.com) and create an API key under [Settings > API](https://etu.timeclimbers.com/settings/api).
+2. Run `etu login` and paste the key.
+3. Run `etu create` to write your first blip, then `etu list` to read it back.
 
-1. Put your API key in `~/.config/etu/config.json` with keys `api_key` and optionally `grpc_target` (default: `grpc.etu.timeclimbers.com:443`), or
-2. Set the `ETU_API_KEY` environment variable (and optionally `ETU_GRPC_TARGET`).
+## Pricing
 
-Example config file:
+Etu has a 14-day free trial, then costs $5 per year. See [pricing](https://etu.timeclimbers.com/pricing). The CLI stops working without an active subscription.
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| `create` | Write a new entry. Attach images with `-i` and audio with `-a`. |
+| `list` | List entries, optionally from a starting datetime. |
+| `show` | Show an entry with its images and audio. |
+| `last` | Print the most recent entry. |
+| `random` | Show a random entry. |
+| `search` | Fuzzy search entries. |
+| `edit` | Edit an entry. |
+| `delete` | Delete an entry. |
+| `tags` | List tags with usage counts. |
+| `stats` | Show your blip, tag, and word counts. |
+| `export` | Export all of your data as JSON to stdout or a file (`-o`). |
+| `timesince` | Print the time since your last entry, for shell prompts. |
+| `login` / `logout` | Save or remove your API key. |
+
+Run `etu [command] --help` for flags.
+
+## Configuration
+
+`etu login` writes `~/.config/etu/config.json`:
 
 ```json
 {
-  "api_key": "your-64-char-hex-api-key",
+  "api_key": "etu_...",
   "grpc_target": "grpc.etu.timeclimbers.com:443"
 }
 ```
 
-Config and the "time since last post" cache live under `~/.config/etu/`. Tag generation and storage are handled by the backend; see [etu-backend](https://github.com/icco/etu-backend) for setup.
+`ETU_API_KEY` and `ETU_GRPC_TARGET` override the file.
 
-```
-$ etu
-Etu. A personal command line journal.
+## Build from source
 
-Usage:
-  etu [flags]
-  etu [command]
-
-Available Commands:
-  create      Create a new journal entry (attach images/audio via drag & drop in TUI or -i/--image, -a/--audio).
-  delete      Delete a journal entry.
-  edit        Edit a journal entry.
-  help        Help about any command
-  last        Output a string of time since last post.
-  list        List journal entries, with an optional starting datetime.
-  search      Search journal entries using fuzzy search.
-  stats       Show journal stats (blips, tags, words written).
-  tags        List all tags with usage counts.
-  timesince   Output a string of time since last post.
-
-Flags:
-  -h, --help      help for etu
-  -v, --version   version for etu
-
-Use "etu [command] --help" for more information about a command.
+```shell
+git clone https://github.com/icco/etu
+cd etu
+task build
 ```
 
 ## Inspiration
 
-Etu is [the personification of time](https://en.wikipedia.org/wiki/Time_and_fate_deities) according to the [Lakota](https://en.wikipedia.org/wiki/Lakota_people).
-
-Etu is inspired heavily by the work of @neauoire at [wiki.xxiivv.com](https://wiki.xxiivv.com/#about), [Time Travelers](https://github.com/merveilles/Time-Travelers), and the screenshots in the [inspiration](https://github.com/icco/etu/tree/main/inspiration) folder.
-
-Other projects that inspired me:
-
- - https://github.com/charmbracelet/glow
- - https://github.com/caarlos0/tasktimer
- - https://github.com/achannarasappa/ticker
-
-## History
-
-I've rewritten this approximately seven times. Originally a location-based blogging app, then time tracking, wiki, journaling. Backends: Charm, SQLite, Notion, and now the [etu-backend](https://github.com/icco/etu-backend) gRPC API.
+Etu is [the personification of time](https://en.wikipedia.org/wiki/Time_and_fate_deities) according to the [Lakota](https://en.wikipedia.org/wiki/Lakota_people). It is inspired by [wiki.xxiivv.com](https://wiki.xxiivv.com/#about), [Time Travelers](https://github.com/merveilles/Time-Travelers), [glow](https://github.com/charmbracelet/glow), [tasktimer](https://github.com/caarlos0/tasktimer), [ticker](https://github.com/achannarasappa/ticker), and the screenshots in [inspiration](https://github.com/icco/etu/tree/main/inspiration).
