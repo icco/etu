@@ -2,12 +2,18 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const defaultGRPCTarget = "grpc.etu.timeclimbers.com:443"
+
+// SignupURL is where new users create an account and API key.
+const SignupURL = "https://etu.timeclimbers.com"
 
 // ConfigFile represents the persisted config file format.
 type ConfigFile struct {
@@ -49,7 +55,7 @@ func CachePath(filename string) (string, error) {
 }
 
 // loadConfigFromFile reads api_key and grpc_target from ~/.config/etu/config.json.
-// Missing file or invalid JSON returns nil error and zero values; caller can use env or defaults.
+// A missing file returns zero values; invalid JSON returns an error.
 func loadConfigFromFile() (*ConfigFile, error) {
 	path, err := ConfigPath()
 	if err != nil {
@@ -59,7 +65,7 @@ func loadConfigFromFile() (*ConfigFile, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
 	if err != nil {
 		if os.IsNotExist(err) {
-			return SaveConfig("", "")
+			return &ConfigFile{}, nil
 		}
 		return nil, err
 	}
@@ -86,8 +92,37 @@ func SaveConfig(apiKey, grpcTarget string) (*ConfigFile, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := os.Chmod(path, 0600); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("could not restrict config file permissions: %w", err)
+	}
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		return nil, fmt.Errorf("could not write config file: %w", err)
 	}
 	return cf, nil
+}
+
+// SaveAPIKey stores apiKey in the config file, keeping the saved grpc_target.
+func SaveAPIKey(apiKey string) error {
+	cf, err := loadConfigFromFile()
+	if err != nil {
+		var syntaxErr *json.SyntaxError
+		var typeErr *json.UnmarshalTypeError
+		if !errors.As(err, &syntaxErr) && !errors.As(err, &typeErr) {
+			return err
+		}
+		log.Printf("etu: replacing invalid config: %v", err)
+		cf = &ConfigFile{}
+	}
+	_, err = SaveConfig(strings.TrimSpace(apiKey), cf.GRPCTarget)
+	if err != nil {
+		return err
+	}
+	path, err := CachePath("timesince.cache")
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("saved API key but could not clear timesince cache: %w", err)
+	}
+	return nil
 }

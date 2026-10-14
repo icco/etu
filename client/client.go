@@ -37,19 +37,22 @@ type Config struct {
 }
 
 // LoadConfig loads configuration from ~/.config/etu/config.json and environment variables.
-// Env ETU_API_KEY and ETU_GRPC_TARGET override file values. If no config file exists and
-// no API key is set, a config file is created with the correct structure and an empty key.
+// Env ETU_API_KEY and ETU_GRPC_TARGET override file values. It never writes the config file.
 func LoadConfig() *Config {
 	cf, err := loadConfigFromFile()
 	if err != nil {
 		log.Printf("etu: reading config: %v", err)
+		cf = &ConfigFile{}
 	}
 
-	if cf.APIKey == "" {
-		cf.APIKey = os.Getenv("ETU_API_KEY")
+	if v := os.Getenv("ETU_API_KEY"); v != "" {
+		cf.APIKey = v
 	}
-	if cf.GRPCTarget == "" {
-		cf.GRPCTarget = os.Getenv("ETU_GRPC_TARGET")
+	if v := os.Getenv("ETU_GRPC_TARGET"); v != "" {
+		cf.GRPCTarget = v
+	}
+	if strings.TrimSpace(cf.GRPCTarget) == "" {
+		cf.GRPCTarget = defaultGRPCTarget
 	}
 	// Trim whitespace so pasted keys or env vars with trailing newlines don't break validation.
 	return &Config{
@@ -61,7 +64,7 @@ func LoadConfig() *Config {
 // Validate checks that the API key is present.
 func (c *Config) Validate() error {
 	if c.APIKey == "" {
-		return fmt.Errorf("API key required: set ETU_API_KEY or add api_key to config file")
+		return fmt.Errorf("API key required: run `etu login` or set ETU_API_KEY (sign up at %s)", SignupURL)
 	}
 	c.warnIfTargetUnresolvable()
 	return nil

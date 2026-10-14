@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"go.icco.me/etu-backend/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -184,5 +187,30 @@ func TestGetGRPCClientsNoKey(t *testing.T) {
 	_, err := c.getGRPCClients()
 	if err == nil {
 		t.Error("expected error for empty API key")
+	}
+}
+
+type verificationClient struct {
+	proto.ApiKeysServiceClient
+	valid bool
+}
+
+func (v verificationClient) VerifyApiKey(_ context.Context, _ *proto.VerifyApiKeyRequest, _ ...grpc.CallOption) (*proto.VerifyApiKeyResponse, error) { //nolint:revive // Must match the generated gRPC interface.
+	userID := "alice"
+	return &proto.VerifyApiKeyResponse{Valid: v.valid, UserId: &userID}, nil
+}
+
+func TestVerifyAPIKeyWithoutNotesAccess(t *testing.T) {
+	for _, valid := range []bool{true, false} {
+		g := &grpcClients{apiKeysClient: verificationClient{valid: valid}}
+		g.connOnce.Do(func() {})
+		c := &Config{APIKey: "test-key", grpc: g}
+		err := c.VerifyAPIKey(context.Background())
+		if valid && err != nil {
+			t.Fatalf("valid key requires no notes access: %v", err)
+		}
+		if !valid && status.Code(err) != codes.Unauthenticated {
+			t.Fatalf("invalid key must return Unauthenticated, got %v", err)
+		}
 	}
 }
