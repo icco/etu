@@ -35,8 +35,8 @@ jobs:
           tag_prefix: v
           # Patterns must be wrapped in / / to be treated as regexes. A bare string is
           # a literal substring match, so 'feat:' misses scoped commits like 'feat(x):'.
-          major_pattern: '/^[a-z]+(\(.+\))?!:/'
-          minor_pattern: '/feat(\(.+\))?:/'
+          major_pattern: /^[a-z]+(\(.+\))?!:/
+          minor_pattern: /feat(\(.+\))?:/
           version_format: ${major}.${minor}.${patch}
       - name: Create and push tag
         if: github.event_name != 'push' && steps.versioning.outputs.changed == 'true'
@@ -50,10 +50,10 @@ jobs:
       - name: Run GoReleaser
         # On a tag push GoReleaser reads the version from the tag itself.
         if: github.event_name == 'push' || steps.versioning.outputs.changed == 'true'
-        uses: goreleaser/goreleaser-action@v7
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de
         with:
           distribution: goreleaser
-          version: ~> v2
+          version: v2.19.0
           args: release --clean
         env:
           # Use GITHUB_TOKEN for releases in the same repo
