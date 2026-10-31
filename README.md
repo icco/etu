@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" width="96" alt="">
+
 # Etu
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/icco/etu)](https://goreportcard.com/report/github.com/icco/etu)

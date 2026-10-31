@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="26 24 60.5 60.5"><defs xmlns="http://www.w3.org/2000/svg">
+    <linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="30.27" y1="31.07" x2="73.95" y2="80.21">
+      <stop offset="0" stop-color="#EC07C8" />
+      <stop offset="0.5" stop-color="#A332FF" />
+      <stop offset="1" stop-color="#1F62FF" />
+    </linearGradient>
+    <linearGradient id="foldTop" gradientUnits="userSpaceOnUse" x1="54.63" y1="0" x2="61.85" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity="0" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="foldRight" gradientUnits="userSpaceOnUse" x1="0" y1="40.64" x2="0" y2="48.29">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.45" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#brand)" d="M31.03 40.73V33.17C31.03 30.02 33.55 27.5 36.7 27.5H61.85V30.44H36.7C35.18 30.44 33.97 31.66 33.97 33.17V42.2C33.08 41.53 32.08 41.02 31.03 40.73Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#brand)" d="M31.03 67.73C32.08 67.48 33.08 66.98 33.97 66.35V74.75C33.97 76.26 35.18 77.48 36.7 77.48H69.37C70.88 77.48 72.1 76.26 72.1 74.75V56.98H75.08V74.75C75.08 77.9 72.52 80.5 69.37 80.5H36.7C33.55 80.5 31.03 77.9 31.03 74.75Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#brand)" d="M72.1 40.64H75.08V50.93H72.1Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#foldTop)" d="M54.63 27.5H61.85V30.44H54.63Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#foldRight)" d="M72.1 40.64H75.08V48.29H72.1Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#brand)" d="M61.85 27.5L75.08 40.64H65.42C63.45 40.64 61.85 39.05 61.85 37.07Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="url(#brand)" fill-rule="evenodd" d="M27.12 45.77C27.12 43.04 29.85 41.65 32.16 43.08L46.02 51.35C46.86 51.86 47.28 52.91 47.28 54C47.28 55.09 46.86 56.1 46.02 56.69L32.16 65.3C29.85 66.56 27.12 65.17 27.12 62.57ZM32.12 50.3C32.12 49.55 32.87 49.25 33.42 49.63L39.85 53.54C40.27 53.83 40.27 54.42 39.85 54.71L33.42 58.58C32.87 58.96 32.12 58.62 32.12 57.95Z" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="url(#brand)" stroke-width="2.27" stroke-linecap="round" stroke-linejoin="round" d="M47.28 54.04H49.59L51.69 51.02L54.76 58.87L58.41 45.22L61.77 62.99L65.21 49.34L68.41 57.11L70.8 54H84.24" /></svg>
