@@ -1,12 +1,12 @@
 module go.icco.me/etu
 
-go 1.26.2
+go 1.26.7
 
 require (
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.1.1
 	charm.land/huh/v2 v2.0.3
-	charm.land/lipgloss/v2 v2.0.6
+	charm.land/lipgloss/v2 v2.1.0
 	github.com/charmbracelet/x/ansi v0.11.9
 	github.com/spf13/cobra v1.10.2
 	go.icco.me/etu-backend v0.0.0-20261013141805-4abbe3c69fd3
