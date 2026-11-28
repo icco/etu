@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 	"charm.land/huh/v2/spinner"
 	"github.com/spf13/cobra"
@@ -85,7 +84,7 @@ var (
 	listCmd = &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"l"},
-		Short:   "List journal entries, with an optional starting datetime.",
+		Short:   "List recent journal entries.",
 		Args:    cobra.NoArgs,
 		RunE:    listPosts,
 	}
@@ -93,7 +92,7 @@ var (
 	searchCmd = &cobra.Command{
 		Use:     "search",
 		Aliases: []string{"s"},
-		Short:   "Search journal entries using fuzzy search.",
+		Short:   "Search journal entries.",
 		Args:    cobra.NoArgs,
 		RunE:    searchPosts,
 	}
@@ -166,20 +165,20 @@ func createPost(cmd *cobra.Command, _ []string) error {
 		if err := form.WithTheme(etuTheme).Run(); err != nil {
 			return err
 		}
+	}
 
-		text = strings.TrimSpace(text)
-		if text == "" {
-			return fmt.Errorf("journal entry cannot be empty")
-		}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return fmt.Errorf("journal entry cannot be empty")
 	}
 
 	imagePaths, err := cmd.Flags().GetStringSlice("image")
 	if err != nil {
-		imagePaths = nil
+		return err
 	}
 	audioPaths, err := cmd.Flags().GetStringSlice("audio")
 	if err != nil {
-		audioPaths = nil
+		return err
 	}
 	imagePaths = append(imagePaths, parsePaths(imagePathsInput)...)
 	audioPaths = append(audioPaths, parsePaths(audioPathsInput)...)
@@ -218,19 +217,10 @@ func timeSinceLastPost(cmd *cobra.Command, _ []string) error {
 
 func deletePost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
-	model := newPostListModel(cfg, 25, "Select entry to delete", true)
-	p := tea.NewProgram(model)
-	finalModel, err := p.Run()
-	if err != nil {
+	selectedPost, err := runPostList(newPostListModel(cfg, 25, "Select entry to delete", true))
+	if err != nil || selectedPost == nil {
 		return err
 	}
-
-	// Check if a post was selected
-	if finalModel.(postListModel).selected == nil {
-		return nil // User quit without selecting
-	}
-
-	selectedPost := finalModel.(postListModel).selected
 
 	// Prompt for confirmation
 	var confirm bool
@@ -281,26 +271,15 @@ func mostRecentPost(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	model := newPostListModel(cfg, 1, "Most Recent Entry", true)
-	if _, err := tea.NewProgram(model).Run(); err != nil {
-		return err
-	}
-	return nil
+	return displayPost(cmd, posts[0])
 }
 
 func listPosts(cmd *cobra.Command, _ []string) error {
-	model := newPostListModel(cfg, 25, "Interstitial Notes", true)
-	p := tea.NewProgram(model)
-	finalModel, err := p.Run()
-	if err != nil {
+	selected, err := runPostList(newPostListModel(cfg, 25, "Interstitial Notes", true))
+	if err != nil || selected == nil {
 		return err
 	}
-
-	// If a post was selected, display it with media
-	if finalModel.(postListModel).selected != nil {
-		return displayPost(cmd, finalModel.(postListModel).selected)
-	}
-	return nil
+	return displayPost(cmd, selected)
 }
 
 func randomPost(cmd *cobra.Command, _ []string) error {

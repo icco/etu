@@ -185,6 +185,17 @@ func (m *postListModel) applyStyles(st styles) {
 	m.list.Help.Styles.FullSeparator = st.sep
 }
 
+// runPostList runs m until the user quits and returns the selected post, or the
+// load error the list showed.
+func runPostList(m postListModel) (*client.Post, error) {
+	final, err := tea.NewProgram(m).Run()
+	if err != nil {
+		return nil, err
+	}
+	pm := final.(postListModel)
+	return pm.selected, pm.loadErr
+}
+
 func (m postListModel) Init() tea.Cmd {
 	if !m.loading {
 		return nil

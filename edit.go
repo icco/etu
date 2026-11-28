@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 	"charm.land/huh/v2/spinner"
 	"github.com/spf13/cobra"
@@ -20,19 +19,10 @@ var editCmd = &cobra.Command{
 
 func editPost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
-	model := newPostListModel(cfg, 25, "Select entry to edit", true)
-	p := tea.NewProgram(model)
-	finalModel, err := p.Run()
-	if err != nil {
+	selectedPost, err := runPostList(newPostListModel(cfg, 25, "Select entry to edit", true))
+	if err != nil || selectedPost == nil {
 		return err
 	}
-
-	// Check if a post was selected
-	if finalModel.(postListModel).selected == nil {
-		return nil // User quit without selecting
-	}
-
-	selectedPost := finalModel.(postListModel).selected
 
 	// Fetch full content so the editor is pre-filled with the whole entry
 	var text string
