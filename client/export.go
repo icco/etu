@@ -14,11 +14,7 @@ import (
 // Export streams all of the caller's data to w as a JSON array of export items
 // and returns the number of items written.
 func (c *Config) Export(ctx context.Context, w io.Writer) (int, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return 0, err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return 0, err
 	}

@@ -41,7 +41,7 @@ See [pricing](https://etu.timeclimbers.com/pricing) for current plans and trial 
 | `show` | Show an entry with its images and audio. |
 | `last` | Print the most recent entry. |
 | `random` | Show a random entry. |
-| `search` | Fuzzy search entries. |
+| `search` | Search entries. |
 | `edit` | Edit an entry. |
 | `delete` | Delete an entry. |
 | `tags` | List tags with usage counts. |

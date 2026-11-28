@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2/spinner"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/spf13/cobra"
 	"go.icco.me/etu/client"
 )
@@ -26,20 +26,11 @@ var showCmd = &cobra.Command{
 
 func showPost(cmd *cobra.Command, _ []string) error {
 	// Show list of posts to select from
-	model := newPostListModel(cfg, 25, "Select entry to view", true)
-	p := tea.NewProgram(model)
-	finalModel, err := p.Run()
-	if err != nil {
+	selected, err := runPostList(newPostListModel(cfg, 25, "Select entry to view", true))
+	if err != nil || selected == nil {
 		return err
 	}
-
-	// Check if a post was selected
-	if finalModel.(postListModel).selected == nil {
-		return nil // User quit without selecting
-	}
-
-	selectedPost := finalModel.(postListModel).selected
-	return displayPost(cmd, selectedPost)
+	return displayPost(cmd, selected)
 }
 
 func displayPost(cmd *cobra.Command, post *client.Post) error {
@@ -107,11 +98,7 @@ func displayPost(cmd *cobra.Command, post *client.Post) error {
 }
 
 func truncate(s string, maxLen int) string {
-	s = strings.ReplaceAll(s, "\n", " ")
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
+	return ansi.Truncate(strings.ReplaceAll(s, "\n", " "), maxLen, "...")
 }
 
 // displayImageInline attempts to display an image inline using iTerm2's protocol.

@@ -8,6 +8,7 @@ require (
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.1.1
 	github.com/charmbracelet/x/ansi v0.11.10
+	github.com/gofrs/flock v0.13.2
 	github.com/spf13/cobra v1.10.2
 	go.icco.me/etu-backend v0.0.0-20261013141805-4abbe3c69fd3
 	google.golang.org/grpc v1.85.0

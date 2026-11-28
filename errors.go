@@ -27,6 +27,8 @@ func friendlyError(err error) error {
 		}
 	case codes.Unauthenticated:
 		return errors.New("API key rejected (keys are revoked when your password changes), create a new one at " + apiSettingsURL)
+	case codes.Unavailable:
+		return fmt.Errorf("%w (check grpc_target in your config or ETU_GRPC_TARGET)", err)
 	}
 	return err
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"strings"
 
-	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 )
@@ -36,16 +35,9 @@ func searchPosts(cmd *cobra.Command, args []string) error {
 	model.query = query
 	model.loading = true
 
-	p := tea.NewProgram(model)
-	finalModel, err := p.Run()
-	if err != nil {
+	selected, err := runPostList(model)
+	if err != nil || selected == nil {
 		return err
 	}
-
-	// If a post was selected, display it with media
-	if finalModel.(postListModel).selected != nil {
-		return displayPost(cmd, finalModel.(postListModel).selected)
-	}
-
-	return nil
+	return displayPost(cmd, selected)
 }

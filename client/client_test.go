@@ -1,10 +1,15 @@
 package client
 
 import (
+	"bytes"
+	"encoding/gob"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/gofrs/flock"
 )
 
 func TestValidate(t *testing.T) {
@@ -192,9 +197,9 @@ func TestCacheRoundTrip(t *testing.T) {
 	setTestHome(t)
 
 	cfg := &Config{APIKey: "test"}
-	dur := 5 * time.Minute
+	last := time.Now().Add(-5 * time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(dur); err != nil {
+	if err := cfg.cacheToFile(t.Context(), last); err != nil {
 		t.Fatalf("cacheToFile: %v", err)
 	}
 
@@ -205,8 +210,8 @@ func TestCacheRoundTrip(t *testing.T) {
 	if data == nil {
 		t.Fatal("expected cache data, got nil")
 	}
-	if data.Duration != dur {
-		t.Errorf("Duration = %v, want %v", data.Duration, dur)
+	if !data.LastPost.Equal(last) {
+		t.Errorf("LastPost = %v, want %v", data.LastPost, last)
 	}
 	if time.Since(data.Saved) > time.Second {
 		t.Errorf("Saved time too old: %v", data.Saved)
@@ -217,11 +222,13 @@ func TestCacheOverwrite(t *testing.T) {
 	setTestHome(t)
 
 	cfg := &Config{APIKey: "test"}
+	first := time.Now().Add(-time.Hour).Truncate(time.Second)
+	second := time.Now().Add(-time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(1 * time.Minute); err != nil {
+	if err := cfg.cacheToFile(t.Context(), first); err != nil {
 		t.Fatal(err)
 	}
-	if err := cfg.cacheToFile(10 * time.Minute); err != nil {
+	if err := cfg.cacheToFile(t.Context(), second); err != nil {
 		t.Fatal(err)
 	}
 
@@ -229,8 +236,17 @@ func TestCacheOverwrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if data.Duration != 10*time.Minute {
-		t.Errorf("Duration = %v, want %v", data.Duration, 10*time.Minute)
+	if !data.LastPost.Equal(second) {
+		t.Errorf("LastPost = %v, want %v", data.LastPost, second)
+	}
+	entries, err := os.ReadDir(filepath.Dir(mustCachePath(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) == ".tmp" {
+			t.Errorf("temp file left behind: %s", e.Name())
+		}
 	}
 }
 
@@ -244,5 +260,149 @@ func TestCacheFromFileMissing(t *testing.T) {
 	}
 	if data != nil {
 		t.Error("expected nil data for missing cache file")
+	}
+}
+
+func mustCachePath(t *testing.T) string {
+	t.Helper()
+	path, err := CachePath(timesinceCacheFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestTimeSinceLastPost(t *testing.T) {
+	cachedPost := time.Now().Add(-3 * time.Hour)
+	fetchedPost := time.Now().Add(-time.Hour)
+	fetchErr := errors.New("backend down")
+	key := (&Config{APIKey: "etu_alice", GRPCTarget: "localhost:443"}).cacheKey()
+
+	tests := []struct {
+		name      string
+		cache     *cacheData
+		corrupt   bool
+		readOnly  bool
+		fetchErr  error
+		want      time.Duration
+		wantFetch bool
+		wantErr   bool
+	}{
+		{name: "fresh cache skips fetch", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost, Key: key}, want: 3 * time.Hour},
+		{name: "stale cache fetches", cache: &cacheData{Saved: time.Now().Add(-time.Hour), LastPost: cachedPost, Key: key}, want: time.Hour, wantFetch: true},
+		{name: "old-format cache fetches", cache: &cacheData{Saved: time.Now(), Key: key}, want: time.Hour, wantFetch: true},
+		{name: "other account cache fetches", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost, Key: "other"}, want: time.Hour, wantFetch: true},
+		{name: "missing cache fetches", want: time.Hour, wantFetch: true},
+		{name: "corrupt cache fetches", corrupt: true, want: time.Hour, wantFetch: true},
+		{name: "failed cache write still answers", readOnly: true, want: time.Hour, wantFetch: true},
+		{name: "fetch error", fetchErr: fetchErr, wantFetch: true, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			path := filepath.Join(dir, timesinceCacheFile)
+			if tt.cache != nil {
+				var buf bytes.Buffer
+				if err := gob.NewEncoder(&buf).Encode(tt.cache); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, buf.Bytes(), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.corrupt {
+				if err := os.WriteFile(path, []byte("not gob"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.readOnly {
+				if err := os.Chmod(dir, 0500); err != nil { //nolint:gosec // G302: test dir must be readable but not writable
+					t.Fatal(err)
+				}
+				t.Cleanup(func() { _ = os.Chmod(dir, 0700) }) //nolint:gosec // G302: restore so TempDir cleanup can remove it
+			}
+
+			fetched := false
+			got, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
+				fetched = true
+				return fetchedPost, tt.fetchErr
+			})
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+			}
+			if fetched != tt.wantFetch {
+				t.Errorf("fetched = %v, want %v", fetched, tt.wantFetch)
+			}
+			if !tt.wantErr && (got < tt.want || got > tt.want+time.Minute) {
+				t.Errorf("got %v, want about %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTimeSinceLastPostKeepsNewerWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	key := "alice"
+	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
+
+	_, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
+		if err := writeCache(t.Context(), path, key, newer, time.Time{}); err != nil {
+			t.Fatal(err)
+		}
+		return time.Now().Add(-time.Hour), nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := readCache(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || !got.LastPost.Equal(newer) {
+		t.Fatalf("cache = %+v, want LastPost %v from the write made during the fetch", got, newer)
+	}
+}
+
+func TestTimeSinceLastPostNewerFetchBeatsOverlappingOlderFetch(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	key := "alice"
+	older := time.Now().Add(-time.Hour).Truncate(time.Second)
+	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
+
+	_, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
+		if err := writeCache(t.Context(), path, key, older, time.Now().Add(-time.Second)); err != nil {
+			t.Fatal(err)
+		}
+		return newer, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := readCache(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || !got.LastPost.Equal(newer) {
+		t.Fatalf("cache = %+v, want LastPost %v from the newer fetch", got, newer)
+	}
+}
+
+func TestWriteCacheGivesUpWhenLocked(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	held := flock.New(path + ".lock")
+	if err := held.Lock(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = held.Unlock() })
+
+	start := time.Now()
+	if err := writeCache(t.Context(), path, "alice", time.Now(), time.Time{}); err == nil {
+		t.Fatal("writeCache succeeded while the lock was held")
+	}
+	if d := time.Since(start); d > 3*cacheLockTimeout {
+		t.Fatalf("writeCache waited %v, want about %v", d, cacheLockTimeout)
 	}
 }

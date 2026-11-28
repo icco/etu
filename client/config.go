@@ -117,7 +117,7 @@ func SaveAPIKey(apiKey string) error {
 	if err != nil {
 		return err
 	}
-	path, err := CachePath("timesince.cache")
+	path, err := CachePath(timesinceCacheFile)
 	if err != nil {
 		return err
 	}

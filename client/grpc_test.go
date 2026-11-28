@@ -18,9 +18,7 @@ func TestApiKeyCredsGetRequestMetadata(t *testing.T) {
 		key  string
 		want string
 	}{
-		{"with prefix", "etu_abc123", "etu_abc123"},
-		{"without prefix", "abc123", "etu_abc123"},
-		{"empty key", "", "etu_"},
+		{"key sent as stored", "etu_abc123", "etu_abc123"},
 	}
 
 	for _, tt := range tests {
