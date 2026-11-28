@@ -25,6 +25,7 @@ import (
 const (
 	timesinceCacheFile = "timesince.cache"
 	timesinceCacheTTL  = 5 * time.Minute
+	cacheLockTimeout   = time.Second
 )
 
 // Post represents a journal entry (display model for TUI/CLI).
@@ -172,19 +173,26 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 // writeCache replaces the cache file with a rename, so a concurrent reader
 // sees the old file or the new one, never a half-written one. When started is
 // set, the write is skipped if another process cached for the same key after
-// started, since a fetch that began earlier may hold an older post.
+// started and its post is not older, since a fetch that began earlier may hold
+// an older post. The lock wait is bounded so a stuck writer cannot hang callers.
 func writeCache(path, key string, lastPost, started time.Time) (err error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 	lock := flock.New(path + ".lock")
-	if err := lock.Lock(); err != nil {
-		return err
+	ctx, cancel := context.WithTimeout(context.Background(), cacheLockTimeout)
+	defer cancel()
+	locked, err := lock.TryLockContext(ctx, 10*time.Millisecond)
+	if err != nil {
+		return fmt.Errorf("lock timesince cache: %w", err)
+	}
+	if !locked {
+		return errors.New("lock timesince cache: busy")
 	}
 	defer func() { err = errors.Join(err, lock.Unlock()) }()
 	if !started.IsZero() {
-		if cur, err := readCache(path); err == nil && cur != nil && cur.Key == key && cur.Saved.After(started) {
+		if cur, err := readCache(path); err == nil && cur != nil && cur.Key == key && cur.Saved.After(started) && !lastPost.After(cur.LastPost) {
 			return nil
 		}
 	}

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/gofrs/flock"
 )
 
 func TestValidate(t *testing.T) {
@@ -360,5 +362,47 @@ func TestTimeSinceLastPostKeepsNewerWrite(t *testing.T) {
 	}
 	if got == nil || !got.LastPost.Equal(newer) {
 		t.Fatalf("cache = %+v, want LastPost %v from the write made during the fetch", got, newer)
+	}
+}
+
+func TestTimeSinceLastPostNewerFetchBeatsOverlappingOlderFetch(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	key := "alice"
+	older := time.Now().Add(-time.Hour).Truncate(time.Second)
+	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
+
+	_, err := timeSinceLastPost(path, key, func() (time.Time, error) {
+		if err := writeCache(path, key, older, time.Now().Add(-time.Second)); err != nil {
+			t.Fatal(err)
+		}
+		return newer, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := readCache(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || !got.LastPost.Equal(newer) {
+		t.Fatalf("cache = %+v, want LastPost %v from the newer fetch", got, newer)
+	}
+}
+
+func TestWriteCacheGivesUpWhenLocked(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	held := flock.New(path + ".lock")
+	if err := held.Lock(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = held.Unlock() })
+
+	start := time.Now()
+	if err := writeCache(path, "alice", time.Now(), time.Time{}); err == nil {
+		t.Fatal("writeCache succeeded while the lock was held")
+	}
+	if d := time.Since(start); d > 3*cacheLockTimeout {
+		t.Fatalf("writeCache waited %v, want about %v", d, cacheLockTimeout)
 	}
 }
