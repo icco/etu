@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/gob"
 	"errors"
 	"os"
@@ -298,14 +299,11 @@ func TestTimeSinceLastPost(t *testing.T) {
 			dir := t.TempDir()
 			path := filepath.Join(dir, timesinceCacheFile)
 			if tt.cache != nil {
-				f, err := os.Create(path)
-				if err != nil {
+				var buf bytes.Buffer
+				if err := gob.NewEncoder(&buf).Encode(tt.cache); err != nil {
 					t.Fatal(err)
 				}
-				if err := gob.NewEncoder(f).Encode(tt.cache); err != nil {
-					t.Fatal(err)
-				}
-				if err := f.Close(); err != nil {
+				if err := os.WriteFile(path, buf.Bytes(), 0600); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -315,10 +313,10 @@ func TestTimeSinceLastPost(t *testing.T) {
 				}
 			}
 			if tt.readOnly {
-				if err := os.Chmod(dir, 0500); err != nil {
+				if err := os.Chmod(dir, 0500); err != nil { //nolint:gosec // G302: test dir must be readable but not writable
 					t.Fatal(err)
 				}
-				t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
+				t.Cleanup(func() { _ = os.Chmod(dir, 0700) }) //nolint:gosec // G302: restore so TempDir cleanup can remove it
 			}
 
 			fetched := false
