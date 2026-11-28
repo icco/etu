@@ -274,6 +274,7 @@ func TestTimeSinceLastPost(t *testing.T) {
 	cachedPost := time.Now().Add(-3 * time.Hour)
 	fetchedPost := time.Now().Add(-time.Hour)
 	fetchErr := errors.New("backend down")
+	key := (&Config{APIKey: "etu_alice", GRPCTarget: "localhost:443"}).cacheKey()
 
 	tests := []struct {
 		name      string
@@ -285,9 +286,10 @@ func TestTimeSinceLastPost(t *testing.T) {
 		wantFetch bool
 		wantErr   bool
 	}{
-		{name: "fresh cache skips fetch", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost}, want: 3 * time.Hour},
-		{name: "stale cache fetches", cache: &cacheData{Saved: time.Now().Add(-time.Hour), LastPost: cachedPost}, want: time.Hour, wantFetch: true},
-		{name: "old-format cache fetches", cache: &cacheData{Saved: time.Now()}, want: time.Hour, wantFetch: true},
+		{name: "fresh cache skips fetch", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost, Key: key}, want: 3 * time.Hour},
+		{name: "stale cache fetches", cache: &cacheData{Saved: time.Now().Add(-time.Hour), LastPost: cachedPost, Key: key}, want: time.Hour, wantFetch: true},
+		{name: "old-format cache fetches", cache: &cacheData{Saved: time.Now(), Key: key}, want: time.Hour, wantFetch: true},
+		{name: "other account cache fetches", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost, Key: "other"}, want: time.Hour, wantFetch: true},
 		{name: "missing cache fetches", want: time.Hour, wantFetch: true},
 		{name: "corrupt cache fetches", corrupt: true, want: time.Hour, wantFetch: true},
 		{name: "failed cache write still answers", readOnly: true, want: time.Hour, wantFetch: true},
@@ -320,7 +322,7 @@ func TestTimeSinceLastPost(t *testing.T) {
 			}
 
 			fetched := false
-			got, err := timeSinceLastPost(path, func() (time.Time, error) {
+			got, err := timeSinceLastPost(path, key, func() (time.Time, error) {
 				fetched = true
 				return fetchedPost, tt.fetchErr
 			})
@@ -334,5 +336,29 @@ func TestTimeSinceLastPost(t *testing.T) {
 				t.Errorf("got %v, want about %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestTimeSinceLastPostKeepsNewerWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), timesinceCacheFile)
+	key := "alice"
+	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
+
+	_, err := timeSinceLastPost(path, key, func() (time.Time, error) {
+		if err := writeCache(path, key, newer, time.Time{}); err != nil {
+			t.Fatal(err)
+		}
+		return time.Now().Add(-time.Hour), nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := readCache(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || !got.LastPost.Equal(newer) {
+		t.Fatalf("cache = %+v, want LastPost %v from the write made during the fetch", got, newer)
 	}
 }

@@ -4,7 +4,9 @@ package client
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -16,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/flock"
 	"go.icco.me/etu-backend/proto"
 )
 
@@ -76,11 +79,16 @@ func (c *Config) Validate() error {
 
 // UpdateCache updates the cache with the latest post.
 func (c *Config) UpdateCache(ctx context.Context) error {
+	path, err := c.cachePath()
+	if err != nil {
+		return err
+	}
+	started := time.Now()
 	last, err := c.lastPostTime(ctx)
 	if err != nil {
 		return err
 	}
-	return c.cacheToFile(last)
+	return writeCache(path, c.cacheKey(), last, started)
 }
 
 // TimeSinceLastPost returns the time since the last post was created.
@@ -95,23 +103,32 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 		}
 		return time.Since(last), nil
 	}
-	return timeSinceLastPost(path, fetch)
+	return timeSinceLastPost(path, c.cacheKey(), fetch)
 }
 
-// timeSinceLastPost answers from the cache at path while it is fresh, otherwise
-// from fetch. A failed cache write is logged, since the answer is still right.
-func timeSinceLastPost(path string, fetch func() (time.Time, error)) (time.Duration, error) {
-	if cache, err := readCache(path); err == nil && cache != nil && !cache.LastPost.IsZero() && time.Since(cache.Saved) < timesinceCacheTTL {
+// timeSinceLastPost answers from the cache at path while it is fresh and was
+// written for key, otherwise from fetch. A failed cache write is logged, since
+// the answer is still right.
+func timeSinceLastPost(path, key string, fetch func() (time.Time, error)) (time.Duration, error) {
+	if cache, err := readCache(path); err == nil && cache != nil && cache.Key == key && !cache.LastPost.IsZero() && time.Since(cache.Saved) < timesinceCacheTTL {
 		return time.Since(cache.LastPost), nil
 	}
+	started := time.Now()
 	last, err := fetch()
 	if err != nil {
 		return 0, err
 	}
-	if err := writeCache(path, last); err != nil {
+	if err := writeCache(path, key, last, started); err != nil {
 		log.Printf("etu: writing timesince cache: %v", err)
 	}
 	return time.Since(last), nil
+}
+
+// cacheKey identifies the account and backend a cache entry belongs to without
+// storing the API key.
+func (c *Config) cacheKey() string {
+	sum := sha256.Sum256([]byte(c.APIKey + "\n" + c.GRPCTarget))
+	return hex.EncodeToString(sum[:8])
 }
 
 func (c *Config) lastPostTime(ctx context.Context) (time.Time, error) {
@@ -128,18 +145,20 @@ func (c *Config) lastPostTime(ctx context.Context) (time.Time, error) {
 type cacheData struct {
 	Saved    time.Time
 	LastPost time.Time
+	Key      string
 }
 
 func (c *Config) cachePath() (string, error) {
 	return CachePath(timesinceCacheFile)
 }
 
+// cacheToFile records lastPost as the newest post, replacing any cache entry.
 func (c *Config) cacheToFile(lastPost time.Time) error {
 	path, err := c.cachePath()
 	if err != nil {
 		return err
 	}
-	return writeCache(path, lastPost)
+	return writeCache(path, c.cacheKey(), lastPost, time.Time{})
 }
 
 func (c *Config) cacheFromFile() (*cacheData, error) {
@@ -151,11 +170,23 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 }
 
 // writeCache replaces the cache file with a rename, so a concurrent reader
-// sees the old file or the new one, never a half-written one.
-func writeCache(path string, lastPost time.Time) (err error) {
+// sees the old file or the new one, never a half-written one. When started is
+// set, the write is skipped if another process cached for the same key after
+// started, since a fetch that began earlier may hold an older post.
+func writeCache(path, key string, lastPost, started time.Time) (err error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
+	}
+	lock := flock.New(path + ".lock")
+	if err := lock.Lock(); err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, lock.Unlock()) }()
+	if !started.IsZero() {
+		if cur, err := readCache(path); err == nil && cur != nil && cur.Key == key && cur.Saved.After(started) {
+			return nil
+		}
 	}
 	f, err := os.CreateTemp(dir, filepath.Base(path)+".*.tmp")
 	if err != nil {
@@ -166,7 +197,7 @@ func writeCache(path string, lastPost time.Time) (err error) {
 			err = errors.Join(err, os.Remove(f.Name()))
 		}
 	}()
-	if err := gob.NewEncoder(f).Encode(cacheData{Saved: time.Now(), LastPost: lastPost}); err != nil {
+	if err := gob.NewEncoder(f).Encode(cacheData{Saved: time.Now(), LastPost: lastPost, Key: key}); err != nil {
 		return errors.Join(err, f.Close())
 	}
 	if err := f.Close(); err != nil {
