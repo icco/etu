@@ -5,11 +5,11 @@ package client
 import (
 	"context"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"log"
 	"math"
 	"mime"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +17,11 @@ import (
 	"time"
 
 	"go.icco.me/etu-backend/proto"
+)
+
+const (
+	timesinceCacheFile = "timesince.cache"
+	timesinceCacheTTL  = 5 * time.Minute
 )
 
 // Post represents a journal entry (display model for TUI/CLI).
@@ -66,101 +71,105 @@ func (c *Config) Validate() error {
 	if c.APIKey == "" {
 		return fmt.Errorf("API key required: run `etu login` or set ETU_API_KEY (sign up at %s)", SignupURL)
 	}
-	c.warnIfTargetUnresolvable()
 	return nil
-}
-
-// warnIfTargetUnresolvable prints a stderr warning when GRPCTarget's host doesn't resolve.
-// Catches stale grpc_target values after a default change (e.g. PR #97 moved natwelch.com → timeclimbers.com).
-func (c *Config) warnIfTargetUnresolvable() {
-	if c.GRPCTarget == "" {
-		return
-	}
-	host, _, err := net.SplitHostPort(c.GRPCTarget)
-	if err != nil {
-		host = c.GRPCTarget
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	if addrs, err := net.DefaultResolver.LookupHost(ctx, host); err == nil && len(addrs) > 0 {
-		return
-	}
-	path, _ := ConfigPath()
-	fmt.Fprintf(os.Stderr, "etu: warning: grpc_target %q does not resolve (default is %s). Update %s, set ETU_GRPC_TARGET, or clear the value to fall back to the default.\n", c.GRPCTarget, defaultGRPCTarget, path)
 }
 
 // UpdateCache updates the cache with the latest post.
 func (c *Config) UpdateCache(ctx context.Context) error {
-	posts, err := c.ListPosts(ctx, 1)
+	last, err := c.lastPostTime(ctx)
 	if err != nil {
 		return err
 	}
-	if len(posts) == 0 {
-		return fmt.Errorf("no posts found")
-	}
-	dur := time.Since(posts[0].CreatedAt)
-	return c.cacheToFile(dur)
+	return c.cacheToFile(last)
 }
 
 // TimeSinceLastPost returns the time since the last post was created.
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
-	cache, err := c.cacheFromFile()
+	path, err := c.cachePath()
 	if err != nil {
-		log.Printf("etu: reading timesince cache: %v", err)
+		return 0, err
 	}
-	if cache != nil {
-		if time.Since(cache.Saved) < 5*time.Minute {
-			return cache.Duration, nil
-		}
+	return timeSinceLastPost(path, func() (time.Time, error) { return c.lastPostTime(ctx) })
+}
+
+// timeSinceLastPost answers from the cache at path while it is fresh, otherwise
+// from fetch. A failed cache write is logged, since the answer is still right.
+func timeSinceLastPost(path string, fetch func() (time.Time, error)) (time.Duration, error) {
+	if cache, err := readCache(path); err == nil && cache != nil && !cache.LastPost.IsZero() && time.Since(cache.Saved) < timesinceCacheTTL {
+		return time.Since(cache.LastPost), nil
 	}
-	if err := c.UpdateCache(ctx); err != nil {
-		return 0, fmt.Errorf("updating cache %w", err)
-	}
-	cache, err = c.cacheFromFile()
+	last, err := fetch()
 	if err != nil {
-		log.Printf("etu: reading timesince cache: %v", err)
+		return 0, err
 	}
-	if cache != nil {
-		return cache.Duration, nil
+	if err := writeCache(path, last); err != nil {
+		log.Printf("etu: writing timesince cache: %v", err)
 	}
-	return 0, fmt.Errorf("cache still not found")
+	return time.Since(last), nil
+}
+
+func (c *Config) lastPostTime(ctx context.Context) (time.Time, error) {
+	posts, err := c.ListPosts(ctx, 1)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if len(posts) == 0 {
+		return time.Time{}, errors.New("no posts found")
+	}
+	return posts[0].CreatedAt, nil
 }
 
 type cacheData struct {
 	Saved    time.Time
-	Duration time.Duration
+	LastPost time.Time
 }
 
 func (c *Config) cachePath() (string, error) {
-	return CachePath("timesince.cache")
+	return CachePath(timesinceCacheFile)
 }
 
-func (c *Config) cacheToFile(dur time.Duration) (err error) {
+func (c *Config) cacheToFile(lastPost time.Time) error {
 	path, err := c.cachePath()
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return err
-	}
-	// path is built from CachePath() (fixed config dir under user home), not external input.
-	f, err := os.Create(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if closeErr := f.Close(); closeErr != nil && err == nil {
-			err = closeErr
-		}
-	}()
-	return gob.NewEncoder(f).Encode(cacheData{Saved: time.Now(), Duration: dur})
+	return writeCache(path, lastPost)
 }
 
-func (c *Config) cacheFromFile() (data *cacheData, err error) {
+func (c *Config) cacheFromFile() (*cacheData, error) {
 	path, err := c.cachePath()
 	if err != nil {
 		return nil, err
 	}
+	return readCache(path)
+}
+
+// writeCache replaces the cache file with a rename, so a concurrent reader
+// sees the old file or the new one, never a half-written one.
+func writeCache(path string, lastPost time.Time) (err error) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(dir, filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, os.Remove(f.Name()))
+		}
+	}()
+	if err := gob.NewEncoder(f).Encode(cacheData{Saved: time.Now(), LastPost: lastPost}); err != nil {
+		return errors.Join(err, f.Close())
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Rename(f.Name(), path)
+}
+
+func readCache(path string) (data *cacheData, err error) {
 	// path is built from CachePath() (fixed config dir under user home), not external input.
 	f, err := os.Open(path) //nolint:gosec // G304: path is from fixed config dir, not user-controlled
 	if err != nil {
@@ -202,64 +211,51 @@ func detectMIME(data []byte, path string) string {
 	return mimeType
 }
 
-// LoadImageUploads reads image files from paths and returns proto ImageUpload messages.
-// MIME type is detected from content (or file extension as fallback).
-func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
+// loadUploads reads each path and builds an upload from its data and MIME type.
+func loadUploads[T any](kind string, paths []string, build func(data []byte, mimeType string) T) ([]T, error) {
 	if len(paths) == 0 {
 		return nil, nil
 	}
-	out := make([]*proto.ImageUpload, 0, len(paths))
+	out := make([]T, 0, len(paths))
 	for _, p := range paths {
 		// Paths come from CLI flags supplied by the user; reading them is the intent.
 		data, err := os.ReadFile(p) //nolint:gosec // G304: user-supplied CLI input
 		if err != nil {
-			return nil, fmt.Errorf("read image %s: %w", p, err)
+			return nil, fmt.Errorf("read %s %s: %w", kind, p, err)
 		}
-		out = append(out, &proto.ImageUpload{
-			Data:     data,
-			MimeType: detectMIME(data, p),
-		})
+		out = append(out, build(data, detectMIME(data, p)))
 	}
 	return out, nil
+}
+
+// LoadImageUploads reads image files from paths and returns proto ImageUpload messages.
+// MIME type is detected from content (or file extension as fallback).
+func LoadImageUploads(paths []string) ([]*proto.ImageUpload, error) {
+	return loadUploads("image", paths, func(data []byte, mimeType string) *proto.ImageUpload {
+		return &proto.ImageUpload{Data: data, MimeType: mimeType}
+	})
 }
 
 // LoadAudioUploads reads audio files from paths and returns proto AudioUpload messages.
 // MIME type is detected from content (or file extension as fallback).
 func LoadAudioUploads(paths []string) ([]*proto.AudioUpload, error) {
-	if len(paths) == 0 {
-		return nil, nil
-	}
-	out := make([]*proto.AudioUpload, 0, len(paths))
-	for _, p := range paths {
-		// Paths come from CLI flags supplied by the user; reading them is the intent.
-		data, err := os.ReadFile(p) //nolint:gosec // G304: user-supplied CLI input
-		if err != nil {
-			return nil, fmt.Errorf("read audio %s: %w", p, err)
-		}
-		out = append(out, &proto.AudioUpload{
-			Data:     data,
-			MimeType: detectMIME(data, p),
-		})
-	}
-	return out, nil
+	return loadUploads("audio", paths, func(data []byte, mimeType string) *proto.AudioUpload {
+		return &proto.AudioUpload{Data: data, MimeType: mimeType}
+	})
 }
 
 // SaveEntry saves a new journal entry via the backend (tags are generated on the backend).
 // imagePaths and audioPaths are optional paths to image and audio files to attach to the note.
 func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPaths []string) error {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return err
-	}
-	g, err := c.getGRPCClients()
-	if err != nil {
-		return err
-	}
 	images, err := LoadImageUploads(imagePaths)
 	if err != nil {
 		return err
 	}
 	audios, err := LoadAudioUploads(audioPaths)
+	if err != nil {
+		return err
+	}
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return err
 	}
@@ -272,10 +268,8 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 	if err != nil {
 		return err
 	}
-	created := resp.GetNote()
-	if created != nil && created.GetCreatedAt() != nil {
-		dur := time.Since(created.GetCreatedAt().AsTime())
-		if err := c.cacheToFile(dur); err != nil {
+	if created := resp.GetNote(); created != nil && created.GetCreatedAt() != nil {
+		if err := c.cacheToFile(created.GetCreatedAt().AsTime()); err != nil {
 			log.Printf("etu: updating timesince cache: %v", err)
 		}
 	}
@@ -285,11 +279,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 // UpdatePost updates the content of an existing journal entry by ID.
 // Tags are left untouched (the backend keeps the existing tag list).
 func (c *Config) UpdatePost(ctx context.Context, pageID, content string) (*Post, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -307,11 +297,7 @@ func (c *Config) UpdatePost(ctx context.Context, pageID, content string) (*Post,
 
 // DeletePost deletes a journal entry by ID.
 func (c *Config) DeletePost(ctx context.Context, pageID string) error {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return err
 	}
@@ -324,41 +310,19 @@ func (c *Config) DeletePost(ctx context.Context, pageID string) error {
 
 // ListPosts lists the most recent journal entries.
 func (c *Config) ListPosts(ctx context.Context, count int) ([]*Post, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	g, err := c.getGRPCClients()
-	if err != nil {
-		return nil, err
-	}
-	limit, err := toInt32(count)
-	if err != nil {
-		return nil, fmt.Errorf("count: %w", err)
-	}
-	resp, err := g.notesClient.ListNotes(ctx, &proto.ListNotesRequest{
-		UserId: userID,
-		Limit:  limit,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return notesToPosts(resp.GetNotes()), nil
+	return c.SearchPosts(ctx, "", count)
 }
 
-// SearchPosts searches journal entries via the backend.
+// SearchPosts searches journal entries via the backend. An empty query lists
+// the most recent entries.
 func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) ([]*Post, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	g, err := c.getGRPCClients()
-	if err != nil {
-		return nil, err
-	}
 	limit, err := toInt32(maxResults)
 	if err != nil {
 		return nil, fmt.Errorf("maxResults: %w", err)
+	}
+	g, userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
 	}
 	resp, err := g.notesClient.ListNotes(ctx, &proto.ListNotesRequest{
 		UserId: userID,
@@ -373,17 +337,13 @@ func (c *Config) SearchPosts(ctx context.Context, query string, maxResults int) 
 
 // GetRandomPosts fetches random journal entries from the backend.
 func (c *Config) GetRandomPosts(ctx context.Context, count int) ([]*Post, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	g, err := c.getGRPCClients()
-	if err != nil {
-		return nil, err
-	}
 	c32, err := toInt32(count)
 	if err != nil {
 		return nil, fmt.Errorf("count: %w", err)
+	}
+	g, userID, err := c.ensureUserID(ctx)
+	if err != nil {
+		return nil, err
 	}
 	resp, err := g.notesClient.GetRandomNotes(ctx, &proto.GetRandomNotesRequest{
 		UserId: userID,
@@ -403,11 +363,7 @@ type Tag struct {
 
 // ListTags lists all tags for the current user.
 func (c *Config) ListTags(ctx context.Context) ([]Tag, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -429,11 +385,7 @@ type Stats struct {
 
 // GetStats fetches aggregate stats for the current user.
 func (c *Config) GetStats(ctx context.Context) (Stats, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return Stats{}, err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return Stats{}, err
 	}
@@ -452,11 +404,7 @@ func (c *Config) GetStats(ctx context.Context) (Stats, error) {
 
 // GetPostFullContent fetches the full content of a post by ID.
 func (c *Config) GetPostFullContent(ctx context.Context, pageID string) (string, error) {
-	userID, err := c.ensureUserID(ctx)
-	if err != nil {
-		return "", err
-	}
-	g, err := c.getGRPCClients()
+	g, userID, err := c.ensureUserID(ctx)
 	if err != nil {
 		return "", err
 	}

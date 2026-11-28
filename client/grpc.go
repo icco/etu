@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -63,12 +62,8 @@ type apiKeyCreds struct {
 }
 
 func (a apiKeyCreds) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
-	key := a.apiKey
-	if !strings.HasPrefix(key, "etu_") {
-		key = "etu_" + key
-	}
 	return map[string]string{
-		"authorization": key,
+		"authorization": a.apiKey,
 	}, nil
 }
 
@@ -123,15 +118,16 @@ func (c *Config) getGRPCClients() (*grpcClients, error) {
 
 // VerifyAPIKey checks the configured key without accessing subscription-gated data.
 func (c *Config) VerifyAPIKey(ctx context.Context) error {
-	_, err := c.ensureUserID(ctx)
+	_, _, err := c.ensureUserID(ctx)
 	return err
 }
 
-// ensureUserID calls VerifyApiKey and caches user_id for use in note requests.
-func (c *Config) ensureUserID(ctx context.Context) (string, error) {
+// ensureUserID returns the service clients and the user_id from VerifyApiKey,
+// cached for use in note requests.
+func (c *Config) ensureUserID(ctx context.Context) (*grpcClients, string, error) {
 	g, err := c.getGRPCClients()
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	g.userIDOnce.Do(func() {
 		resp, err := g.apiKeysClient.VerifyApiKey(ctx, &proto.VerifyApiKeyRequest{
@@ -148,7 +144,7 @@ func (c *Config) ensureUserID(ctx context.Context) (string, error) {
 		g.userID = resp.GetUserId()
 	})
 	if g.userIDErr != nil {
-		return "", g.userIDErr
+		return nil, "", g.userIDErr
 	}
-	return g.userID, nil
+	return g, g.userID, nil
 }

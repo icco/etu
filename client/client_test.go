@@ -1,6 +1,8 @@
 package client
 
 import (
+	"encoding/gob"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -192,9 +194,9 @@ func TestCacheRoundTrip(t *testing.T) {
 	setTestHome(t)
 
 	cfg := &Config{APIKey: "test"}
-	dur := 5 * time.Minute
+	last := time.Now().Add(-5 * time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(dur); err != nil {
+	if err := cfg.cacheToFile(last); err != nil {
 		t.Fatalf("cacheToFile: %v", err)
 	}
 
@@ -205,8 +207,8 @@ func TestCacheRoundTrip(t *testing.T) {
 	if data == nil {
 		t.Fatal("expected cache data, got nil")
 	}
-	if data.Duration != dur {
-		t.Errorf("Duration = %v, want %v", data.Duration, dur)
+	if !data.LastPost.Equal(last) {
+		t.Errorf("LastPost = %v, want %v", data.LastPost, last)
 	}
 	if time.Since(data.Saved) > time.Second {
 		t.Errorf("Saved time too old: %v", data.Saved)
@@ -217,11 +219,13 @@ func TestCacheOverwrite(t *testing.T) {
 	setTestHome(t)
 
 	cfg := &Config{APIKey: "test"}
+	first := time.Now().Add(-time.Hour).Truncate(time.Second)
+	second := time.Now().Add(-time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(1 * time.Minute); err != nil {
+	if err := cfg.cacheToFile(first); err != nil {
 		t.Fatal(err)
 	}
-	if err := cfg.cacheToFile(10 * time.Minute); err != nil {
+	if err := cfg.cacheToFile(second); err != nil {
 		t.Fatal(err)
 	}
 
@@ -229,8 +233,17 @@ func TestCacheOverwrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if data.Duration != 10*time.Minute {
-		t.Errorf("Duration = %v, want %v", data.Duration, 10*time.Minute)
+	if !data.LastPost.Equal(second) {
+		t.Errorf("LastPost = %v, want %v", data.LastPost, second)
+	}
+	entries, err := os.ReadDir(filepath.Dir(mustCachePath(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) == ".tmp" {
+			t.Errorf("temp file left behind: %s", e.Name())
+		}
 	}
 }
 
@@ -244,5 +257,84 @@ func TestCacheFromFileMissing(t *testing.T) {
 	}
 	if data != nil {
 		t.Error("expected nil data for missing cache file")
+	}
+}
+
+func mustCachePath(t *testing.T) string {
+	t.Helper()
+	path, err := CachePath(timesinceCacheFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestTimeSinceLastPost(t *testing.T) {
+	cachedPost := time.Now().Add(-3 * time.Hour)
+	fetchedPost := time.Now().Add(-time.Hour)
+	fetchErr := errors.New("backend down")
+
+	tests := []struct {
+		name      string
+		cache     *cacheData
+		corrupt   bool
+		readOnly  bool
+		fetchErr  error
+		want      time.Duration
+		wantFetch bool
+		wantErr   bool
+	}{
+		{name: "fresh cache skips fetch", cache: &cacheData{Saved: time.Now(), LastPost: cachedPost}, want: 3 * time.Hour},
+		{name: "stale cache fetches", cache: &cacheData{Saved: time.Now().Add(-time.Hour), LastPost: cachedPost}, want: time.Hour, wantFetch: true},
+		{name: "old-format cache fetches", cache: &cacheData{Saved: time.Now()}, want: time.Hour, wantFetch: true},
+		{name: "missing cache fetches", want: time.Hour, wantFetch: true},
+		{name: "corrupt cache fetches", corrupt: true, want: time.Hour, wantFetch: true},
+		{name: "failed cache write still answers", readOnly: true, want: time.Hour, wantFetch: true},
+		{name: "fetch error", fetchErr: fetchErr, wantFetch: true, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			path := filepath.Join(dir, timesinceCacheFile)
+			if tt.cache != nil {
+				f, err := os.Create(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := gob.NewEncoder(f).Encode(tt.cache); err != nil {
+					t.Fatal(err)
+				}
+				if err := f.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.corrupt {
+				if err := os.WriteFile(path, []byte("not gob"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.readOnly {
+				if err := os.Chmod(dir, 0500); err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
+			}
+
+			fetched := false
+			got, err := timeSinceLastPost(path, func() (time.Time, error) {
+				fetched = true
+				return fetchedPost, tt.fetchErr
+			})
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+			}
+			if fetched != tt.wantFetch {
+				t.Errorf("fetched = %v, want %v", fetched, tt.wantFetch)
+			}
+			if !tt.wantErr && (got < tt.want || got > tt.want+time.Minute) {
+				t.Errorf("got %v, want about %v", got, tt.want)
+			}
+		})
 	}
 }
