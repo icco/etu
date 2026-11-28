@@ -85,11 +85,17 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 
 // TimeSinceLastPost returns the time since the last post was created.
 func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
+	fetch := func() (time.Time, error) { return c.lastPostTime(ctx) }
 	path, err := c.cachePath()
 	if err != nil {
-		return 0, err
+		log.Printf("etu: timesince cache unavailable: %v", err)
+		last, err := fetch()
+		if err != nil {
+			return 0, err
+		}
+		return time.Since(last), nil
 	}
-	return timeSinceLastPost(path, func() (time.Time, error) { return c.lastPostTime(ctx) })
+	return timeSinceLastPost(path, fetch)
 }
 
 // timeSinceLastPost answers from the cache at path while it is fresh, otherwise
