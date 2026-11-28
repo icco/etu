@@ -199,7 +199,7 @@ func TestCacheRoundTrip(t *testing.T) {
 	cfg := &Config{APIKey: "test"}
 	last := time.Now().Add(-5 * time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(last); err != nil {
+	if err := cfg.cacheToFile(t.Context(), last); err != nil {
 		t.Fatalf("cacheToFile: %v", err)
 	}
 
@@ -225,10 +225,10 @@ func TestCacheOverwrite(t *testing.T) {
 	first := time.Now().Add(-time.Hour).Truncate(time.Second)
 	second := time.Now().Add(-time.Minute).Truncate(time.Second)
 
-	if err := cfg.cacheToFile(first); err != nil {
+	if err := cfg.cacheToFile(t.Context(), first); err != nil {
 		t.Fatal(err)
 	}
-	if err := cfg.cacheToFile(second); err != nil {
+	if err := cfg.cacheToFile(t.Context(), second); err != nil {
 		t.Fatal(err)
 	}
 
@@ -324,7 +324,7 @@ func TestTimeSinceLastPost(t *testing.T) {
 			}
 
 			fetched := false
-			got, err := timeSinceLastPost(path, key, func() (time.Time, error) {
+			got, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
 				fetched = true
 				return fetchedPost, tt.fetchErr
 			})
@@ -346,8 +346,8 @@ func TestTimeSinceLastPostKeepsNewerWrite(t *testing.T) {
 	key := "alice"
 	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
 
-	_, err := timeSinceLastPost(path, key, func() (time.Time, error) {
-		if err := writeCache(path, key, newer, time.Time{}); err != nil {
+	_, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
+		if err := writeCache(t.Context(), path, key, newer, time.Time{}); err != nil {
 			t.Fatal(err)
 		}
 		return time.Now().Add(-time.Hour), nil
@@ -371,8 +371,8 @@ func TestTimeSinceLastPostNewerFetchBeatsOverlappingOlderFetch(t *testing.T) {
 	older := time.Now().Add(-time.Hour).Truncate(time.Second)
 	newer := time.Now().Add(-time.Minute).Truncate(time.Second)
 
-	_, err := timeSinceLastPost(path, key, func() (time.Time, error) {
-		if err := writeCache(path, key, older, time.Now().Add(-time.Second)); err != nil {
+	_, err := timeSinceLastPost(t.Context(), path, key, func() (time.Time, error) {
+		if err := writeCache(t.Context(), path, key, older, time.Now().Add(-time.Second)); err != nil {
 			t.Fatal(err)
 		}
 		return newer, nil
@@ -399,7 +399,7 @@ func TestWriteCacheGivesUpWhenLocked(t *testing.T) {
 	t.Cleanup(func() { _ = held.Unlock() })
 
 	start := time.Now()
-	if err := writeCache(path, "alice", time.Now(), time.Time{}); err == nil {
+	if err := writeCache(t.Context(), path, "alice", time.Now(), time.Time{}); err == nil {
 		t.Fatal("writeCache succeeded while the lock was held")
 	}
 	if d := time.Since(start); d > 3*cacheLockTimeout {

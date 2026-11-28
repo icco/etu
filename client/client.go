@@ -89,7 +89,7 @@ func (c *Config) UpdateCache(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return writeCache(path, c.cacheKey(), last, started)
+	return writeCache(ctx, path, c.cacheKey(), last, started)
 }
 
 // TimeSinceLastPost returns the time since the last post was created.
@@ -104,13 +104,13 @@ func (c *Config) TimeSinceLastPost(ctx context.Context) (time.Duration, error) {
 		}
 		return time.Since(last), nil
 	}
-	return timeSinceLastPost(path, c.cacheKey(), fetch)
+	return timeSinceLastPost(ctx, path, c.cacheKey(), fetch)
 }
 
 // timeSinceLastPost answers from the cache at path while it is fresh and was
 // written for key, otherwise from fetch. A failed cache write is logged, since
 // the answer is still right.
-func timeSinceLastPost(path, key string, fetch func() (time.Time, error)) (time.Duration, error) {
+func timeSinceLastPost(ctx context.Context, path, key string, fetch func() (time.Time, error)) (time.Duration, error) {
 	if cache, err := readCache(path); err == nil && cache != nil && cache.Key == key && !cache.LastPost.IsZero() && time.Since(cache.Saved) < timesinceCacheTTL {
 		return time.Since(cache.LastPost), nil
 	}
@@ -119,7 +119,7 @@ func timeSinceLastPost(path, key string, fetch func() (time.Time, error)) (time.
 	if err != nil {
 		return 0, err
 	}
-	if err := writeCache(path, key, last, started); err != nil {
+	if err := writeCache(ctx, path, key, last, started); err != nil {
 		log.Printf("etu: writing timesince cache: %v", err)
 	}
 	return time.Since(last), nil
@@ -154,12 +154,12 @@ func (c *Config) cachePath() (string, error) {
 }
 
 // cacheToFile records lastPost as the newest post, replacing any cache entry.
-func (c *Config) cacheToFile(lastPost time.Time) error {
+func (c *Config) cacheToFile(ctx context.Context, lastPost time.Time) error {
 	path, err := c.cachePath()
 	if err != nil {
 		return err
 	}
-	return writeCache(path, c.cacheKey(), lastPost, time.Time{})
+	return writeCache(ctx, path, c.cacheKey(), lastPost, time.Time{})
 }
 
 func (c *Config) cacheFromFile() (*cacheData, error) {
@@ -175,13 +175,13 @@ func (c *Config) cacheFromFile() (*cacheData, error) {
 // set, the write is skipped if another process cached for the same key after
 // started and its post is not older, since a fetch that began earlier may hold
 // an older post. The lock wait is bounded so a stuck writer cannot hang callers.
-func writeCache(path, key string, lastPost, started time.Time) (err error) {
+func writeCache(ctx context.Context, path, key string, lastPost, started time.Time) (err error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 	lock := flock.New(path + ".lock")
-	ctx, cancel := context.WithTimeout(context.Background(), cacheLockTimeout)
+	ctx, cancel := context.WithTimeout(ctx, cacheLockTimeout)
 	defer cancel()
 	locked, err := lock.TryLockContext(ctx, 10*time.Millisecond)
 	if err != nil {
@@ -314,7 +314,7 @@ func (c *Config) SaveEntry(ctx context.Context, text string, imagePaths, audioPa
 		return err
 	}
 	if created := resp.GetNote(); created != nil && created.GetCreatedAt() != nil {
-		if err := c.cacheToFile(created.GetCreatedAt().AsTime()); err != nil {
+		if err := c.cacheToFile(ctx, created.GetCreatedAt().AsTime()); err != nil {
 			log.Printf("etu: updating timesince cache: %v", err)
 		}
 	}
